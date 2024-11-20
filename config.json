@@ -1,6 +1,12 @@
 {
-    "title":"Blog Title",
-    "subTitle":"Blog description",
-    "avatarUrl":"https://github.githubassets.com/favicons/favicon.svg",
-    "GMEEK_VERSION":"last"
+    "title": "巴斯.zznQ",
+    "subTitle": "What do I do?",
+    "email": "admin@imipy.com",
+    "avatarUrl": "https://avatars.githubusercontent.com/u/26270009",
+    "GMEEK_VERSION": "last",
+    "singlePage": [
+        "about"
+    ],
+    "i18n": "EN",
+    "needComment": 1
 }
