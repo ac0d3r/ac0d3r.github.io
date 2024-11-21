@@ -308,7 +308,7 @@ rbx = *<span class="pl-en">ivar_offset</span>(m_dbEncryptInfo);</pre></div>
 <h3>Tool Optimization</h3>
 <div class="highlight highlight-source-shell"><pre class="notranslate">$ ll wechatoe
 -rwxr-xr-x  1 whoami  staff    75M  1 17 17:27 wechatoe</pre></div>
-<p>Because it contains the embedded Frida dynamic library, the compiled file is very large. In the future, a custom tool will be implemented using Objective-C.</p>
+<p>Because it contains the embedded Frida dynamic library, the compiled file is very large. In the future, a tool will be implemented using Objective-C.</p>
 <h2>How to Defend Against It</h2>
 <p>Due to the limitations of macOS <a href="https://developer.apple.com/documentation/security/hardened_runtime" rel="nofollow">Hardened Runtime</a>, even if malicious programs use <code class="notranslate">task_for_pid</code> API, they cannot control the target process (disabling <code class="notranslate">SIP</code> allows it to work).</p>
 <p>However, many macOS users install custom plugins for WeChat, and when a plugin is installed, the application needs to be <code class="notranslate">re-signed</code>. This process removes the runtime flag:</p>

@@ -286,7 +286,7 @@ $ ll wechatoe
 -rwxr-xr-x  1 whoami  staff    75M  1 17 17:27 wechatoe
 ```
 
-Because it contains the embedded Frida dynamic library, the compiled file is very large. In the future, a custom tool will be implemented using Objective-C.
+Because it contains the embedded Frida dynamic library, the compiled file is very large. In the future, a tool will be implemented using Objective-C.
 
 
 ## How to Defend Against It
