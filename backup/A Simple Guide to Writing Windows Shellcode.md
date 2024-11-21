@@ -225,7 +225,7 @@ int main()
 }
 ```
 
-It is compiled by Visual Studio, which results in a very large size. Rewriting it with MASM produces a much smaller size:[shellcode.asm](https://github.com/ac0d3r/0xpe/blob/master/shellcode/shellcode.asm).
+It is compiled by Visual Studio, which results in a very large size. Rewriting it with MASM produces a much smaller size: [shellcode.asm](https://github.com/ac0d3r/0xpe/blob/master/shellcode/shellcode.asm).
 
 ## Extract Shellcode
 
