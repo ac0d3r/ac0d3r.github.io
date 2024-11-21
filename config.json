@@ -1,11 +1,11 @@
 {
-    "title": "巴斯.zznQ",
-    "subTitle": "What do I do?",
+    "title": "zznQ",
+    "subTitle": "",
     "email": "admin@imipy.com",
     "avatarUrl": "https://avatars.githubusercontent.com/u/26270009",
     "GMEEK_VERSION": "main",
     "singlePage": [
-        "about"
+        "about", "link"
     ],
     "i18n": "EN",
     "needComment": 1
