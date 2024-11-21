@@ -1,6 +1,6 @@
 {
     "title": "zznQ",
-    "subTitle": "",
+    "subTitle": "Breaking Code, Building Dreams",
     "email": "admin@imipy.com",
     "avatarUrl": "https://avatars.githubusercontent.com/u/26270009",
     "GMEEK_VERSION": "main",
@@ -8,5 +8,6 @@
         "about", "link"
     ],
     "i18n": "EN",
+    "startSite":"01/05/2018",
     "needComment": 1
 }
