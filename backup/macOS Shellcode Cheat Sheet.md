@@ -453,4 +453,4 @@ int main(int argc, char **argv)
 - [https://github.com/killswitch-GUI/C-OSX-Shellcode](https://github.com/killswitch-GUI/C-OSX-Shellcode)
 - [https://archcloudlabs.com/projects/r2_shellcode_generation/](https://archcloudlabs.com/projects/r2_shellcode_generation/)
 
-<!-- ##{"timestamp":1677569940}## -->
+<!-- ##{"timestamp":1665301140}## -->
