@@ -253,3 +253,5 @@ You did it 🎉
 - https://securitycafe.ro/2015/10/30/introduction-to-windows-shellcode-development-part1/
 - https://securitycafe.ro/2015/12/14/introduction-to-windows-shellcode-development-part-2/
 - https://securitycafe.ro/2016/02/15/introduction-to-windows-shellcode-development-part-3/
+
+<!-- ##{"timestamp":1630316468}## -->
