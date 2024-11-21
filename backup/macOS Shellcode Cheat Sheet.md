@@ -452,3 +452,5 @@ int main(int argc, char **argv)
 - [https://nieyong.github.io/wiki_cpu/mmap详解.html](https://nieyong.github.io/wiki_cpu/mmap%E8%AF%A6%E8%A7%A3.html)
 - [https://github.com/killswitch-GUI/C-OSX-Shellcode](https://github.com/killswitch-GUI/C-OSX-Shellcode)
 - [https://archcloudlabs.com/projects/r2_shellcode_generation/](https://archcloudlabs.com/projects/r2_shellcode_generation/)
+
+<!-- ##{"timestamp":1677569940}## -->
