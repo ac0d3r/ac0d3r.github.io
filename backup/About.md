@@ -2,7 +2,7 @@ Software Developer & Researcher
 
 ## My Research
 
-### iOS Jailbreak Development
+### iOS Jailbreak App
 - [TrollAppDuplicator](https://github.com/BreakOnCrash/TrollAppDuplicator) | iOS App duplicator for TrollStore
 - [TrollR2ool](https://github.com/BreakOnCrash/TrollR2ool) | iOS Runtime analysis tool
 
