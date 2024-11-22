@@ -1,6 +1,6 @@
-> This article was first published on the [凹陷外壳](https://mp.weixin.qq.com/s/zjMdOTqO4IWhKVsMTyk_Og).
+> This article was first published on the [BreakOnCrash Lab](https://mp.weixin.qq.com/s/zjMdOTqO4IWhKVsMTyk_Og).
 
-## Introduction
+## Development Environment
 
 - Device Info: `M1/macOS 12.6.3`
 - Assembler Tool: `nasm`
@@ -9,7 +9,7 @@
 - Disassembler: `objdump`
 
 
-## System Calls (AMD64)
+## SystemCalls (AMD64)
 To use system calls in assembly, you need to pass the system call number in the `rax` register. Parameters are passed through the following registers:
 
 - `rdi`: First function argument
@@ -161,7 +161,7 @@ _main:
 
 ### Bind Shell
 
-First, implement the logic for binding the shell using clang, as this provides a clearer structure:
+To begin, I will use clang to implement the shell-binding logic, as it clarifies my thought process:
 
 ```c
 //  clang -arch x86_64  bindshell.c -o bindshell

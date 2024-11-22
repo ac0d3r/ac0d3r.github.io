@@ -10,9 +10,9 @@
         let theme = localStorage.getItem("meek_theme") || "light";
         document.documentElement.setAttribute("data-color-mode", theme);
     </script>
-<meta name="description" content="> This article was first published on the [凹陷外壳](https://mp.">
+<meta name="description" content="> This article was first published on the [BreakOnCrash Lab](https://mp.">
 <meta property="og:title" content="macOS Shellcode Cheat Sheet">
-<meta property="og:description" content="> This article was first published on the [凹陷外壳](https://mp.">
+<meta property="og:description" content="> This article was first published on the [BreakOnCrash Lab](https://mp.">
 <meta property="og:type" content="article">
 <meta property="og:url" content="https://ac0d3r.github.io/post/macos-shellcode-cheat-sheet.html">
 <meta property="og:image" content="https://avatars.githubusercontent.com/u/26270009">
@@ -84,9 +84,9 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 </div>
     <div id="content">
 <div class="markdown-body" id="postBody"><blockquote>
-<p>This article was first published on the <a href="https://mp.weixin.qq.com/s/zjMdOTqO4IWhKVsMTyk_Og" rel="nofollow">凹陷外壳</a>.</p>
+<p>This article was first published on the <a href="https://mp.weixin.qq.com/s/zjMdOTqO4IWhKVsMTyk_Og" rel="nofollow">BreakOnCrash Lab</a>.</p>
 </blockquote>
-<h2>Introduction</h2>
+<h2>Development Environment</h2>
 <ul>
 <li>Device Info: <code class="notranslate">M1/macOS 12.6.3</code></li>
 <li>Assembler Tool: <code class="notranslate">nasm</code></li>
@@ -94,7 +94,7 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 <li>Clang Version: <code class="notranslate">Apple clang version 13.1.6 (clang-1316.0.21.2.5)</code></li>
 <li>Disassembler: <code class="notranslate">objdump</code></li>
 </ul>
-<h2>System Calls (AMD64)</h2>
+<h2>SystemCalls (AMD64)</h2>
 <p>To use system calls in assembly, you need to pass the system call number in the <code class="notranslate">rax</code> register. Parameters are passed through the following registers:</p>
 <ul>
 <li><code class="notranslate">rdi</code>: First function argument</li>
@@ -228,7 +228,7 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 <span class="pl-en">    </span>
 <span class="pl-en">    </span><span class="pl-k">syscall</span><span class="pl-c">                 ; rax=execve rdi='/bin/zsh' rsi=['/bin/zsh', '-c', 'open /System/Applications/Calculator.app'] rdx=0</span></pre></div>
 <h3>Bind Shell</h3>
-<p>First, implement the logic for binding the shell using clang, as this provides a clearer structure:</p>
+<p>To begin, I will use clang to implement the shell-binding logic, as it clarifies my thought process:</p>
 <div class="highlight highlight-source-c"><pre class="notranslate"><span class="pl-c">//  clang -arch x86_64  bindshell.c -o bindshell</span>
 <span class="pl-k">#include</span> <span class="pl-s">&lt;unistd.h&gt;</span>
 <span class="pl-k">#include</span> <span class="pl-s">&lt;sys/socket.h&gt;</span>
