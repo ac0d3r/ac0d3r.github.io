@@ -99,11 +99,11 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 </li>
 <li>Enter c and press Enter to continue execution.</li>
 <li>Log in to it.</li>
-<li>After logging in, enter the following command to read memory:
+<li>Once logged in, execute the following command to read memory:
 <pre lang="lldb" class="notranslate"><code class="notranslate">memory read --size 1 --format x --count 32 $rsi
 </code></pre>
 <ul>
-<li>For ARM architecture, replace <code class="notranslate">$rsi</code> with <code class="notranslate">$x1</code>:
+<li>In the ARM architecture, <code class="notranslate">$rsi</code> should be replaced with <code class="notranslate">$x1</code>.
 <pre lang="lldb" class="notranslate"><code class="notranslate"> memory read --size 1 --format x --count 32 $x1
 </code></pre>
 </li>
@@ -112,7 +112,7 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 </ol>
 <p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/e59f270c-7793-413b-82aa-240f9b8981c9"><img src="https://github.com/user-attachments/assets/e59f270c-7793-413b-82aa-240f9b8981c9" alt="image" style="max-width: 100%;"></a></p>
 <ol start="7">
-<li>Parse the data using code to extract the key:</li>
+<li>Parse the raw data to extract the key:</li>
 </ol>
 <div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-s1">ori_key</span> <span class="pl-c1">=</span> <span class="pl-s">"""</span>
 <span class="pl-s">0x60000241e920: 0x11 0x22 0x33 0x44 0x55 0xaa 0xbb 0xcc</span>
@@ -123,21 +123,26 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 
 <span class="pl-s1">key</span> <span class="pl-c1">=</span> <span class="pl-s">'0x'</span> <span class="pl-c1">+</span> <span class="pl-s">''</span>.<span class="pl-en">join</span>(<span class="pl-s1">i</span>.<span class="pl-en">partition</span>(<span class="pl-s">':'</span>)[<span class="pl-c1">2</span>].<span class="pl-en">replace</span>(<span class="pl-s">'0x'</span>, <span class="pl-s">''</span>).<span class="pl-en">replace</span>(<span class="pl-s">' '</span>, <span class="pl-s">''</span>) <span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">in</span> <span class="pl-s1">ori_key</span>.<span class="pl-en">split</span>(<span class="pl-s">'<span class="pl-cce">\n</span>'</span>)[<span class="pl-c1">1</span>:<span class="pl-c1">5</span>])
 <span class="pl-en">print</span>(<span class="pl-s1">key</span>)</pre></div>
-<p>WeChat chat database file storage path: <code class="notranslate">~/Library/Containers/com.tencent.xinWeChat/Data/Library/Application Support/com.tencent.xinWeChat/[version]/[uuid]/Message/*.db</code></p>
-<p>Use <strong>DB Browser for SQLite</strong> to open and view the chat database:</p>
+<p>The WeChat chat database is stored at:<br>
+<code class="notranslate">~/Library/Containers/com.tencent.xinWeChat/Data/Library/Application Support/com.tencent.xinWeChat/[version]/[uuid]/Message/*.db</code></p>
+<p>Use <strong>DB Browser for SQLite</strong> to open and view the database.</p>
 <p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/ad10511a-0b1e-4ce2-82ad-6728cdb343b5"><img src="https://github.com/user-attachments/assets/ad10511a-0b1e-4ce2-82ad-6728cdb343b5" alt="image" style="max-width: 100%;"></a></p>
-<h2>Exploring the Internal Storage of WeChat Chat</h2>
-<p>WeChat on macOS uses WCDB to manage its chat data. <a href="https://github.com/Tencent/wcdb">WCDB</a> is an open-source project by Tencent, built on top of <a href="https://github.com/sqlcipher/sqlcipher">SQLCipher</a>.</p>
-<p>In <a href="https://github.com/sqlcipher/sqlcipher">SQLCipher</a>, the <a href="https://github.com/sqlcipher/sqlcipher/blob/master/src/crypto.c#L914">sqlite3_key</a> function is used to open encrypted databases. WCDB encapsulates this function within the <a href="https://github.com/Tencent/wcdb/wiki/iOS-macOS%e4%bd%bf%e7%94%a8%e6%95%99%e7%a8%8b#%E5%8A%A0%E5%AF%86">setCipherKey</a> method."</p>
+<h2>Exploring the Internal Storage of WeChat Chats</h2>
+<p>WeChat on macOS uses WCDB to manage its chat data, <a href="https://github.com/Tencent/wcdb">WCDB</a> is an open-source library developed by Tencent, built on top of <a href="https://github.com/sqlcipher/sqlcipher">SQLCipher</a>.</p>
+<p>In <a href="https://github.com/sqlcipher/sqlcipher">SQLCipher</a>, the function <a href="https://github.com/sqlcipher/sqlcipher/blob/master/src/crypto.c#L914">sqlite3_key</a> is used to open encrypted databases. WCDB wraps this functionality into its <a href="https://github.com/Tencent/wcdb/wiki/iOS-macOS%e4%bd%bf%e7%94%a8%e6%95%99%e7%a8%8b#%E5%8A%A0%E5%AF%86">setCipherKey</a> method, providing a simpler interface for setting encryption keys.</p>
 <div class="highlight highlight-source-c"><pre class="notranslate"><span class="pl-smi">int</span> <span class="pl-en">sqlite3_key</span>(<span class="pl-smi">sqlite3</span> <span class="pl-c1">*</span><span class="pl-s1">db</span>, <span class="pl-k">const</span> <span class="pl-smi">void</span> <span class="pl-c1">*</span><span class="pl-s1">pKey</span>, <span class="pl-smi">int</span> <span class="pl-s1">nKey</span>)</pre></div>
-<p>This explains why, by setting a breakpoint at the <code class="notranslate">sqlite3_key</code> function and reading <code class="notranslate">rsi</code> (the second parameter), we can obtain the encryption <code class="notranslate">*pKey</code>.</p>
+<p>This explains why, by setting a breakpoint at the <code class="notranslate">sqlite3_key</code> function and inspecting the <code class="notranslate">rsi</code> register (the second parameter), we can obtain the encryption key (<code class="notranslate">pKey</code>).</p>
 <h2>Thought Process for Building a Forensic Tool</h2>
 <h3>Decoding from File</h3>
-<p>Find a Sample Objective-C Code for Opening an Encrypted Database in the WCDB Wiki：</p>
+<ol>
+<li>Here is the Objective-C code example from the WCDB Wiki for opening an encrypted database:</li>
+</ol>
 <div class="highlight highlight-source-objc"><pre class="notranslate">WCTDatabase *database = [[WCTDatabase <span class="pl-c1">alloc</span>] <span class="pl-c1">initWithPath:</span>path];
 <span class="pl-c1">NSData</span> *password = [<span class="pl-s"><span class="pl-pds">@"</span>MyPassword<span class="pl-pds">"</span></span> <span class="pl-c1">dataUsingEncoding:</span>NSASCIIStringEncoding];
 [database <span class="pl-c1">setCipherKey:</span>password];</pre></div>
-<p>Use the <code class="notranslate">Frida</code> tool for dynamic analysis of WeChat, Trace the operations of the <code class="notranslate">WCTDatabase</code> class:</p>
+<ol start="2">
+<li>Use the <code class="notranslate">Frida</code> tool to dynamically analysis of WeChat, Trace All Methods of the WCTDatabase Class:</li>
+</ol>
 <div class="highlight highlight-source-shell"><pre class="notranslate">$ frida-trace -m <span class="pl-s"><span class="pl-pds">"</span>*[WCTDatabase *]<span class="pl-pds">"</span></span> <span class="pl-s"><span class="pl-pds">"</span>WeChat<span class="pl-pds">"</span></span>
 ...
 3643 ms  -[WCTDatabase initWithPath:0x6000029d4540]
@@ -154,7 +159,10 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 4182 ms  -[WCTDatabase isTableExists:0x60000075b400]
 ...
 79122 ms  -[WCTDatabase backupWithCipher:0x600001246190]</pre></div>
-<p>Read the value of the <code class="notranslate">setCipherKey</code> parameter. From the example code, it can be determined that <code class="notranslate">0x600001246190</code> is an <code class="notranslate">NSData</code> object. The content is retrieved in Frida:</p>
+<ol start="3">
+<li>Inspect the value of <code class="notranslate">setCipherKey</code>.<br>
+From the example code, it can be determined that <code class="notranslate">0x600001246190</code> is an <code class="notranslate">NSData</code> object. To retrieve its content, modify and run the following script in Frida:</li>
+</ol>
 <div class="highlight highlight-source-js"><pre class="notranslate"><span class="pl-c">// Edit WCTDatabase/setCipherKey_andCipherPageSize_andRaw_.js</span>
 ...
 <span class="pl-en">onEnter</span><span class="pl-kos">(</span><span class="pl-s1">log</span><span class="pl-kos">,</span> <span class="pl-s1">args</span><span class="pl-kos">,</span> <span class="pl-s1">state</span><span class="pl-kos">)</span> <span class="pl-kos">{</span>
@@ -172,19 +180,28 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 <span class="pl-kos">}</span><span class="pl-kos">,</span>
 ...</pre></div>
 <p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/a4fcba31-d388-4f3e-93c1-d6d48b150399"><img src="https://github.com/user-attachments/assets/a4fcba31-d388-4f3e-93c1-d6d48b150399" alt="image" style="max-width: 100%;"></a></p>
-<p>The key is the same as before,the WCTDatabase.setCipherKey function is the place where the key is initialized.</p>
-<p>Using <code class="notranslate">Hopper</code> to reverse engineer, we find the <code class="notranslate">MessageDB.setupDB</code> symbol, which we can infer is responsible for setting up the message database:</p>
-<div class="highlight highlight-source-objc"><pre class="notranslate">r0 = <span class="pl-k">@class</span>(WCDBHelper);
+<p>The CipherKey is the same as before, indicating that we have found the correct location.</p>
+<ol start="4">
+<li>Continuing the Reverse Engineering</li>
+</ol>
+<p>Using <code class="notranslate">WCTDatabase</code> symbol, I located the <code class="notranslate">MessageDB.setupDB</code> symbol, which appears to be responsible for initializing the database:</p>
+<div class="highlight highlight-source-objc"><pre class="notranslate"><span class="pl-c"><span class="pl-c">//</span> MessageDB setupDB method</span>
+r0 = <span class="pl-k">@class</span>(WCDBHelper);
 r0 = [r0 <span class="pl-c1">CipherKey</span>];
 ...
 [*(r21 + <span class="pl-c1">0x8</span>) <span class="pl-c1">setTag:</span>*(<span class="pl-c1">int32_t</span> *)(r21 + <span class="pl-c1">0x18</span>)];
 [*(r21 + <span class="pl-c1">0x8</span>) <span class="pl-c1">setCipherKey:</span>var_78 <span class="pl-c1">andCipherPageSize:</span>r28 <span class="pl-c1">andRaw:</span><span class="pl-c1">0x1</span>];
 ...</pre></div>
-<p>The key managed by <code class="notranslate">WCDBHelper.CipherKey</code> is obtained from <code class="notranslate">AccountStorage</code>. Simplified pseudocode:</p>
-<div class="highlight highlight-source-objc"><pre class="notranslate">...
+<p>From the code, it can be observed that the <code class="notranslate">CipherKey</code> is from the <code class="notranslate">WCDBHelper.CipherKey</code> property. Furthermore, WCDBHelper.CipherKey is set through AccountStorage.</p>
+<p>Below is the simplified pseudocode:</p>
+<div class="highlight highlight-source-objc"><pre class="notranslate"><span class="pl-c"><span class="pl-c">//</span> WCDBHelper setup dbEncryptKey</span>
+...
 a = [[MMServiceCenter <span class="pl-c1">defaultCenter</span>] <span class="pl-c1">getService:</span> [AccountStorage <span class="pl-c1">class</span>]]
 i = [[a <span class="pl-c1">GetDBEncryptInfo</span>] <span class="pl-c1">m_dbEncryptKey</span>]</pre></div>
-<p>Analyze the <code class="notranslate">AccountStorage</code> class. In its <code class="notranslate">init</code> method, the database configuration file path is provided. Use <code class="notranslate">PBCoder</code> to decode <code class="notranslate">DBEncryptInfo</code> from the file:</p>
+<ol start="5">
+<li>Analyzing the <code class="notranslate">AccountStorage</code></li>
+</ol>
+<p>In the init method of the <code class="notranslate">AccountStorage</code> class, the database configuration file path is provided. The <code class="notranslate">PBCoder</code> class is used to decode the <code class="notranslate">DBEncryptInfo</code> structure from the file:</p>
 <div class="highlight highlight-source-objc"><pre class="notranslate">rax = [PathUtility <span class="pl-c1">GetAccountSettingDbPath</span>];
 rax = [rax <span class="pl-c1">retain</span>];
 rcx = *<span class="pl-en">ivar_offset</span>(m_dbEncryptInfoPath);
@@ -192,13 +209,16 @@ rcx = *<span class="pl-en">ivar_offset</span>(m_dbEncryptInfoPath);
 rax = [PBCoder <span class="pl-c1">decodeObjectOfClass:</span>[DBEncryptInfo <span class="pl-c1">class</span>] <span class="pl-c1">fromFile:</span>r13-&gt;m_dbEncryptInfoPath];
 rax = [rax <span class="pl-c1">retain</span>];
 rbx = *<span class="pl-en">ivar_offset</span>(m_dbEncryptInfo);</pre></div>
-<p>Hook to retrieve the database configuration file:</p>
+<p>Hook the <code class="notranslate">[PathUtility GetAccountSettingDbPath]</code> function to to log the configuration file path:</p>
 <div class="highlight highlight-source-js"><pre class="notranslate"><span class="pl-c">// Edit PathUtility/GetAccountSettingDbPath.js</span>
 <span class="pl-en">onLeave</span><span class="pl-kos">(</span><span class="pl-s1">log</span><span class="pl-kos">,</span> <span class="pl-s1">retval</span><span class="pl-kos">,</span> <span class="pl-s1">state</span><span class="pl-kos">)</span><span class="pl-kos"></span> <span class="pl-kos">{</span>
   <span class="pl-k">var</span> <span class="pl-s1">ret</span> <span class="pl-c1">=</span> <span class="pl-k">new</span> <span class="pl-v">ObjC</span><span class="pl-kos">.</span><span class="pl-c1">Object</span><span class="pl-kos">(</span><span class="pl-s1">retval</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
   <span class="pl-en">log</span><span class="pl-kos">(</span><span class="pl-s">`return value: <span class="pl-s1"><span class="pl-kos">${</span><span class="pl-s1">ret</span><span class="pl-kos">}</span></span>==`</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
 <span class="pl-kos">}</span></pre></div>
-<p>The printed content is: <code class="notranslate">~/Library/Containers/com.tencent.xinWeChat/Data/Library/Application Support/com.tencent.xinWeChat/[version]/[uuid]/Account/setting_db.data</code>.</p>
+<p>We have got the configuration file: <code class="notranslate">~/Library/Containers/com.tencent.xinWeChat/Data/Library/Application Support/com.tencent.xinWeChat/[version]/[uuid]/Account/setting_db.data</code>.</p>
+<ol start="6">
+<li>Analyzing the <code class="notranslate">PBCoder</code></li>
+</ol>
 <p>What is <code class="notranslate">PBCoder</code> and how does it decode data? By searching, I found <a href="https://github.com/Tencent/MMKV/issues/42#issuecomment-424976201" data-hovercard-type="issue" data-hovercard-url="/Tencent/MMKV/issues/42/hovercard">an issue in the Tencent open-source MMKV project</a>, which reveals that pbcoding is based on <code class="notranslate">protobuf</code> (Protocol Buffers) for archiving objects.</p>
 <p>Using the <code class="notranslate">protoc --decode_raw &lt; setting_db.data</code> command to decode the file, we can see three properties: the first property likely represents the key, the second is unknown, and the third is the timestamp:</p>
 <p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/b8301c5d-08bd-4045-acd0-4bf85dfa3dc7"><img src="https://github.com/user-attachments/assets/b8301c5d-08bd-4045-acd0-4bf85dfa3dc7" alt="image" style="max-width: 100%;"></a></p>
@@ -210,7 +230,7 @@ rbx = *<span class="pl-en">ivar_offset</span>(m_dbEncryptInfo);</pre></div>
 <span class="pl-k">var</span> <span class="pl-s1">data</span> <span class="pl-c1">=</span> <span class="pl-s1">key</span><span class="pl-kos">[</span><span class="pl-s">'- m_dbEncryptKey'</span><span class="pl-kos">]</span><span class="pl-kos">(</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
 <span class="pl-en">hexdump</span><span class="pl-kos">(</span><span class="pl-s1">data</span><span class="pl-kos">.</span><span class="pl-en">bytes</span><span class="pl-kos">(</span><span class="pl-kos">)</span><span class="pl-kos">,</span> <span class="pl-kos">{</span> <span class="pl-c1">offset</span>: <span class="pl-c1">0</span><span class="pl-kos">,</span> <span class="pl-c1">length</span>: <span class="pl-s1">data</span><span class="pl-kos">.</span><span class="pl-en">length</span><span class="pl-kos">(</span><span class="pl-kos">)</span> <span class="pl-kos">}</span><span class="pl-kos">)</span><span class="pl-kos">;</span></pre></div>
 <p>It cannot be decoded. After running the <code class="notranslate">decodeObjectOfClass</code> function, there is still additional logic to be executed.</p>
-<p>Since I couldn't find any relevant clues through reverse engineering, I’ll have to abandon this approach for now.</p>
+<p>Since I couldn't find any relevant clues through reverse engineering, I’ll have to abandon this approach for now.😡</p>
 <h3>Reading from Memory</h3>
 <p>After the reverse engineering analysis above, retrieving the key from memory is quite easy because <code class="notranslate">DBEncryptInfo</code> is a singleton (this has been confirmed through multiple tests). By dumping the value of its <code class="notranslate">m_dbEncryptKey(NSData)</code>, the key can be obtained:</p>
 <p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/720c59c9-01ed-4ca0-bfd3-d9a4c2a66425"><img src="https://github.com/user-attachments/assets/720c59c9-01ed-4ca0-bfd3-d9a4c2a66425" alt="image" style="max-width: 100%;"></a></p>

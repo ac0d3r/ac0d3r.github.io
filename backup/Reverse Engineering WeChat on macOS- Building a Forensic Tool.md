@@ -15,18 +15,17 @@
 	```
 4. Enter c and press Enter to continue execution.
 5. Log in to it.
-6. After logging in, enter the following command to read memory:
+6. Once logged in, execute the following command to read memory:
 	```lldb
 	memory read --size 1 --format x --count 32 $rsi
 	```
-    - For ARM architecture, replace `$rsi` with `$x1`:
+    - In the ARM architecture, `$rsi` should be replaced with `$x1`.
 		```lldb
 		memory read --size 1 --format x --count 32 $x1
 		```
 ![image](https://github.com/user-attachments/assets/e59f270c-7793-413b-82aa-240f9b8981c9)
 
-7. Parse the data using code to extract the key:
-
+7. Parse the raw data to extract the key:
 ```python
 ori_key = """
 0x60000241e920: 0x11 0x22 0x33 0x44 0x55 0xaa 0xbb 0xcc
@@ -39,29 +38,30 @@ key = '0x' + ''.join(i.partition(':')[2].replace('0x', '').replace(' ', '') for 
 print(key)
 ```
 
-WeChat chat database file storage path: `~/Library/Containers/com.tencent.xinWeChat/Data/Library/Application Support/com.tencent.xinWeChat/[version]/[uuid]/Message/*.db`
+The WeChat chat database is stored at:  
+`~/Library/Containers/com.tencent.xinWeChat/Data/Library/Application Support/com.tencent.xinWeChat/[version]/[uuid]/Message/*.db`  
 
-Use **DB Browser for SQLite** to open and view the chat database:
+Use **DB Browser for SQLite** to open and view the database.
 
 ![image](https://github.com/user-attachments/assets/ad10511a-0b1e-4ce2-82ad-6728cdb343b5)
 
-## Exploring the Internal Storage of WeChat Chat
+## Exploring the Internal Storage of WeChat Chats
 
-WeChat on macOS uses WCDB to manage its chat data. [WCDB](https://github.com/Tencent/wcdb) is an open-source project by Tencent, built on top of [SQLCipher](https://github.com/sqlcipher/sqlcipher).
+WeChat on macOS uses WCDB to manage its chat data, [WCDB](https://github.com/Tencent/wcdb) is an open-source library developed by Tencent, built on top of [SQLCipher](https://github.com/sqlcipher/sqlcipher).
 
-In [SQLCipher](https://github.com/sqlcipher/sqlcipher), the [sqlite3_key](https://github.com/sqlcipher/sqlcipher/blob/master/src/crypto.c#L914) function is used to open encrypted databases. WCDB encapsulates this function within the [setCipherKey](https://github.com/Tencent/wcdb/wiki/iOS-macOS%e4%bd%bf%e7%94%a8%e6%95%99%e7%a8%8b#%E5%8A%A0%E5%AF%86) method."
+In [SQLCipher](https://github.com/sqlcipher/sqlcipher), the function [sqlite3_key](https://github.com/sqlcipher/sqlcipher/blob/master/src/crypto.c#L914) is used to open encrypted databases. WCDB wraps this functionality into its [setCipherKey](https://github.com/Tencent/wcdb/wiki/iOS-macOS%e4%bd%bf%e7%94%a8%e6%95%99%e7%a8%8b#%E5%8A%A0%E5%AF%86) method, providing a simpler interface for setting encryption keys.
 
 ```c
 int sqlite3_key(sqlite3 *db, const void *pKey, int nKey)
 ```
 
-This explains why, by setting a breakpoint at the `sqlite3_key` function and reading `rsi` (the second parameter), we can obtain the encryption `*pKey`.
+This explains why, by setting a breakpoint at the `sqlite3_key` function and inspecting the `rsi` register (the second parameter), we can obtain the encryption key (`pKey`).
 
 ## Thought Process for Building a Forensic Tool
 
 ### Decoding from File
 
-Find a Sample Objective-C Code for Opening an Encrypted Database in the WCDB Wiki：
+1. Here is the Objective-C code example from the WCDB Wiki for opening an encrypted database:
 
 ```objective-c
 WCTDatabase *database = [[WCTDatabase alloc] initWithPath:path];
@@ -69,7 +69,7 @@ NSData *password = [@"MyPassword" dataUsingEncoding:NSASCIIStringEncoding];
 [database setCipherKey:password];
 ```
 
-Use the `Frida` tool for dynamic analysis of WeChat, Trace the operations of the `WCTDatabase` class:
+2. Use the `Frida` tool to dynamically analysis of WeChat, Trace All Methods of the WCTDatabase Class:
 
 ```bash
 $ frida-trace -m "*[WCTDatabase *]" "WeChat"
@@ -90,7 +90,8 @@ $ frida-trace -m "*[WCTDatabase *]" "WeChat"
 79122 ms  -[WCTDatabase backupWithCipher:0x600001246190]
 ```
 
-Read the value of the `setCipherKey` parameter. From the example code, it can be determined that `0x600001246190` is an `NSData` object. The content is retrieved in Frida:
+3. Inspect the value of `setCipherKey`.  
+   From the example code, it can be determined that `0x600001246190` is an `NSData` object. To retrieve its content, modify and run the following script in Frida:
 
 ```js
 // Edit WCTDatabase/setCipherKey_andCipherPageSize_andRaw_.js
@@ -113,11 +114,14 @@ onEnter(log, args, state) {
 
 ![image](https://github.com/user-attachments/assets/a4fcba31-d388-4f3e-93c1-d6d48b150399)
 
-The key is the same as before,the WCTDatabase.setCipherKey function is the place where the key is initialized.
+The CipherKey is the same as before, indicating that we have found the correct location.
 
-Using `Hopper` to reverse engineer, we find the `MessageDB.setupDB` symbol, which we can infer is responsible for setting up the message database:
+4. Continuing the Reverse Engineering
+
+Using `WCTDatabase` symbol, I located the `MessageDB.setupDB` symbol, which appears to be responsible for initializing the database:
 
 ```objective-c
+// MessageDB setupDB method
 r0 = @class(WCDBHelper);
 r0 = [r0 CipherKey];
 ...
@@ -126,15 +130,20 @@ r0 = [r0 CipherKey];
 ...
 ```
 
-The key managed by `WCDBHelper.CipherKey` is obtained from `AccountStorage`. Simplified pseudocode:
+From the code, it can be observed that the `CipherKey` is from the `WCDBHelper.CipherKey` property. Furthermore, WCDBHelper.CipherKey is set through AccountStorage.
+
+Below is the simplified pseudocode:
 
 ```objective-c
+// WCDBHelper setup dbEncryptKey
 ...
 a = [[MMServiceCenter defaultCenter] getService: [AccountStorage class]]
 i = [[a GetDBEncryptInfo] m_dbEncryptKey]
 ```
 
-Analyze the `AccountStorage` class. In its `init` method, the database configuration file path is provided. Use `PBCoder` to decode `DBEncryptInfo` from the file:
+5. Analyzing the `AccountStorage`
+
+In the init method of the `AccountStorage` class, the database configuration file path is provided. The `PBCoder` class is used to decode the `DBEncryptInfo` structure from the file:
 
 ```objective-c
 rax = [PathUtility GetAccountSettingDbPath];
@@ -146,7 +155,7 @@ rax = [rax retain];
 rbx = *ivar_offset(m_dbEncryptInfo);
 ```
 
-Hook to retrieve the database configuration file:
+Hook the `[PathUtility GetAccountSettingDbPath]` function to to log the configuration file path:
 
 ```jsx
 // Edit PathUtility/GetAccountSettingDbPath.js
@@ -155,7 +164,9 @@ onLeave(log, retval, state) {
   log(`return value: ${ret}==`);
 }
 ```
-The printed content is: `~/Library/Containers/com.tencent.xinWeChat/Data/Library/Application Support/com.tencent.xinWeChat/[version]/[uuid]/Account/setting_db.data`.
+We have got the configuration file: `~/Library/Containers/com.tencent.xinWeChat/Data/Library/Application Support/com.tencent.xinWeChat/[version]/[uuid]/Account/setting_db.data`.
+
+6. Analyzing the `PBCoder`
 
 What is `PBCoder` and how does it decode data? By searching, I found [an issue in the Tencent open-source MMKV project](https://github.com/Tencent/MMKV/issues/42#issuecomment-424976201), which reveals that pbcoding is based on `protobuf` (Protocol Buffers) for archiving objects.
 
@@ -175,7 +186,7 @@ hexdump(data.bytes(), { offset: 0, length: data.length() });
 
 It cannot be decoded. After running the `decodeObjectOfClass` function, there is still additional logic to be executed.
 
-Since I couldn't find any relevant clues through reverse engineering, I’ll have to abandon this approach for now.
+Since I couldn't find any relevant clues through reverse engineering, I’ll have to abandon this approach for now.😡
 
 ### Reading from Memory
 
