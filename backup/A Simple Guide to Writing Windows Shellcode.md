@@ -17,7 +17,8 @@ To write position-independent code, the following points should be taken into ac
 
 In Windows, applications cannot directly access system calls. Instead, they use functions from the Windows API (WinAPI), which are stored in DLLs such as `kernel32.dll`, `advapi32.dll`, `gdi32.dll`, etc. `ntdll.dll` and `kernel32.dll` are especially important, as every process imports them.
 
-Here is the program I wrote, [nothing_to_do](https://github.com/ac0d3r/0xpe/blob/master/shellcode/nothing_to_do.cpp), using [listdlls](https://docs.microsoft.com/en-us/sysinternals/downloads/listdlls) to list the imported DLLs:
+Here is the program I wrote, called [nothing_to_do](https://github.com/ac0d3r/0xpe/blob/master/shellcode/nothing_to_do.cpp). I used [listdlls](https://docs.microsoft.com/en-us/sysinternals/downloads/listdlls) to list the imported DLLs.
+
 
 ![image](https://github.com/user-attachments/assets/b1cb2274-5d78-412b-a578-03fa5b80621e)
 
@@ -68,8 +69,8 @@ typedef struct _LDR_DATA_TABLE_ENTRY {
 
 
 > **Tips:**
-  In Windows versions prior to Vista, the first two DLLs in InInitializationOrderModuleList are ntdll.dll and kernel32.dll, but for Vista and later versions, the second DLL is changed to kernelbase.dll.
-In InMemoryOrderModuleList, the first entry is calc.exe (the executable), the second is ntdll.dll, and the third is kernel32.dll. This method currently applies to all versions of Windows and is the preferred approach.
+  In Windows versions prior to Vista, the first two DLLs in `InInitializationOrderModuleList` are `ntdll.dll` and `kernel32.dll`, but for Vista and later versions, the second DLL is changed to `kernelbase.dll`.
+In `InMemoryOrderModuleLis`t, the first entry is `calc.exe` (the executable), the second is `ntdll.dll`, and the third is `kernel32.dll`. This method currently applies to all versions of Windows and is the preferred approach.
 
 ### Kernel32.dll Addressing Process:
 
@@ -108,7 +109,7 @@ typedef struct _IMAGE_EXPORT_DIRECTORY {
     DWORD   AddressOfNameOrdinals;  // Exported function ordinal table RVA: stores the function ordinals (table element width is 2, total size is NumberOfNames * 2)
 } IMAGE_EXPORT_DIRECTORY, *PIMAGE_EXPORT_DIRECTORY;
 ```
-**
+
 ![image](https://github.com/user-attachments/assets/a0a43d0e-ab05-4793-a286-67a287e13a94)
 
 Implementing with Assembly Code:
@@ -225,7 +226,8 @@ int main()
 }
 ```
 
-It is compiled by Visual Studio, which results in a very large size. Rewriting it with MASM produces a much smaller size: [shellcode.asm](https://github.com/ac0d3r/0xpe/blob/master/shellcode/shellcode.asm).
+It was compiled using `Visual Studio`, resulting in a very large size. By rewriting it in `MASM`, I was able to produce a much smaller file: [shellcode.asm](https://github.com/ac0d3r/0xpe/blob/master/shellcode/shellcode.asm).
+
 
 ## Extract Shellcode
 
