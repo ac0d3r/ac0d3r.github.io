@@ -16,7 +16,7 @@ XAgent(OpenBMB) | CVE-2024-2007  | Container Escape | [OpenBMB/XAgent/issues/386
 
 ## Toy program
 - [gf.imipy.com](https://gf.imipy.com/) - Today's meal picker.
-- [pinger](https://github.com/ac0d3r/pingser) - Exchange custom messages via ICMP.
+- [pinger](https://github.com/ac0d3r/pingser) - Transfer custom messages via `ICMP`.
 - [v2hreo](https://github.com/ac0d3r/v2hreo) - V2ray macOS Menu Bar Application: <img src="https://img.shields.io/badge/-292e33?logo=swift" height="18"> + CGO.
 - [webportscan](https://github.com/ac0d3r/webportscan) - Scan local service (TCP) ports over Web page.
 - [PiMonitor](https://github.com/ac0d3r/PiMonitor) - Build a Controllable Web Video Monitor with <img src="https://img.shields.io/badge/-292e33?logo=go" height="18">+<img src="https://img.shields.io/badge/4b-292e33?logo=raspberry-pi" height="18">.
