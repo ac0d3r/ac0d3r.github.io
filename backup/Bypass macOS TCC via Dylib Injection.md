@@ -155,3 +155,5 @@ Run `launchctl load test.plist` to start recording in the target app. The demons
 
 - [A deep dive into macOS TCC.db](https://www.rainforestqa.com/blog/macos-tcc-db-deep-dive)
 - [CVE-2023-26818 - Bypass TCC with Telegram in macOS](https://danrevah.github.io/2023/05/15/CVE-2023-26818-Bypass-TCC-with-Telegram/)
+
+<!-- ##{"timestamp":1692288000}## -->
