@@ -1,3 +1,5 @@
+> This article was first published on the [tttang Community](https://tttang.com/archive/1903/).
+
 ## What is TCC?
 
 TCC (Transparency, Consent, and Control) is a privacy protection technology introduced by Apple, designed to manage and control the access that applications have to system resources. It is part of the macOS privacy protection mechanism, allowing users to control which applications can access specific sensitive information and system functionalities, such as the camera, microphone, location, contacts, calendar, photos, etc.

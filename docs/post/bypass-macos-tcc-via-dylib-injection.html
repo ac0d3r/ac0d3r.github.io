@@ -10,13 +10,9 @@
         let theme = localStorage.getItem("meek_theme") || "light";
         document.documentElement.setAttribute("data-color-mode", theme);
     </script>
-<meta name="description" content="## What is TCC?
-
-TCC (Transparency, Consent, and Control) is a privacy protection technology introduced by Apple, designed to manage and control the access that applications have to system resources.">
+<meta name="description" content="> This article was first published on the [tttang Community](https://tttang.">
 <meta property="og:title" content="Bypass macOS TCC via Dylib Injection">
-<meta property="og:description" content="## What is TCC?
-
-TCC (Transparency, Consent, and Control) is a privacy protection technology introduced by Apple, designed to manage and control the access that applications have to system resources.">
+<meta property="og:description" content="> This article was first published on the [tttang Community](https://tttang.">
 <meta property="og:type" content="article">
 <meta property="og:url" content="https://ac0d3r.github.io/post/bypass-macos-tcc-via-dylib-injection.html">
 <meta property="og:image" content="https://github.com/user-attachments/assets/0429c3dd-e34c-4676-a5fa-079c995ad228">
@@ -87,7 +83,10 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 </div>
 </div>
     <div id="content">
-<div class="markdown-body" id="postBody"><h2>What is TCC?</h2>
+<div class="markdown-body" id="postBody"><blockquote>
+<p>This article was first published on the <a href="https://tttang.com/archive/1903/" rel="nofollow">tttang Community</a>.</p>
+</blockquote>
+<h2>What is TCC?</h2>
 <p>TCC (Transparency, Consent, and Control) is a privacy protection technology introduced by Apple, designed to manage and control the access that applications have to system resources. It is part of the macOS privacy protection mechanism, allowing users to control which applications can access specific sensitive information and system functionalities, such as the camera, microphone, location, contacts, calendar, photos, etc.</p>
 <h2>Dylib Injection</h2>
 <p>If the target application is granted access to the microphone and camera permissions, and it uses special entitlements like <code class="notranslate">com.apple.security.cs.allow-dyld-environment-variable</code>, <code class="notranslate">com.apple.security.cs.disable-library-validation</code>, it is possible to inject a dylib (dynamic library) to bypass TCC and gain access to the microphone and camera permissions, among others.</p>
