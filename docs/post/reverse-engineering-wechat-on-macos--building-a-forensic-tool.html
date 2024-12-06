@@ -121,7 +121,7 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 <span class="pl-s">0x60000241e938: 0x11 0x22 0x33 0x44 0x55 0xaa 0xbb 0xcc</span>
 <span class="pl-s">"""</span>
 
-<span class="pl-s1">key</span> <span class="pl-c1">=</span> <span class="pl-s">'0x'</span> <span class="pl-c1">+</span> <span class="pl-s">''</span>.<span class="pl-en">join</span>(<span class="pl-s1">i</span>.<span class="pl-en">partition</span>(<span class="pl-s">':'</span>)[<span class="pl-c1">2</span>].<span class="pl-en">replace</span>(<span class="pl-s">'0x'</span>, <span class="pl-s">''</span>).<span class="pl-en">replace</span>(<span class="pl-s">' '</span>, <span class="pl-s">''</span>) <span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">in</span> <span class="pl-s1">ori_key</span>.<span class="pl-en">split</span>(<span class="pl-s">'<span class="pl-cce">\n</span>'</span>)[<span class="pl-c1">1</span>:<span class="pl-c1">5</span>])
+<span class="pl-s1">key</span> <span class="pl-c1">=</span> <span class="pl-s">'0x'</span> <span class="pl-c1">+</span> <span class="pl-s">''</span>.<span class="pl-c1">join</span>(<span class="pl-s1">i</span>.<span class="pl-c1">partition</span>(<span class="pl-s">':'</span>)[<span class="pl-c1">2</span>].<span class="pl-c1">replace</span>(<span class="pl-s">'0x'</span>, <span class="pl-s">''</span>).<span class="pl-c1">replace</span>(<span class="pl-s">' '</span>, <span class="pl-s">''</span>) <span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">in</span> <span class="pl-s1">ori_key</span>.<span class="pl-c1">split</span>(<span class="pl-s">'<span class="pl-cce">\n</span>'</span>)[<span class="pl-c1">1</span>:<span class="pl-c1">5</span>])
 <span class="pl-en">print</span>(<span class="pl-s1">key</span>)</pre></div>
 <p>The WeChat chat database is stored at:<br>
 <code class="notranslate">~/Library/Containers/com.tencent.xinWeChat/Data/Library/Application Support/com.tencent.xinWeChat/[version]/[uuid]/Message/*.db</code></p>
@@ -246,8 +246,8 @@ rbx = *<span class="pl-en">ivar_offset</span>(m_dbEncryptInfo);</pre></div>
 	<span class="pl-s">"github.com/frida/frida-go/frida"</span>
 )
 
-<span class="pl-k">func</span> <span class="pl-en">main</span>() {
-	<span class="pl-s1">fmt</span>.<span class="pl-en">Println</span>(<span class="pl-en">Key</span>())
+<span class="pl-k">func</span> <span class="pl-s1">main</span>() {
+	<span class="pl-s1">fmt</span>.<span class="pl-c1">Println</span>(<span class="pl-s1">Key</span>())
 }
 
 <span class="pl-k">var</span> <span class="pl-s1">js</span> <span class="pl-c1">=</span> <span class="pl-s">`</span>
@@ -262,39 +262,39 @@ rbx = *<span class="pl-en">ivar_offset</span>(m_dbEncryptInfo);</pre></div>
 	<span class="pl-c1">Payload</span> <span class="pl-smi">string</span> <span class="pl-s">`json:"payload,omitempty"`</span>
 }
 
-<span class="pl-k">func</span> <span class="pl-en">Key</span>() (<span class="pl-smi">string</span>, <span class="pl-smi">error</span>) {
+<span class="pl-k">func</span> <span class="pl-s1">Key</span>() (<span class="pl-smi">string</span>, <span class="pl-smi">error</span>) {
 	<span class="pl-k">var</span> <span class="pl-s1">key</span> <span class="pl-smi">string</span>
-	<span class="pl-s1">c</span> <span class="pl-c1">:=</span> <span class="pl-en">make</span>(<span class="pl-k">chan</span> <span class="pl-k">struct</span>{}, <span class="pl-c1">1</span>)
+	<span class="pl-s1">c</span> <span class="pl-c1">:=</span> <span class="pl-s1">make</span>(<span class="pl-k">chan</span> <span class="pl-k">struct</span>{}, <span class="pl-c1">1</span>)
 
-	<span class="pl-s1">mgr</span> <span class="pl-c1">:=</span> <span class="pl-s1">frida</span>.<span class="pl-en">NewDeviceManager</span>()
-	<span class="pl-s1">dev</span>, <span class="pl-s1">err</span> <span class="pl-c1">:=</span> <span class="pl-s1">mgr</span>.<span class="pl-en">LocalDevice</span>()
+	<span class="pl-s1">mgr</span> <span class="pl-c1">:=</span> <span class="pl-s1">frida</span>.<span class="pl-c1">NewDeviceManager</span>()
+	<span class="pl-s1">dev</span>, <span class="pl-s1">err</span> <span class="pl-c1">:=</span> <span class="pl-s1">mgr</span>.<span class="pl-c1">LocalDevice</span>()
 	<span class="pl-k">if</span> <span class="pl-s1">err</span> <span class="pl-c1">!=</span> <span class="pl-c1">nil</span> {
 		<span class="pl-k">return</span> <span class="pl-s">""</span>, <span class="pl-s1">err</span>
 	}
 
-	<span class="pl-s1">session</span>, <span class="pl-s1">err</span> <span class="pl-c1">:=</span> <span class="pl-s1">dev</span>.<span class="pl-en">Attach</span>(<span class="pl-s">"WeChat"</span>, <span class="pl-c1">nil</span>)
+	<span class="pl-s1">session</span>, <span class="pl-s1">err</span> <span class="pl-c1">:=</span> <span class="pl-s1">dev</span>.<span class="pl-c1">Attach</span>(<span class="pl-s">"WeChat"</span>, <span class="pl-c1">nil</span>)
 	<span class="pl-k">if</span> <span class="pl-s1">err</span> <span class="pl-c1">!=</span> <span class="pl-c1">nil</span> {
 		<span class="pl-k">return</span> <span class="pl-s">""</span>, <span class="pl-s1">err</span>
 	}
 
-	<span class="pl-s1">script</span>, <span class="pl-s1">err</span> <span class="pl-c1">:=</span> <span class="pl-s1">session</span>.<span class="pl-en">CreateScript</span>(<span class="pl-s1">js</span>)
+	<span class="pl-s1">script</span>, <span class="pl-s1">err</span> <span class="pl-c1">:=</span> <span class="pl-s1">session</span>.<span class="pl-c1">CreateScript</span>(<span class="pl-s1">js</span>)
 	<span class="pl-k">if</span> <span class="pl-s1">err</span> <span class="pl-c1">!=</span> <span class="pl-c1">nil</span> {
 		<span class="pl-k">return</span> <span class="pl-s">""</span>, <span class="pl-s1">err</span>
 	}
 
-	<span class="pl-s1">script</span>.<span class="pl-en">On</span>(<span class="pl-s">"message"</span>, <span class="pl-k">func</span>(<span class="pl-s1">msg</span> <span class="pl-smi">string</span>) {
+	<span class="pl-s1">script</span>.<span class="pl-c1">On</span>(<span class="pl-s">"message"</span>, <span class="pl-k">func</span>(<span class="pl-s1">msg</span> <span class="pl-smi">string</span>) {
 		<span class="pl-k">defer</span> <span class="pl-k">func</span>() {
 			<span class="pl-s1">c</span> <span class="pl-c1">&lt;-</span> <span class="pl-k">struct</span>{}{}
 		}()
 
 		<span class="pl-s1">m</span> <span class="pl-c1">:=</span> <span class="pl-smi">Log</span>{}
-		<span class="pl-s1">err</span> <span class="pl-c1">:=</span> <span class="pl-s1">json</span>.<span class="pl-en">Unmarshal</span>([]<span class="pl-smi">byte</span>(<span class="pl-s1">msg</span>), <span class="pl-c1">&amp;</span><span class="pl-s1">m</span>)
+		<span class="pl-s1">err</span> <span class="pl-c1">:=</span> <span class="pl-s1">json</span>.<span class="pl-c1">Unmarshal</span>([]<span class="pl-smi">byte</span>(<span class="pl-s1">msg</span>), <span class="pl-c1">&amp;</span><span class="pl-s1">m</span>)
 		<span class="pl-k">if</span> <span class="pl-s1">err</span> <span class="pl-c1">==</span> <span class="pl-c1">nil</span> {
-			<span class="pl-s1">key</span> <span class="pl-c1">=</span> <span class="pl-en">parse</span>(<span class="pl-s1">m</span>.<span class="pl-c1">Payload</span>)
+			<span class="pl-s1">key</span> <span class="pl-c1">=</span> <span class="pl-s1">parse</span>(<span class="pl-s1">m</span>.<span class="pl-c1">Payload</span>)
 		}
 	})
 
-	<span class="pl-k">if</span> <span class="pl-s1">err</span> <span class="pl-c1">:=</span> <span class="pl-s1">script</span>.<span class="pl-en">Load</span>(); <span class="pl-s1">err</span> <span class="pl-c1">!=</span> <span class="pl-c1">nil</span> {
+	<span class="pl-k">if</span> <span class="pl-s1">err</span> <span class="pl-c1">:=</span> <span class="pl-s1">script</span>.<span class="pl-c1">Load</span>(); <span class="pl-s1">err</span> <span class="pl-c1">!=</span> <span class="pl-c1">nil</span> {
 		<span class="pl-k">return</span> <span class="pl-s">""</span>, <span class="pl-s1">err</span>
 	}
 
@@ -302,26 +302,26 @@ rbx = *<span class="pl-en">ivar_offset</span>(m_dbEncryptInfo);</pre></div>
 	<span class="pl-k">return</span> <span class="pl-s1">key</span>, <span class="pl-c1">nil</span>
 }
 
-<span class="pl-k">func</span> <span class="pl-en">parse</span>(<span class="pl-s1">payload</span> <span class="pl-smi">string</span>) <span class="pl-smi">string</span> {
+<span class="pl-k">func</span> <span class="pl-s1">parse</span>(<span class="pl-s1">payload</span> <span class="pl-smi">string</span>) <span class="pl-smi">string</span> {
 	<span class="pl-k">var</span> <span class="pl-s1">r</span> strings.<span class="pl-smi">Builder</span>
-	<span class="pl-s1">r</span>.<span class="pl-en">WriteString</span>(<span class="pl-s">"0x"</span>)
+	<span class="pl-s1">r</span>.<span class="pl-c1">WriteString</span>(<span class="pl-s">"0x"</span>)
 
-	<span class="pl-s1">data</span> <span class="pl-c1">:=</span> <span class="pl-s1">strings</span>.<span class="pl-en">Split</span>(<span class="pl-s1">payload</span>, <span class="pl-s">"<span class="pl-cce">\n</span>"</span>)
-	<span class="pl-k">if</span> <span class="pl-en">len</span>(<span class="pl-s1">data</span>) <span class="pl-c1">==</span> <span class="pl-c1">0</span> {
+	<span class="pl-s1">data</span> <span class="pl-c1">:=</span> <span class="pl-s1">strings</span>.<span class="pl-c1">Split</span>(<span class="pl-s1">payload</span>, <span class="pl-s">"<span class="pl-cce">\n</span>"</span>)
+	<span class="pl-k">if</span> <span class="pl-s1">len</span>(<span class="pl-s1">data</span>) <span class="pl-c1">==</span> <span class="pl-c1">0</span> {
 		<span class="pl-k">return</span> <span class="pl-s">""</span>
 	}
 	<span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">:=</span> <span class="pl-k">range</span> <span class="pl-s1">data</span> {
-		<span class="pl-s1">v</span> <span class="pl-c1">:=</span> <span class="pl-s1">strings</span>.<span class="pl-en">Split</span>(<span class="pl-s1">data</span>[<span class="pl-s1">i</span>], <span class="pl-s">"  "</span>)
-		<span class="pl-k">if</span> <span class="pl-en">len</span>(<span class="pl-s1">v</span>) <span class="pl-c1">!=</span> <span class="pl-c1">3</span> {
+		<span class="pl-s1">v</span> <span class="pl-c1">:=</span> <span class="pl-s1">strings</span>.<span class="pl-c1">Split</span>(<span class="pl-s1">data</span>[<span class="pl-s1">i</span>], <span class="pl-s">"  "</span>)
+		<span class="pl-k">if</span> <span class="pl-s1">len</span>(<span class="pl-s1">v</span>) <span class="pl-c1">!=</span> <span class="pl-c1">3</span> {
 			<span class="pl-k">continue</span>
 		}
-		<span class="pl-s1">key</span> <span class="pl-c1">:=</span> <span class="pl-s1">strings</span>.<span class="pl-en">ReplaceAll</span>(<span class="pl-s1">v</span>[<span class="pl-c1">1</span>], <span class="pl-s">" "</span>, <span class="pl-s">""</span>)
-		<span class="pl-s1">r</span>.<span class="pl-en">WriteString</span>(<span class="pl-s1">key</span>)
+		<span class="pl-s1">key</span> <span class="pl-c1">:=</span> <span class="pl-s1">strings</span>.<span class="pl-c1">ReplaceAll</span>(<span class="pl-s1">v</span>[<span class="pl-c1">1</span>], <span class="pl-s">" "</span>, <span class="pl-s">""</span>)
+		<span class="pl-s1">r</span>.<span class="pl-c1">WriteString</span>(<span class="pl-s1">key</span>)
 	}
-	<span class="pl-k">if</span> <span class="pl-s1">r</span>.<span class="pl-en">Len</span>() <span class="pl-c1">==</span> <span class="pl-c1">2</span> {
+	<span class="pl-k">if</span> <span class="pl-s1">r</span>.<span class="pl-c1">Len</span>() <span class="pl-c1">==</span> <span class="pl-c1">2</span> {
 		<span class="pl-k">return</span> <span class="pl-s">""</span>
 	}
-	<span class="pl-k">return</span> <span class="pl-s1">r</span>.<span class="pl-en">String</span>()
+	<span class="pl-k">return</span> <span class="pl-s1">r</span>.<span class="pl-c1">String</span>()
 }</pre></div>
 <p>I got the chat key 🎉:<br>
 <a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/b45d8772-c44d-481b-ac77-81429b98dd72"><img src="https://github.com/user-attachments/assets/b45d8772-c44d-481b-ac77-81429b98dd72" alt="image" style="max-width: 100%;"></a></p>
