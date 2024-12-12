@@ -211,7 +211,7 @@ In the Darwin environment, the injection function in `frida-core` is [_frida_dar
 
 `frida-objc-bridge` is essentially implemented as a hack targeting the runtime of the corresponding high-level language, built on top of `gum-js`. These are collectively referred to as the bridges for their respective languages. In the runtime, [gumjs](https://github.com/frida/frida-gum/blob/main/bindings/gumjs/runtime/objc.js) introduces it (`Frida._objc = require('frida-objc-bridge')`). This is the foundation for the `ObjC.*` interfaces we use when writing Frida JavaScript scripts.
 
-#### lib/api.js
+#### /lib/api.js
 
 The `api.js` file loads the `libobjc.A.dylib` dynamic library to import Objective-C APIs, such as `objc_getClassList`, `class_getInstanceMethod`, and others.
 
