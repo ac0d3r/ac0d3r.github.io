@@ -9,7 +9,7 @@ function createTOC() {
         return;  // 如果没有标题元素，则不创建TOC
     }
     
-    tocElement.insertAdjacentHTML('afterbegin', '<div class="toc-title">文章目录</div>');
+    tocElement.insertAdjacentHTML('afterbegin', '<div class="toc-title">TOC</div>');
     
     headings.forEach(heading => {
         if (!heading.id) {
