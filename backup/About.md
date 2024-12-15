@@ -1,9 +1,11 @@
 - Software Developer & Researcher
-- Skilled in the R&D of security products, including web vulnerability scanners, asset mapping, malware analysis, network simulation, code execution sandboxes, and more.
 - Projects I have participated in:
   - Maleware Sandbox([DAS-Sandbox](https://sandbox.dbappsecurity.com.cn/))
+    ***unix Malware Analysis**, **Network Simulation Engine**
   - AIGC for Cybersecurity([DAS-AI](https://das-ai.com/welcome))
-  - Web Asset Vulnerability Scanner([Hunter](http://www.secwx.com/))
+    **Code Execution Sandbox**, **LLM Gateway**
+  - Automated Penetration Testing Platform([Hunter](https://www.secwx.com/))
+    **Network Asset Discovery**, **WebApp Vulnerability Scanner**, **WebApp Fingerprinting**
 
 ## Open Source Projects
 
