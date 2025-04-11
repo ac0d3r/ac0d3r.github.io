@@ -12,11 +12,11 @@
     </script>
 <meta name="description" content="- Software Developer & Researcher
 - Projects I have participated in:
-  - Maleware Sandbox([DAS-Sandbox](https://sandbox.">
+  - [DAS-Sandbox](https://sandbox.">
 <meta property="og:title" content="About">
 <meta property="og:description" content="- Software Developer & Researcher
 - Projects I have participated in:
-  - Maleware Sandbox([DAS-Sandbox](https://sandbox.">
+  - [DAS-Sandbox](https://sandbox.">
 <meta property="og:type" content="article">
 <meta property="og:url" content="https://ac0d3r.github.io/about.html">
 <meta property="og:image" content="https://github.com/user-attachments/assets/11582532-b1b7-447b-ae67-e6c426457935">
@@ -81,12 +81,9 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 <li>Software Developer &amp; Researcher</li>
 <li>Projects I have participated in:
 <ul>
-<li>Maleware Sandbox(<a href="https://sandbox.dbappsecurity.com.cn/" rel="nofollow">DAS-Sandbox</a>)<br>
-<strong>UNIX-like Malware Research</strong>, <strong>Network Simulation Engine</strong></li>
-<li>AIGC for Cybersecurity(<a href="https://das-ai.com/welcome" rel="nofollow">DAS-AI</a>)<br>
-<strong>Code Execution Sandbox</strong>, <strong>LLM Gateway</strong></li>
-<li>Automated Penetration Testing Platform(<a href="https://www.secwx.com/" rel="nofollow">Hunter</a>)<br>
-<strong>Network Asset Discovery</strong>, <strong>WebApp Vulnerability Scanner</strong>, <strong>WebApp Fingerprinting</strong></li>
+<li><a href="https://sandbox.dbappsecurity.com.cn/" rel="nofollow">DAS-Sandbox</a>(Maleware Sandbox) - <strong>UNIX-like Malware Research</strong>, <strong>Network Simulation Engine</strong></li>
+<li><a href="https://das-ai.com/welcome" rel="nofollow">DAS-AI</a>(AI for Cybersecurity) - <strong>Code Execution Sandbox</strong>, <strong>LLM Gateway</strong></li>
+<li><a href="https://www.secwx.com/" rel="nofollow">Hunter</a>(Network Asset Mapping System) - <strong>Network Asset Discovery</strong>, <strong>WebApp DAST</strong>, <strong>WebApp Fingerprinting</strong></li>
 </ul>
 </li>
 </ul>
@@ -94,47 +91,25 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 <ul>
 <li><a href="https://github.com/ac0d3r/Hyuga">Hyuga</a>｜A tool for monitoring Out-of-Band (OOB) traffic, supporting DNS, HTTP, LDAP, RMI, and DNS-Rebinding.</li>
 <li><a href="https://github.com/ac0d3r/xssfinder">xssfinder</a>｜A tool for detecting DOM-Based XSS using taint analysis, based on Chrome Headless for dynamic semantic analysis of JavaScript.</li>
-<li><a href="https://github.com/BreakOnCrash/inx">inx</a>｜Inject *.dylib into target process (like Frida) on macOS (arm64 and x86_64).</li>
-</ul>
-<h2>My Research</h2>
-<p><strong>iOS Jailbreak Apps</strong></p>
-<ul>
 <li><a href="https://github.com/BreakOnCrash/TrollAppDuplicator">TrollAppDuplicator</a> | iOS App duplicator for TrollStore</li>
-<li><a href="https://github.com/BreakOnCrash/TrollR2ool">TrollR2ool</a> | iOS Runtime analysis tool</li>
+<li><a href="https://github.com/BreakOnCrash/go-embed-extractor">go-embed-extractor</a>｜Extracting Go embeds</li>
 </ul>
-<p><strong>Vulnerability Research</strong></p>
-<markdown-accessiblity-table><table role="table">
-<thead>
-<tr>
-<th>Product</th>
-<th>VUL-ID</th>
-<th>Type</th>
-<th>Remark</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Clash</td>
-<td>-</td>
-<td>CSRF to RCE</td>
-<td>On October 5, 2022, A code audit (Clash in Go) discovered an in-the-wild 0day exploit.</td>
-</tr>
-<tr>
-<td>ClashX</td>
-<td>CVE-2023-34655</td>
-<td>-</td>
-<td><a href="github.com/yichengchen/clashX/discussions/1150">clashX/discussions/1150</a>, <a href="https://tttang.com/archive/1904/" rel="nofollow">tttang.com/1904</a></td>
-</tr>
-<tr>
-<td>XAgent(OpenBMB)</td>
-<td><a title="CVE-2024-2007" data-hovercard-type="advisory" data-hovercard-url="/advisories/GHSA-wq2q-fqq7-mgvw/hovercard" href="https://github.com/advisories/GHSA-wq2q-fqq7-mgvw">CVE-2024-2007</a></td>
-<td>Container Escape</td>
-<td><a href="github.com/OpenBMB/XAgent/issues/386">OpenBMB/XAgent/issues/386</a></td>
-</tr>
-</tbody>
-</table></markdown-accessiblity-table>
+<h3>PR</h3>
+<ul>
+<li><a href="https://github.com/Tencent/AI-Infra-Guard/pull/20" data-hovercard-type="pull_request" data-hovercard-url="/Tencent/AI-Infra-Guard/pull/20/hovercard">Tencent/AI-Infra-Guard</a>: Optimize the Fingerprint DSL parser (build AST and support short-circuit)</li>
+<li><a href="https://github.com/saferwall/elf/pull/4" data-hovercard-type="pull_request" data-hovercard-url="/saferwall/elf/pull/4/hovercard">saferwall/elf</a>: Fix parsing of ELF section header</li>
+</ul>
+<h2>Vulnerability Research</h2>
+<ul>
+<li>CVE-2025-1975: Audit Ollama (Go), found DoS bug, got bounty.</li>
+<li><a title="CVE-2024-2007" data-hovercard-type="advisory" data-hovercard-url="/advisories/GHSA-wq2q-fqq7-mgvw/hovercard" href="https://github.com/advisories/GHSA-wq2q-fqq7-mgvw">CVE-2024-2007</a>: Audit XAgent(OpenBMB), found container escape bug. <a href="https://github.com/OpenBMB/XAgent/issues/386" data-hovercard-type="issue" data-hovercard-url="/OpenBMB/XAgent/issues/386/hovercard">link</a></li>
+<li>CVE-2023-34655: Audit ClashX (ObjC), found XPC proxy privilege bug. <a href="https://github.com/yichengchen/clashX/discussions/1150">link</a></li>
+<li>Found in-the-wild 0-day: Audit Clash (Go), found CSRF-to-RCE bug (Oct 5, 2022).</li>
+</ul>
 <h2>Toy program</h2>
 <ul>
+<li><a href="https://github.com/BreakOnCrash/TrollR2ool">TrollR2ool</a> | iOS Runtime analysis tool</li>
+<li><a href="https://github.com/BreakOnCrash/inx">inx</a>｜Inject *.dylib into target process (like Frida) on macOS (arm64 and x86_64).</li>
 <li><a href="https://gf.imipy.com/" rel="nofollow">gf.imipy.com</a> - Today's meal picker.</li>
 <li><a href="https://github.com/ac0d3r/pingser">pinger</a> - Transfer custom messages via <code class="notranslate">ICMP</code>.</li>
 <li><a href="https://github.com/ac0d3r/v2hreo">v2hreo</a> - V2ray macOS Menu Bar Application with <a target="_blank" rel="noopener noreferrer nofollow" href="https://camo.githubusercontent.com/78f7764714ed9ce5fd6fdaa61264a0b57011610a7ae7322c30b7b5e4ec9aa60a/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f2d3239326533333f6c6f676f3d7377696674"><img src="https://camo.githubusercontent.com/78f7764714ed9ce5fd6fdaa61264a0b57011610a7ae7322c30b7b5e4ec9aa60a/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f2d3239326533333f6c6f676f3d7377696674" height="18" data-canonical-src="https://img.shields.io/badge/-292e33?logo=swift" style="max-width: 100%;"></a> + CGO.</li>
@@ -143,6 +118,10 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 <li><a href="https://github.com/ac0d3r/nicu?tab=readme-ov-file#rua">Rua</a> - Generate a <a target="_blank" rel="noopener noreferrer nofollow" href="https://user-images.githubusercontent.com/26270009/149051761-21e0e181-534d-458a-ad63-5c8963eda447.gif"><img src="https://user-images.githubusercontent.com/26270009/149051761-21e0e181-534d-458a-ad63-5c8963eda447.gif" height="30" style="max-width: 100%;"></a>(rua.gif) from any avatar.</li>
 </ul>
 <h2>Others</h2>
+<ul>
+<li>微信公众号</li>
+</ul>
+<p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/049439af-4a86-4106-abad-b438b21175d5"><img src="https://github.com/user-attachments/assets/049439af-4a86-4106-abad-b438b21175d5" width="280" style="max-width: 100%;"></a></p>
 <ul>
 <li><a href="https://ac0d3r.notion.site/zznQ-4b2780d3bf864ab3bee6044612f6e631" rel="nofollow">Old Blog(CN)</a></li>
 </ul></div>
