@@ -197,7 +197,7 @@ func main() {
 
 使用 `$GOSSAFUNC=sum go build foo.go` 会生成 ssa.html 文件在浏览器上打开：
 
-<img src="https://github.com/user-attachments/assets/bf35a201-4a6e-4c90-af42-15534b428e38" height="350">
+<img src="https://github.com/user-attachments/assets/bf35a201-4a6e-4c90-af42-15534b428e38" height="260">
 
 可以看到 `If v6 → b3 b2 (5)` v6即`b`为 true 时跳转到 b3, false 跳转到 b2。(Tip: `(5)`表示源码第五行 )
 
@@ -212,7 +212,7 @@ func main() {
 # gosec
 > [gosec](https://github.com/securego/gosec) 是一个Go安全检查工具，它通过分析Go代码的AST和SSA表示来检测安全问题。
  
-gosec 包含规则如下：
+gosec 规则如下：
 
 - 基于 AST 检测的
 ```
@@ -330,7 +330,7 @@ for _, file := range pkg.Syntax {
 	ast.Walk(gosec, file)
 }
 ```
-- gosec 实现 ast.Visitor 接口
+- gosec 实现了 ast.Visitor 接口
 
 ```go	
 func (gosec *Analyzer) Visit(n ast.Node) ast.Visitor {
@@ -463,12 +463,18 @@ func runSliceBounds(pass *analysis.Pass) (interface{}, error) {
 	}
 	// 判断if操作，消除误报
 	for ifref, binop := range ifs {
-		// extractBinOpBound 分析二元操作（如 <, >），确定边界类型（upperBounded, lowerUnbounded 等）和值。
-		bound, value, err := extractBinOpBound(binop)
-		for i, block := range ifref.Block().Succs { // 遍历为True时blocks
+		bound, value, err := extractBinOpBound(binop) // 提取边界信息（bound 和 value）
+		for i, block := range ifref.Block().Succs { // 分析if 语句所在基本块的后继块
+			if i == 1 { //（0 表示真分支，1 表示假分支）
+				bound = invBound(bound) // 反转bound的值
+			}
+			var processBlock func(block *ssa.BasicBlock, depth int)
 			...
-			// 如果条件保证访问在界内（如 if i < len(s)），则从 issues 中移除越界警告（delete(issues, instr)）。
-			// 使用 isSliceInsideBounds 和 isSliceIndexInsideBounds 验证边界
+			// processBlock会遍历基本块中的指令（block.Instrs）
+			// 根据 bound 的类型（lowerUnbounded、upperUnbounded、unbounded、upperBounded）执行不同的逻辑：
+			// 1. 消除误报（从 issues 中移除）。
+			// 2. 分析切片操作（ssa.Slice）或索引操作（ssa.IndexAddr）是否在边界内。
+			// 如果遇到嵌套的 if 语句（ssa.If），递归分析其后继块。使用depth 参数控制递归深度，防止无限递归。
 		}
 }
 ```

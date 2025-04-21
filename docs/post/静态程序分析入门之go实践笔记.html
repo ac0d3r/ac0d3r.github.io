@@ -237,7 +237,7 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 	<span class="pl-s1">println</span>(<span class="pl-s1">max</span>(<span class="pl-c1">1</span>, <span class="pl-c1">2</span>))
 }</pre></div>
 <p>使用 <code class="notranslate">$GOSSAFUNC=sum go build foo.go</code> 会生成 ssa.html 文件在浏览器上打开：</p>
-<p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/bf35a201-4a6e-4c90-af42-15534b428e38"><img src="https://github.com/user-attachments/assets/bf35a201-4a6e-4c90-af42-15534b428e38" height="350" style="max-width: 100%;"></a></p>
+<p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/bf35a201-4a6e-4c90-af42-15534b428e38"><img src="https://github.com/user-attachments/assets/bf35a201-4a6e-4c90-af42-15534b428e38" height="260" style="max-width: 100%;"></a></p>
 <p>可以看到 <code class="notranslate">If v6 → b3 b2 (5)</code> v6即<code class="notranslate">b</code>为 true 时跳转到 b3, false 跳转到 b2。(Tip: <code class="notranslate">(5)</code>表示源码第五行 )</p>
 <p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/7bcfe44b-51f5-4dcc-823e-00738b555f52"><img src="https://github.com/user-attachments/assets/7bcfe44b-51f5-4dcc-823e-00738b555f52" height="250" style="max-width: 100%;"></a></p>
 <p>现在假设 <code class="notranslate">b</code> 为true，跳转到 b3 块后 <code class="notranslate">Plain → b2 (8)</code> 指无条件跳转b2，b2 块中 <code class="notranslate">v10 (8) = Phi &lt;int&gt; v8 v9 (x[int])</code> v10 的值就是 return 的值，<code class="notranslate">Phi</code> 函数需要根据控制流选择 v8 或 v9。如从<code class="notranslate">b3</code>跳转过来的就选v9 即为<code class="notranslate">8</code>。</p>
@@ -247,7 +247,7 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 <blockquote>
 <p><a href="https://github.com/securego/gosec">gosec</a> 是一个Go安全检查工具，它通过分析Go代码的AST和SSA表示来检测安全问题。</p>
 </blockquote>
-<p>gosec 包含规则如下：</p>
+<p>gosec 规则如下：</p>
 <ul>
 <li>基于 AST 检测的</li>
 </ul>
@@ -355,7 +355,7 @@ G602: Possible slice bounds out of range
 	<span class="pl-s1">ast</span>.<span class="pl-c1">Walk</span>(<span class="pl-s1">gosec</span>, <span class="pl-s1">file</span>)
 }</pre></div>
 <ul>
-<li>gosec 实现 ast.Visitor 接口</li>
+<li>gosec 实现了 ast.Visitor 接口</li>
 </ul>
 <div class="highlight highlight-source-go"><pre class="notranslate"><span class="pl-k">func</span> (<span class="pl-s1">gosec</span> <span class="pl-c1">*</span><span class="pl-smi">Analyzer</span>) <span class="pl-c1">Visit</span>(<span class="pl-s1">n</span> ast.<span class="pl-smi">Node</span>) ast.<span class="pl-smi">Visitor</span> {
 	<span class="pl-c1">...</span>
@@ -479,12 +479,18 @@ G602: Possible slice bounds out of range
 	}
 	<span class="pl-c">// 判断if操作，消除误报</span>
 	<span class="pl-k">for</span> <span class="pl-s1">ifref</span>, <span class="pl-s1">binop</span> <span class="pl-c1">:=</span> <span class="pl-k">range</span> <span class="pl-s1">ifs</span> {
-		<span class="pl-c">// extractBinOpBound 分析二元操作（如 &lt;, &gt;），确定边界类型（upperBounded, lowerUnbounded 等）和值。</span>
-		<span class="pl-s1">bound</span>, <span class="pl-s1">value</span>, <span class="pl-s1">err</span> <span class="pl-c1">:=</span> <span class="pl-s1">extractBinOpBound</span>(<span class="pl-s1">binop</span>)
-		<span class="pl-k">for</span> <span class="pl-s1">i</span>, <span class="pl-s1">block</span> <span class="pl-c1">:=</span> <span class="pl-k">range</span> <span class="pl-s1">ifref</span>.<span class="pl-c1">Block</span>().<span class="pl-c1">Succs</span> { <span class="pl-c">// 遍历为True时blocks</span>
+		<span class="pl-s1">bound</span>, <span class="pl-s1">value</span>, <span class="pl-s1">err</span> <span class="pl-c1">:=</span> <span class="pl-s1">extractBinOpBound</span>(<span class="pl-s1">binop</span>) <span class="pl-c">// 提取边界信息（bound 和 value）</span>
+		<span class="pl-k">for</span> <span class="pl-s1">i</span>, <span class="pl-s1">block</span> <span class="pl-c1">:=</span> <span class="pl-k">range</span> <span class="pl-s1">ifref</span>.<span class="pl-c1">Block</span>().<span class="pl-c1">Succs</span> { <span class="pl-c">// 分析if 语句所在基本块的后继块</span>
+			<span class="pl-k">if</span> <span class="pl-s1">i</span> <span class="pl-c1">==</span> <span class="pl-c1">1</span> { <span class="pl-c">//（0 表示真分支，1 表示假分支）</span>
+				<span class="pl-s1">bound</span> <span class="pl-c1">=</span> <span class="pl-s1">invBound</span>(<span class="pl-s1">bound</span>) <span class="pl-c">// 反转bound的值</span>
+			}
+			<span class="pl-k">var</span> <span class="pl-s1">processBlock</span> <span class="pl-k">func</span>(<span class="pl-s1">block</span> <span class="pl-c1">*</span>ssa.<span class="pl-smi">BasicBlock</span>, <span class="pl-s1">depth</span> <span class="pl-smi">int</span>)
 			<span class="pl-c1">...</span>
-			<span class="pl-c">// 如果条件保证访问在界内（如 if i &lt; len(s)），则从 issues 中移除越界警告（delete(issues, instr)）。</span>
-			<span class="pl-c">// 使用 isSliceInsideBounds 和 isSliceIndexInsideBounds 验证边界</span>
+			<span class="pl-c">// processBlock会遍历基本块中的指令（block.Instrs）</span>
+			<span class="pl-c">// 根据 bound 的类型（lowerUnbounded、upperUnbounded、unbounded、upperBounded）执行不同的逻辑：</span>
+			<span class="pl-c">// 1. 消除误报（从 issues 中移除）。</span>
+			<span class="pl-c">// 2. 分析切片操作（ssa.Slice）或索引操作（ssa.IndexAddr）是否在边界内。</span>
+			<span class="pl-c">// 如果遇到嵌套的 if 语句（ssa.If），递归分析其后继块。使用depth 参数控制递归深度，防止无限递归。</span>
 		}
 }</pre></div>
 <h2>gosec 的缺点</h2>
