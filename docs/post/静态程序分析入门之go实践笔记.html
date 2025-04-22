@@ -236,7 +236,7 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 <span class="pl-k">func</span> <span class="pl-s1">main</span>() {
 	<span class="pl-s1">println</span>(<span class="pl-s1">max</span>(<span class="pl-c1">1</span>, <span class="pl-c1">2</span>))
 }</pre></div>
-<p>使用 <code class="notranslate">$GOSSAFUNC=sum go build foo.go</code> 会生成 ssa.html 文件在浏览器上打开：</p>
+<p>使用 <code class="notranslate">$GOSSAFUNC=max go build foo.go</code> 会生成 ssa.html 文件在浏览器上打开：</p>
 <p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/bf35a201-4a6e-4c90-af42-15534b428e38"><img src="https://github.com/user-attachments/assets/bf35a201-4a6e-4c90-af42-15534b428e38" height="260" style="max-width: 100%;"></a></p>
 <p>可以看到 <code class="notranslate">If v6 → b3 b2 (5)</code> v6即<code class="notranslate">b</code>为 true 时跳转到 b3, false 跳转到 b2。(Tip: <code class="notranslate">(5)</code>表示源码第五行 )</p>
 <p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/7bcfe44b-51f5-4dcc-823e-00738b555f52"><img src="https://github.com/user-attachments/assets/7bcfe44b-51f5-4dcc-823e-00738b555f52" height="250" style="max-width: 100%;"></a></p>

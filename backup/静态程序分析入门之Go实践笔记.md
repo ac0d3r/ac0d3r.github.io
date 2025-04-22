@@ -195,7 +195,7 @@ func main() {
 }
 ```
 
-使用 `$GOSSAFUNC=sum go build foo.go` 会生成 ssa.html 文件在浏览器上打开：
+使用 `$GOSSAFUNC=max go build foo.go` 会生成 ssa.html 文件在浏览器上打开：
 
 <img src="https://github.com/user-attachments/assets/bf35a201-4a6e-4c90-af42-15534b428e38" height="260">
 
