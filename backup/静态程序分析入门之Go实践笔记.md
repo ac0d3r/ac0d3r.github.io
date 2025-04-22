@@ -490,7 +490,7 @@ func runSliceBounds(pass *analysis.Pass) (interface{}, error) {
 ## Joern
 > https://github.com/joernio/joern
 
-Joern 是一个开源代码分析平台，专注于 C/C++、Java 等语言，通过生成代码属性图（CPG）进行静态分析，支持 Scala ベース 的查询语言。
+Joern 是一个开源代码分析平台，专注于 C/C++、Java 等语言，通过生成代码属性图（CPG）进行静态分析，支持 Scala 的查询语言。
 
 <img src="https://github.com/user-attachments/assets/275d0080-fff8-4768-beec-602829763230" height="350">
 
@@ -509,9 +509,13 @@ Joern 是一个开源代码分析平台，专注于 C/C++、Java 等语言，通
 
 - https://codeql.github.com/docs/codeql-language-guides/codeql-library-for-go/
 
-## 参考链接
+# 参考链接
 - [Go 语言设计与实现](https://draven.co/golang/docs/part1-prerequisite/ch02-compile/golang-compile-intro/)
 - [Unveiling the Power of Intermediate Representations for Static Analysis: A Survey](https://arxiv.org/abs/2405.12841)
 - [深入理解 LLVM 代码生成](https://www.bilibili.com/video/BV1GCo4YmEK6/)
 - [Why your code is a Graph](https://blog.shiftleft.io/why-your-code-is-a-graph-f7b980eab740)
 - [lorexxar - sast2024](https://lorexxar.cn/2023/12/18/sast2024/)
+
+# 结语
+
+本文内容如有错误或疏漏之处，欢迎读者朋友指出或与我交流讨论，您的宝贵意见将帮助我不断改进！
