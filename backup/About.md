@@ -17,8 +17,9 @@
 - [saferwall/elf](https://github.com/saferwall/elf/pull/4): Fix parsing of ELF section header
 
 ## Vulnerability Research
-- CVE-2024-2007: Audit XAgent(OpenBMB), found container escape bug. [link](https://github.com/OpenBMB/XAgent/issues/386)
-- CVE-2023-34655: Audit ClashX (ObjC), found XPC proxy privilege bug. [link](https://github.com/yichengchen/clashX/discussions/1150)
+- [CVE-2025-1975](https://huntr.com/bounties/921ba5d4-f1d0-4c66-9764-4f72dffe7acd) - ollama
+- [CVE-2024-2007](https://github.com/advisories/GHSA-wq2q-fqq7-mgvw): Audit XAgent(OpenBMB), found container escape bug.
+- CVE-2023-34655: Audit ClashX (ObjC), found XPC proxy privilege bug. ([1150](https://github.com/yichengchen/clashX/discussions/1150),[tttang](https://tttang.com/archive/1904/))
 - Found in-the-wild 0-day: Audit Clash (Go), found CSRF-to-RCE bug (Oct 5, 2022).
 
 ## Toy program
