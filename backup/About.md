@@ -13,7 +13,9 @@
 
 ### PR
 
-- [Tencent/AI-Infra-Guard](https://github.com/Tencent/AI-Infra-Guard/pull/20): Optimize the Fingerprint DSL parser (build AST and support short-circuit)
+- [Tencent/AI-Infra-Guard](https://github.com/Tencent/AI-Infra-Guard)
+  - [Optimize the Fingerprint DSL parser (build AST and support short-circuit)](https://github.com/Tencent/AI-Infra-Guard/pull/20)
+  - [Fix out-of-bounds panic when quoted string ends with a backslash](https://github.com/Tencent/AI-Infra-Guard/pull/27)
 - [saferwall/elf](https://github.com/saferwall/elf/pull/4): Fix parsing of ELF section header
 
 ## Vulnerability Research
