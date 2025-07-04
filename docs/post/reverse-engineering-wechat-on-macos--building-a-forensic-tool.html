@@ -110,7 +110,7 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 </ul>
 </li>
 </ol>
-<p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/e59f270c-7793-413b-82aa-240f9b8981c9"><img src="https://github.com/user-attachments/assets/e59f270c-7793-413b-82aa-240f9b8981c9" alt="image" style="max-width: 100%;"></a></p>
+<p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/e59f270c-7793-413b-82aa-240f9b8981c9"><img src="https://github.com/user-attachments/assets/e59f270c-7793-413b-82aa-240f9b8981c9" alt="image" style="max-width: 100%; height: auto;"></a></p>
 <ol start="7">
 <li>Parse the raw data to extract the key:</li>
 </ol>
@@ -126,7 +126,7 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 <p>The WeChat chat database is stored at:<br>
 <code class="notranslate">~/Library/Containers/com.tencent.xinWeChat/Data/Library/Application Support/com.tencent.xinWeChat/[version]/[uuid]/Message/*.db</code></p>
 <p>Use <strong>DB Browser for SQLite</strong> to open and view the database.</p>
-<p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/ad10511a-0b1e-4ce2-82ad-6728cdb343b5"><img src="https://github.com/user-attachments/assets/ad10511a-0b1e-4ce2-82ad-6728cdb343b5" alt="image" style="max-width: 100%;"></a></p>
+<p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/ad10511a-0b1e-4ce2-82ad-6728cdb343b5"><img src="https://github.com/user-attachments/assets/ad10511a-0b1e-4ce2-82ad-6728cdb343b5" alt="image" style="max-width: 100%; height: auto;"></a></p>
 <h2>Exploring the Internal Storage of WeChat Chats</h2>
 <p>WeChat on macOS uses WCDB to manage its chat data, <a href="https://github.com/Tencent/wcdb">WCDB</a> is an open-source library developed by Tencent, built on top of <a href="https://github.com/sqlcipher/sqlcipher">SQLCipher</a>.</p>
 <p>In <a href="https://github.com/sqlcipher/sqlcipher">SQLCipher</a>, the function <a href="https://github.com/sqlcipher/sqlcipher/blob/master/src/crypto.c#L914">sqlite3_key</a> is used to open encrypted databases. WCDB wraps this functionality into its <a href="https://github.com/Tencent/wcdb/wiki/iOS-macOS%e4%bd%bf%e7%94%a8%e6%95%99%e7%a8%8b#%E5%8A%A0%E5%AF%86">setCipherKey</a> method, providing a simpler interface for setting encryption keys.</p>
@@ -179,7 +179,7 @@ From the example code, it can be determined that <code class="notranslate">0x600
   <span class="pl-kos">}</span><span class="pl-kos">)</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
 <span class="pl-kos">}</span><span class="pl-kos">,</span>
 ...</pre></div>
-<p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/a4fcba31-d388-4f3e-93c1-d6d48b150399"><img src="https://github.com/user-attachments/assets/a4fcba31-d388-4f3e-93c1-d6d48b150399" alt="image" style="max-width: 100%;"></a></p>
+<p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/a4fcba31-d388-4f3e-93c1-d6d48b150399"><img src="https://github.com/user-attachments/assets/a4fcba31-d388-4f3e-93c1-d6d48b150399" alt="image" style="max-width: 100%; height: auto;"></a></p>
 <p>The CipherKey is the same as before, indicating that we have found the correct location.</p>
 <ol start="4">
 <li>Continuing the Reverse Engineering</li>
@@ -221,7 +221,7 @@ rbx = *<span class="pl-en">ivar_offset</span>(m_dbEncryptInfo);</pre></div>
 </ol>
 <p>What is <code class="notranslate">PBCoder</code> and how does it decode data? By searching, I found <a href="https://github.com/Tencent/MMKV/issues/42#issuecomment-424976201" data-hovercard-type="issue" data-hovercard-url="/Tencent/MMKV/issues/42/hovercard">an issue in the Tencent open-source MMKV project</a>, which reveals that pbcoding is based on <code class="notranslate">protobuf</code> (Protocol Buffers) for archiving objects.</p>
 <p>Using the <code class="notranslate">protoc --decode_raw &lt; setting_db.data</code> command to decode the file, we can see three properties: the first property likely represents the key, the second is unknown, and the third is the timestamp:</p>
-<p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/b8301c5d-08bd-4045-acd0-4bf85dfa3dc7"><img src="https://github.com/user-attachments/assets/b8301c5d-08bd-4045-acd0-4bf85dfa3dc7" alt="image" style="max-width: 100%;"></a></p>
+<p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/b8301c5d-08bd-4045-acd0-4bf85dfa3dc7"><img src="https://github.com/user-attachments/assets/b8301c5d-08bd-4045-acd0-4bf85dfa3dc7" alt="image" style="max-width: 100%; height: auto;"></a></p>
 <p>Can we bypass the internal decoding process and use Frida to call the <code class="notranslate">PBCoder</code> decryption function:</p>
 <div class="highlight highlight-source-js"><pre class="notranslate"><span class="pl-c">// debug.js</span>
 <span class="pl-c">// frida WeChat --debug -l tests/debug.js</span>
@@ -233,7 +233,7 @@ rbx = *<span class="pl-en">ivar_offset</span>(m_dbEncryptInfo);</pre></div>
 <p>Since I couldn't find any relevant clues through reverse engineering, I’ll have to abandon this approach for now.😡</p>
 <h3>Reading from Memory</h3>
 <p>After the reverse engineering analysis above, retrieving the key from memory is quite easy because <code class="notranslate">DBEncryptInfo</code> is a singleton (this has been confirmed through multiple tests). By dumping the value of its <code class="notranslate">m_dbEncryptKey(NSData)</code>, the key can be obtained:</p>
-<p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/720c59c9-01ed-4ca0-bfd3-d9a4c2a66425"><img src="https://github.com/user-attachments/assets/720c59c9-01ed-4ca0-bfd3-d9a4c2a66425" alt="image" style="max-width: 100%;"></a></p>
+<p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/720c59c9-01ed-4ca0-bfd3-d9a4c2a66425"><img src="https://github.com/user-attachments/assets/720c59c9-01ed-4ca0-bfd3-d9a4c2a66425" alt="image" style="max-width: 100%; height: auto;"></a></p>
 <h2>Building a Forensic Tool</h2>
 <p>Package the script into an executable using <a href="https://github.com/frida/frida-go">frida-go</a>.</p>
 <div class="highlight highlight-source-go"><pre class="notranslate"><span class="pl-k">package</span> main
@@ -324,7 +324,7 @@ rbx = *<span class="pl-en">ivar_offset</span>(m_dbEncryptInfo);</pre></div>
 	<span class="pl-k">return</span> <span class="pl-s1">r</span>.<span class="pl-c1">String</span>()
 }</pre></div>
 <p>I got the chat key 🎉:<br>
-<a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/b45d8772-c44d-481b-ac77-81429b98dd72"><img src="https://github.com/user-attachments/assets/b45d8772-c44d-481b-ac77-81429b98dd72" alt="image" style="max-width: 100%;"></a></p>
+<a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/b45d8772-c44d-481b-ac77-81429b98dd72"><img src="https://github.com/user-attachments/assets/b45d8772-c44d-481b-ac77-81429b98dd72" alt="image" style="max-width: 100%; height: auto;"></a></p>
 <h3>Tool Optimization</h3>
 <div class="highlight highlight-source-shell"><pre class="notranslate">$ ll wechatoe
 -rwxr-xr-x  1 whoami  staff    75M  1 17 17:27 wechatoe</pre></div>
@@ -332,7 +332,7 @@ rbx = *<span class="pl-en">ivar_offset</span>(m_dbEncryptInfo);</pre></div>
 <h2>How to Defend Against It</h2>
 <p>Due to the limitations of macOS <a href="https://developer.apple.com/documentation/security/hardened_runtime" rel="nofollow">Hardened Runtime</a>, even if malicious programs use <code class="notranslate">task_for_pid</code> API, they cannot control the target process (disabling <code class="notranslate">SIP</code> allows it to work).</p>
 <p>However, many macOS users install custom plugins for WeChat, and when a plugin is installed, the application needs to be <code class="notranslate">re-signed</code>. This process removes the runtime flag:</p>
-<p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/4be222c1-ca71-4579-bf29-0b84d03dc8b8"><img src="https://github.com/user-attachments/assets/4be222c1-ca71-4579-bf29-0b84d03dc8b8" alt="image" style="max-width: 100%;"></a></p>
+<p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/4be222c1-ca71-4579-bf29-0b84d03dc8b8"><img src="https://github.com/user-attachments/assets/4be222c1-ca71-4579-bf29-0b84d03dc8b8" alt="image" style="max-width: 100%; height: auto;"></a></p>
 <p>To preserve the Hardened Runtime, the <code class="notranslate">--options runtime</code> flag must be added during re-signing to enable the enhanced runtime protection.</p>
 </div>
 <div style="font-size:small;margin-top:8px;float:right;"></div>

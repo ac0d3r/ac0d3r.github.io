@@ -96,7 +96,7 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 <li><a href="https://www.geekby.site/2022/02/%E9%9D%99%E6%80%81%E7%A8%8B%E5%BA%8F%E5%88%86%E6%9E%90%E7%B3%BB%E5%88%97%E4%B8%80/" rel="nofollow">geekby - 静态程序分析</a></li>
 </ul>
 <h1>编译与静态分析的关系</h1>
-<p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/f15f4537-1145-48ef-b4c3-ecf7b61e572b"><img src="https://github.com/user-attachments/assets/f15f4537-1145-48ef-b4c3-ecf7b61e572b" height="350" style="max-width: 100%;"></a></p>
+<p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/f15f4537-1145-48ef-b4c3-ecf7b61e572b"><img src="https://github.com/user-attachments/assets/f15f4537-1145-48ef-b4c3-ecf7b61e572b" height="350" style="max-width: 100%; height: auto;"></a></p>
 <p>在 <a href="https://go.dev/src/cmd/compile/README" rel="nofollow">Introduction to the Go compiler</a> 也能看到相似的流程，静态分析主要发生在IR层，生成机器码后端部分(back-end)那就是编译器所考虑的了。</p>
 <ul>
 <li>词法分析器（Scanner）结合正则表达式(Regular Expression) ，通过词法分析（Lexical Analysis）将源码翻译为 token。</li>
@@ -109,7 +109,7 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 <h2>Scanner</h2>
 <p>Go的token定义在<a href="https://github.com/golang/go/blob/master/src/go/token/token.go">token.go</a>文件，还包含对<a href="https://github.com/golang/go/blob/master/src/go/token/token.go#L331-L341">标识符</a>，<a href="https://github.com/golang/go/blob/master/src/go/token/token.go#L322-L326">关键词</a>等判断。</p>
 <p><a href="https://github.com/golang/go/blob/master/src/go/scanner/scanner.go#L80-L974">Scan</a> 方法实现词法分析将源码翻译为tokens。</p>
-<p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/607207d4-df06-46f4-9714-168e635cd3e3"><img src="https://github.com/user-attachments/assets/607207d4-df06-46f4-9714-168e635cd3e3" height="250" style="max-width: 100%;"></a></p>
+<p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/607207d4-df06-46f4-9714-168e635cd3e3"><img src="https://github.com/user-attachments/assets/607207d4-df06-46f4-9714-168e635cd3e3" height="250" style="max-width: 100%; height: auto;"></a></p>
 <h2>Parser</h2>
 <p>获得tokens流后通过文法（Grammar）将其处理为AST(Abstract Syntax Tree，抽象语法树)，<a href="https://go.dev/ref/spec" rel="nofollow">Go 编程语言规范</a> 有关于文法说明：</p>
 <div class="highlight highlight-source-prolog"><pre class="notranslate"><span class="pl-en">SourceFile</span> = <span class="pl-v">PackageClause</span> <span class="pl-s">";"</span> { <span class="pl-v">ImportDecl</span> <span class="pl-s">";"</span> } { <span class="pl-v">TopLevelDecl</span> <span class="pl-s">";"</span> } <span class="pl-k">.</span>
@@ -162,9 +162,9 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 	<span class="pl-s1">ast</span>.<span class="pl-c1">Print</span>(<span class="pl-s1">fs</span>, <span class="pl-s1">fast</span>)
 }</pre></div>
 <p>除了可以用 <code class="notranslate">ast.Print</code> 打印语法树，还可以使用可视化工具<a href="https://yuroyoro.github.io/goast-viewer/" rel="nofollow">goast-viewer</a>：</p>
-<p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/c1fa6d56-fd96-49f3-b26e-3bde5f14226c"><img src="https://github.com/user-attachments/assets/c1fa6d56-fd96-49f3-b26e-3bde5f14226c" height="350" style="max-width: 100%;"></a></p>
+<p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/c1fa6d56-fd96-49f3-b26e-3bde5f14226c"><img src="https://github.com/user-attachments/assets/c1fa6d56-fd96-49f3-b26e-3bde5f14226c" height="350" style="max-width: 100%; height: auto;"></a></p>
 <p>Go文件的AST结构大致如图(参考<a href="https://draven.co/golang/docs/part1-prerequisite/ch02-compile/golang-compile-intro/" rel="nofollow">《Go 语言设计与实现》</a>)：</p>
-<p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/73cb0347-1ea2-415f-9257-27a6ae0fc9e6"><img src="https://github.com/user-attachments/assets/73cb0347-1ea2-415f-9257-27a6ae0fc9e6" height="350" style="max-width: 100%;"></a></p>
+<p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/73cb0347-1ea2-415f-9257-27a6ae0fc9e6"><img src="https://github.com/user-attachments/assets/73cb0347-1ea2-415f-9257-27a6ae0fc9e6" height="350" style="max-width: 100%; height: auto;"></a></p>
 <h2>IR</h2>
 <p>IR 是编译器或静态分析工具将源代码转换为一种便于分析和优化的中间形式，通常是与源语言和目标平台无关的表示。它保留了程序的语义，方便后续分析、优化和代码生成。</p>
 <p>IR 可以是多种形式，如AST（抽象语法树）、三地址码、图、或字节码。</p>
@@ -176,7 +176,7 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 </ul>
 <p><strong>静态分析为什么使用IR而非AST呢？</strong></p>
 <p>AST 是一个语法树的形式，是一个高层级的形式，更加接近程序的源代码，语言相关的，适合做快速的类型检测，但是缺少了<strong>控制流</strong>、<strong>数据流</strong>的信息。</p>
-<p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/3313e50c-e326-4796-bfbe-4d4d6ae14303"><img src="https://github.com/user-attachments/assets/3313e50c-e326-4796-bfbe-4d4d6ae14303" height="250" style="max-width: 100%;"></a></p>
+<p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/3313e50c-e326-4796-bfbe-4d4d6ae14303"><img src="https://github.com/user-attachments/assets/3313e50c-e326-4796-bfbe-4d4d6ae14303" height="250" style="max-width: 100%; height: auto;"></a></p>
 <ul>
 <li>AST 是 high-level 且接近语法结构的，而 IR 是 low-level 且接近机器代码的。</li>
 <li>AST 是依赖于语言的，IR 通常是独立于语言的：三地址码会被分析器重点关注，因为可以将各种前端语言统一翻译成同一种 IR 再加以优化。</li>
@@ -187,7 +187,7 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 <h3>GoSSA</h3>
 <p>Go的编译器在中间表示（IR）中使用 SSA（静态单赋值，Static Single Assignment） 形式。</p>
 <p>这个图从左到右分别是：AST,CFG,SSA，SSA 是基于 CFG 的一种：</p>
-<p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/f866a311-5889-43e3-a8d7-c99cb00a0c31"><img src="https://github.com/user-attachments/assets/f866a311-5889-43e3-a8d7-c99cb00a0c31" height="250" style="max-width: 100%;"></a></p>
+<p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/f866a311-5889-43e3-a8d7-c99cb00a0c31"><img src="https://github.com/user-attachments/assets/f866a311-5889-43e3-a8d7-c99cb00a0c31" height="250" style="max-width: 100%; height: auto;"></a></p>
 <p>CFG 是一个过程或程序的抽象表现，是用在编译器中的一个抽象数据结构，由编译器在内部维护，代表了一个程序执行过程中会遍历到的所有路径。它用图的形式表示一个过程内所有基本块执行的可能流向, 也能反映一个过程的实时执行过程。</p>
 <ul>
 <li>CFG 的节点是基本块（Basic Blocks），表示一组顺序执行的语句；边表示控制流跳转（如 if 分支、循环、或 goto）。</li>
@@ -219,7 +219,7 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 <span class="pl-c">// generate cfg dot</span>
 <span class="pl-s1">cfg</span>.<span class="pl-c1">Dot</span>(<span class="pl-s1">fs</span>)</pre></div>
 <p>使用<a href="https://dreampuf.github.io/GraphvizOnline" rel="nofollow">GraphvizOnline</a>展示CFG(without Unreachable node)：</p>
-<p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/a275bf3a-4e39-4956-ae63-a5c9b8f5949f"><img src="https://github.com/user-attachments/assets/a275bf3a-4e39-4956-ae63-a5c9b8f5949f" height="250" style="max-width: 100%;"></a></p>
+<p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/a275bf3a-4e39-4956-ae63-a5c9b8f5949f"><img src="https://github.com/user-attachments/assets/a275bf3a-4e39-4956-ae63-a5c9b8f5949f" height="250" style="max-width: 100%; height: auto;"></a></p>
 <hr>
 <p>SSA是基于CFG的中间表示（IR），所以基本块直接对应 CFG 的基本块，控制流边（block.Succs）保持不变。但每个变量只赋值一次，ssa会为每个变量的每次赋值生成唯一版本（例如，x1、x2）。跟踪每个基本块中的变量定义（Def）和使用（Use）。在控制流合并点（例如，if 分支合并），插入 <code class="notranslate">φ(phi)</code> 函数选择变量值，使用支配树（Dominator Tree）确定 <code class="notranslate">φ</code> 函数的插入位置。</p>
 <p>Phi 指令（来源于希腊字母 φ）是 SSA 的核心特性，用于处理变量在不同控制流路径上的不同赋值。它的作用是在控制流合并点根据到达当前块的前驱块选择正确的变量值。简单来说，Phi 就像一个“选择器”，它根据程序执行的路径动态决定变量的值。</p>
@@ -237,9 +237,9 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 	<span class="pl-s1">println</span>(<span class="pl-s1">max</span>(<span class="pl-c1">1</span>, <span class="pl-c1">2</span>))
 }</pre></div>
 <p>使用 <code class="notranslate">$GOSSAFUNC=max go build foo.go</code> 会生成 ssa.html 文件在浏览器上打开：</p>
-<p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/bf35a201-4a6e-4c90-af42-15534b428e38"><img src="https://github.com/user-attachments/assets/bf35a201-4a6e-4c90-af42-15534b428e38" height="260" style="max-width: 100%;"></a></p>
+<p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/bf35a201-4a6e-4c90-af42-15534b428e38"><img src="https://github.com/user-attachments/assets/bf35a201-4a6e-4c90-af42-15534b428e38" height="260" style="max-width: 100%; height: auto;"></a></p>
 <p>可以看到 <code class="notranslate">If v6 → b3 b2 (5)</code> v6即<code class="notranslate">b</code>为 true 时跳转到 b3, false 跳转到 b2。(Tip: <code class="notranslate">(5)</code>表示源码第五行 )</p>
-<p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/7bcfe44b-51f5-4dcc-823e-00738b555f52"><img src="https://github.com/user-attachments/assets/7bcfe44b-51f5-4dcc-823e-00738b555f52" height="250" style="max-width: 100%;"></a></p>
+<p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/7bcfe44b-51f5-4dcc-823e-00738b555f52"><img src="https://github.com/user-attachments/assets/7bcfe44b-51f5-4dcc-823e-00738b555f52" height="250" style="max-width: 100%; height: auto;"></a></p>
 <p>现在假设 <code class="notranslate">b</code> 为true，跳转到 b3 块后 <code class="notranslate">Plain → b2 (8)</code> 指无条件跳转b2，b2 块中 <code class="notranslate">v10 (8) = Phi &lt;int&gt; v8 v9 (x[int])</code> v10 的值就是 return 的值，<code class="notranslate">Phi</code> 函数需要根据控制流选择 v8 或 v9。如从<code class="notranslate">b3</code>跳转过来的就选v9 即为<code class="notranslate">8</code>。</p>
 <p>但是 <code class="notranslate">phi</code> 具体怎么实现也不知道，后面还有一堆优化，不去研究下编译器后端的话是看不懂一点。</p>
 <p>接下来想通过分析现有工具了解一下如何实现 Go 静态分析。</p>
@@ -502,7 +502,7 @@ G602: Possible slice bounds out of range
 <p><a href="https://github.com/joernio/joern">https://github.com/joernio/joern</a></p>
 </blockquote>
 <p>Joern 是一个开源代码分析平台，专注于 C/C++、Java 等语言，通过生成代码属性图（CPG）进行静态分析，支持 Scala 的查询语言。</p>
-<p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/275d0080-fff8-4768-beec-602829763230"><img src="https://github.com/user-attachments/assets/275d0080-fff8-4768-beec-602829763230" height="350" style="max-width: 100%;"></a></p>
+<p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/275d0080-fff8-4768-beec-602829763230"><img src="https://github.com/user-attachments/assets/275d0080-fff8-4768-beec-602829763230" height="350" style="max-width: 100%; height: auto;"></a></p>
 <h2>CodeQL</h2>
 <blockquote>
 <p><a href="https://codeql.github.com/docs/">https://codeql.github.com/docs/</a></p>

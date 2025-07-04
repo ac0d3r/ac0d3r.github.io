@@ -109,7 +109,7 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 <h2>The Mechanism Behind DLL Loading on Windows</h2>
 <p>In Windows, applications cannot directly access system calls. Instead, they use functions from the Windows API (WinAPI), which are stored in DLLs such as <code class="notranslate">kernel32.dll</code>, <code class="notranslate">advapi32.dll</code>, <code class="notranslate">gdi32.dll</code>, etc. <code class="notranslate">ntdll.dll</code> and <code class="notranslate">kernel32.dll</code> are especially important, as every process imports them.</p>
 <p>Here is the program I wrote, called <a href="https://github.com/ac0d3r/0xpe/blob/master/shellcode/nothing_to_do.cpp">nothing_to_do</a>. I used <a href="https://docs.microsoft.com/en-us/sysinternals/downloads/listdlls" rel="nofollow">listdlls</a> to list the imported DLLs.</p>
-<p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/b1cb2274-5d78-412b-a578-03fa5b80621e"><img src="https://github.com/user-attachments/assets/b1cb2274-5d78-412b-a578-03fa5b80621e" alt="image" style="max-width: 100%;"></a></p>
+<p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/b1cb2274-5d78-412b-a578-03fa5b80621e"><img src="https://github.com/user-attachments/assets/b1cb2274-5d78-412b-a578-03fa5b80621e" alt="image" style="max-width: 100%; height: auto;"></a></p>
 <h2>DLL Addressing</h2>
 <p>The <a href="https://en.wikipedia.org/wiki/Win32_Thread_Information_Block" rel="nofollow">TEB (Thread Environment Block)</a> structure contains thread information in user mode. On 32-bit systems, we can use the <code class="notranslate">FS</code> register to find the address of the <a href="https://en.wikipedia.org/wiki/Process_Environment_Block" rel="nofollow">PEB (Process Environment Block)</a> at offset <code class="notranslate">0x30</code>.</p>
 <p><code class="notranslate">PEB.ldr</code> points to the <code class="notranslate">PEB_LDR_DATA</code> structure, which contains information about the loaded modules, including the base addresses of <code class="notranslate">kernel32</code> and <code class="notranslate">ntdll</code>.</p>
@@ -147,7 +147,7 @@ In Windows versions prior to Vista, the first two DLLs in <code class="notransla
 In <code class="notranslate">InMemoryOrderModuleLis</code>t, the first entry is <code class="notranslate">calc.exe</code> (the executable), the second is <code class="notranslate">ntdll.dll</code>, and the third is <code class="notranslate">kernel32.dll</code>. This method currently applies to all versions of Windows and is the preferred approach.</p>
 </blockquote>
 <h3>Kernel32.dll Addressing Process:</h3>
-<p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/7cf0ef92-56ac-4a54-999f-7d21d1ce4f9d"><img src="https://github.com/user-attachments/assets/7cf0ef92-56ac-4a54-999f-7d21d1ce4f9d" alt="image" style="max-width: 100%;"></a></p>
+<p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/7cf0ef92-56ac-4a54-999f-7d21d1ce4f9d"><img src="https://github.com/user-attachments/assets/7cf0ef92-56ac-4a54-999f-7d21d1ce4f9d" alt="image" style="max-width: 100%; height: auto;"></a></p>
 <p>Implementing with Assembly Code:</p>
 <div class="highlight highlight-source-assembly"><pre class="notranslate"><span class="pl-k">xor</span><span class="pl-en"> </span><span class="pl-v">ecx</span><span class="pl-s1">,</span><span class="pl-en"> </span><span class="pl-v">ecx</span>
 <span class="pl-k">mov</span><span class="pl-en"> </span><span class="pl-v">ebx</span><span class="pl-s1">,</span><span class="pl-en"> </span><span class="pl-v">fs</span><span class="pl-en">:</span><span class="pl-s1">[</span><span class="pl-v">ecx</span><span class="pl-en"> </span><span class="pl-s1">+</span><span class="pl-en"> </span><span class="pl-c1">0x30</span><span class="pl-s1">]</span><span class="pl-c">    ; *ebx = PEB base address</span>
@@ -175,7 +175,7 @@ In <code class="notranslate">InMemoryOrderModuleLis</code>t, the first entry is 
     DWORD   AddressOfNames;         <span class="pl-c"><span class="pl-c">//</span> Exported function names table RVA: stores the addresses of function name strings (table element width is 4, total size is NumberOfNames * 4)</span>
     DWORD   AddressOfNameOrdinals;  <span class="pl-c"><span class="pl-c">//</span> Exported function ordinal table RVA: stores the function ordinals (table element width is 2, total size is NumberOfNames * 2)</span>
 } IMAGE_EXPORT_DIRECTORY, *PIMAGE_EXPORT_DIRECTORY;</pre></div>
-<p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/a0a43d0e-ab05-4793-a286-67a287e13a94"><img src="https://github.com/user-attachments/assets/a0a43d0e-ab05-4793-a286-67a287e13a94" alt="image" style="max-width: 100%;"></a></p>
+<p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/a0a43d0e-ab05-4793-a286-67a287e13a94"><img src="https://github.com/user-attachments/assets/a0a43d0e-ab05-4793-a286-67a287e13a94" alt="image" style="max-width: 100%; height: auto;"></a></p>
 <p>Implementing with Assembly Code:</p>
 <div class="highlight highlight-source-assembly"><pre class="notranslate"><span class="pl-c">;; Find PE export table</span>
 <span class="pl-k">mov</span><span class="pl-en"> </span><span class="pl-v">edx</span><span class="pl-s1">,</span><span class="pl-en"> </span><span class="pl-s1">[</span><span class="pl-v">ebx</span><span class="pl-en"> </span><span class="pl-s1">+</span><span class="pl-en"> </span><span class="pl-c1">0x3c</span><span class="pl-s1">]</span><span class="pl-c">   ; Find the e_lfanew offset in the DOS header</span>
@@ -291,14 +291,14 @@ F:<span class="pl-cce">\\</span><span class="pl-k">&gt;</span> link -subsystem:w
 <p>There are two methods to extract shellcode:</p>
 <ol>
 <li>Use dumpbin.exe: <code class="notranslate">$ dumpbin.exe /ALL .\\shellcode.obj</code><br>
-<a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/8aac56ce-7a6e-45df-a7f4-d7caeae00af4"><img src="https://github.com/user-attachments/assets/8aac56ce-7a6e-45df-a7f4-d7caeae00af4" alt="image" style="max-width: 100%;"></a></li>
+<a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/8aac56ce-7a6e-45df-a7f4-d7caeae00af4"><img src="https://github.com/user-attachments/assets/8aac56ce-7a6e-45df-a7f4-d7caeae00af4" alt="image" style="max-width: 100%; height: auto;"></a></li>
 <li>Extract the PE .text section Data: starting from PointerToRawData, and retrieve data of size VirtualSize:<br>
-<a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/a423e706-9afa-4435-86a3-c3aaff668234"><img src="https://github.com/user-attachments/assets/a423e706-9afa-4435-86a3-c3aaff668234" alt="image" style="max-width: 100%;"></a></li>
+<a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/a423e706-9afa-4435-86a3-c3aaff668234"><img src="https://github.com/user-attachments/assets/a423e706-9afa-4435-86a3-c3aaff668234" alt="image" style="max-width: 100%; height: auto;"></a></li>
 </ol>
 <h2>Shellcode Loader</h2>
 <p>Write a loader in Golang, code: <a href="https://github.com/ac0d3r/0xpe/blob/master/shellcode/loader.go">loader.go</a>. Compile using the <a href="https://github.com/ac0d3r/0xpe/blob/master/shellcode/Makefile">Makefile</a>, and the run it:</p>
 <p>You did it 🎉<br>
-<a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/17ce5763-8850-409e-a4a5-20ef1986139d"><img src="https://github.com/user-attachments/assets/17ce5763-8850-409e-a4a5-20ef1986139d" alt="" style="max-width: 100%;"></a></p>
+<a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/17ce5763-8850-409e-a4a5-20ef1986139d"><img src="https://github.com/user-attachments/assets/17ce5763-8850-409e-a4a5-20ef1986139d" alt="" style="max-width: 100%; height: auto;"></a></p>
 <h2>Reference</h2>
 <ul>
 <li><a href="https://idafchev.github.io/exploit/2017/09/26/writing_windows_shellcode.html" rel="nofollow">https://idafchev.github.io/exploit/2017/09/26/writing_windows_shellcode.html</a></li>
