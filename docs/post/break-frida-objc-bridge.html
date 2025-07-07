@@ -183,7 +183,7 @@ libc++abi: terminating with uncaught exception of <span class="pl-c1">type</span
 <p><a href="https://developer.apple.com/documentation/objectivec/sel" rel="nofollow">SEL</a>: A <a href="https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/ObjectiveC/Chapters/ocSelectors.html" rel="nofollow">Selector</a> uniquely identifying a method. Its definition:</p>
 <div class="highlight highlight-source-c"><pre class="notranslate"><span class="pl-k">typedef</span> <span class="pl-k">struct</span> <span class="pl-smi">objc_selector</span> <span class="pl-c1">*</span><span class="pl-smi">SEL</span>;</pre></div>
 <p>When calling <code class="notranslate">objc_msgSend</code>, the function uses the <code class="notranslate">isa</code> pointer to traverse the <code class="notranslate">methodLists</code>, searching for the <code class="notranslate">method_name</code> specified by the selector. Below is a visual representation of the structure and lookup process:</p>
-<p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/5983c340-f8be-49de-bc0d-d500f127b724"><img src="https://github.com/user-attachments/assets/5983c340-f8be-49de-bc0d-d500f127b724" alt="image" style="max-width: 100%; height: auto;"></a></p>
+<p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/5983c340-f8be-49de-bc0d-d500f127b724"><img src="https://github.com/user-attachments/assets/5983c340-f8be-49de-bc0d-d500f127b724" alt="image" style="max-width: 100%;"></a></p>
 <h2>Method Swizzling</h2>
 <p>Frida uses <strong>Method Swizzling</strong> to inject or modify <code class="notranslate">ObjC</code> methods. A common implementation is:</p>
 <div class="highlight highlight-source-objc"><pre class="notranslate">...
@@ -216,7 +216,7 @@ libc++abi: terminating with uncaught exception of <span class="pl-c1">type</span
 <span class="pl-k">@end</span></pre></div>
 <p>In this example, we use <a href="https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/ProgrammingWithObjectiveC/CustomizingExistingClasses/CustomizingExistingClasses.html" rel="nofollow">Categories</a> to extend the <code class="notranslate">TargetClass</code> and swap the implementations of <code class="notranslate">hello:</code> and <code class="notranslate">hook_hello:</code> using <code class="notranslate">method_exchangeImplementations</code>.</p>
 <p>Post-swapping, calling <code class="notranslate">[self hook_hello:arg2]</code> invokes the original hello: method due to the swapped pointers. A visual representation:</p>
-<p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/c957b59a-4906-45d7-a49e-280169ee4d6f"><img src="https://github.com/user-attachments/assets/c957b59a-4906-45d7-a49e-280169ee4d6f" alt="image" style="max-width: 100%; height: auto;"></a></p>
+<p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/c957b59a-4906-45d7-a49e-280169ee4d6f"><img src="https://github.com/user-attachments/assets/c957b59a-4906-45d7-a49e-280169ee4d6f" alt="image" style="max-width: 100%;"></a></p>
 <hr>
 <p>There is another approach that does not require defining class <code class="notranslate">Categories</code>. Instead, the original function's <code class="notranslate">imp</code> pointer can be replaced using <code class="notranslate">method_setImplementation</code>.</p>
 <div class="highlight highlight-source-objc"><pre class="notranslate"><span class="pl-k">static</span> <span class="pl-c1">IMP</span> real_isEqualToString = <span class="pl-c1">NULL</span>;
@@ -230,7 +230,7 @@ real_isEqualToString = <span class="pl-c1">method_setImplementation</span>(
                               <span class="pl-k">@selector</span>(<span class="pl-c1">isEqualToString:</span>)),
       (<span class="pl-c1">IMP</span>)custom_isEqualToString);</pre></div>
 <p>Here, the <code class="notranslate">isEqualToString:</code> implementation is replaced by <code class="notranslate">custom_isEqualToString</code>. The original implementation is stored in <code class="notranslate">real_isEqualToString</code>. A visual representation:</p>
-<p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/a0143af6-fdd4-4077-b71a-289194964aca"><img src="https://github.com/user-attachments/assets/a0143af6-fdd4-4077-b71a-289194964aca" alt="image" style="max-width: 100%; height: auto;"></a></p>
+<p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/a0143af6-fdd4-4077-b71a-289194964aca"><img src="https://github.com/user-attachments/assets/a0143af6-fdd4-4077-b71a-289194964aca" alt="image" style="max-width: 100%;"></a></p>
 <h2><strong>Frida</strong></h2>
 <p>The Frida project operates at a relatively low level and is quite complex. I learned about Frida's design and structure through EvilPan's <a href="https://evilpan.com/2022/04/05/frida-internal/" rel="nofollow">Frida Internal</a> series of articles. Frida can be divided into four layers based on its encapsulation hierarchy:</p>
 <ol>
@@ -600,7 +600,7 @@ $ clang -framework Foundation examples/example_target.m  -o tests/example_target
 $ ./example_target
 <span class="pl-c"><span class="pl-c">#</span> inject libchoose.dylib</span>
 $ sudo ./bin/inx [] /path/libchoose.dylib</pre></div>
-<p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/933031b0-f100-4c27-8c4a-ebc1a30b791e"><img src="https://github.com/user-attachments/assets/933031b0-f100-4c27-8c4a-ebc1a30b791e" alt="" style="max-width: 100%; height: auto;"></a></p>
+<p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/933031b0-f100-4c27-8c4a-ebc1a30b791e"><img src="https://github.com/user-attachments/assets/933031b0-f100-4c27-8c4a-ebc1a30b791e" alt="" style="max-width: 100%;"></a></p>
 <h2>Reference</h2>
 <ul>
 <li><a href="https://developer.apple.com/documentation/objectivec/objective-c_runtime?language=objc" rel="nofollow">https://developer.apple.com/documentation/objectivec/objective-c_runtime</a></li>

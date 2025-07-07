@@ -341,7 +341,7 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 <span class="pl-en">    </span><span class="pl-k">push</span><span class="pl-en">    </span><span class="pl-v">r13</span>
 <span class="pl-en">    </span><span class="pl-k">mov</span><span class="pl-en">     </span><span class="pl-v">rdi</span><span class="pl-s1">,</span><span class="pl-en"> </span><span class="pl-v">rsp</span><span class="pl-c">        ; rdi = '//bin/sh'</span>
 <span class="pl-en">    </span><span class="pl-k">syscall</span></pre></div>
-<p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/f3490032-9c80-4140-bba8-e01c64093200"><img src="https://github.com/user-attachments/assets/f3490032-9c80-4140-bba8-e01c64093200" alt="" style="max-width: 100%; height: auto;"></a></p>
+<p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/f3490032-9c80-4140-bba8-e01c64093200"><img src="https://github.com/user-attachments/assets/f3490032-9c80-4140-bba8-e01c64093200" alt="" style="max-width: 100%;"></a></p>
 <h3>Reverse Shell</h3>
 <p>Refer to <code class="notranslate">bindshell.asm</code> and replace the <code class="notranslate">bind</code>, <code class="notranslate">listen</code>, and <code class="notranslate">accept</code> system calls with <code class="notranslate">connect</code>:</p>
 <div class="highlight highlight-source-assembly"><pre class="notranslate"><span class="pl-c">; nasm -f macho64 reverse_shell.asm</span>
@@ -412,7 +412,7 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 <span class="pl-en">    </span><span class="pl-k">push</span><span class="pl-en">    </span><span class="pl-v">r13</span>
 <span class="pl-en">    </span><span class="pl-k">mov</span><span class="pl-en">     </span><span class="pl-v">rdi</span><span class="pl-s1">,</span><span class="pl-en"> </span><span class="pl-v">rsp</span><span class="pl-c">        ; rdi = '//bin/sh'</span>
 <span class="pl-en">    </span><span class="pl-k">syscall</span></pre></div>
-<p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/cc0dc796-352f-4a63-bca6-49b6d17bee39"><img src="https://github.com/user-attachments/assets/cc0dc796-352f-4a63-bca6-49b6d17bee39" alt="" style="max-width: 100%; height: auto;"></a></p>
+<p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/cc0dc796-352f-4a63-bca6-49b6d17bee39"><img src="https://github.com/user-attachments/assets/cc0dc796-352f-4a63-bca6-49b6d17bee39" alt="" style="max-width: 100%;"></a></p>
 <h2>Write Shellcode in C</h2>
 <div class="highlight highlight-source-c"><pre class="notranslate"><span class="pl-c">// clang -arch x86_64 -shared -fno-stack-protector -o execve.a execve.c</span>
 <span class="pl-smi">int</span> <span class="pl-en">main</span>()
