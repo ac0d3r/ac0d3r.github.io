@@ -12,7 +12,9 @@
 - [go-embed-extractor](https://github.com/BreakOnCrash/go-embed-extractor)｜Extracting Go embeds
 
 ### PR
-
+- [NSEcho/furlzz](https://github.com/NSEcho/furlzz)
+  - [Add coverage guided with Stalker](https://github.com/NSEcho/furlzz/pull/53)
+  - [fix(init): use passed-in type when creating config](https://github.com/NSEcho/furlzz/pull/52)
 - [Tencent/AI-Infra-Guard](https://github.com/Tencent/AI-Infra-Guard)
   - [Optimize the Fingerprint DSL parser (build AST and support short-circuit)](https://github.com/Tencent/AI-Infra-Guard/pull/20)
   - [Fix out-of-bounds panic when quoted string ends with a backslash](https://github.com/Tencent/AI-Infra-Guard/pull/27)
