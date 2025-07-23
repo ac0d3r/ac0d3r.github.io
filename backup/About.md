@@ -21,16 +21,15 @@
 - [saferwall/elf](https://github.com/saferwall/elf/pull/4): Fix parsing of ELF section header
 
 ## Vulnerability Research
-- [CVE-2025-5031](https://github.com/advisories/GHSA-pqqp-7cp8-vxvf)
-- [CVE-2025-5030](https://github.com/advisories/GHSA-w6p4-84vc-qc2w)
+- [CVE-2025-5030](https://github.com/advisories/GHSA-w6p4-84vc-qc2w), [CVE-2025-5031](https://github.com/advisories/GHSA-pqqp-7cp8-vxvf)
 - [CVE-2025-1975](https://huntr.com/bounties/921ba5d4-f1d0-4c66-9764-4f72dffe7acd) - Ollama
 - [CVE-2024-2007](https://github.com/advisories/GHSA-wq2q-fqq7-mgvw): Found XAgent(OpenBMB) container escape bug.
 - CVE-2023-34655: Found ClashX(ObjC) XPC proxy privilege bug. ([1150](https://github.com/yichengchen/clashX/discussions/1150),[tttang](https://tttang.com/archive/1904/))
 - Found in-the-wild 0-day, Clash(Go) CSRF-to-RCE bug (Oct 5, 2022).
 
 ## Toy program
-
-- [TrollR2ool](https://github.com/BreakOnCrash/TrollR2ool) | iOS Runtime analysis tool
+- [fbuzzer](https://github.com/BreakOnCrash/fbuzzer) | A Frida-based toy in-process fuzzer 📣
+- [TrollR2ool](https://github.com/BreakOnCrash/TrollR2ool) | iOS Runtime analysis tool 🧌
 - [inx](https://github.com/BreakOnCrash/inx)｜Inject *.dylib into target process (like Frida) on macOS (arm64 and x86_64).
 - [gf.imipy.com](https://gf.imipy.com/) - Today's meal picker.
 - [pinger](https://github.com/ac0d3r/pingser) - Transfer custom messages via `ICMP`.
