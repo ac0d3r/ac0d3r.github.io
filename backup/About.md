@@ -1,4 +1,4 @@
-- Software Developer & Researcher
+- Senior Software Developer & Researcher
 - Projects I have participated in:
   - [DAS-Sandbox](https://sandbox.dbappsecurity.com.cn/)(Maleware Sandbox) - **UNIX-like Malware Research**, **Network Simulation Engine**
   - [DAS-AI](https://das-ai.com/welcome)(AI for Cybersecurity) - **Code Execution Sandbox**, **LLM Gateway**
@@ -9,7 +9,6 @@
 - [Hyuga](https://github.com/ac0d3r/Hyuga)｜A tool for monitoring Out-of-Band (OOB) traffic, supporting DNS, HTTP, LDAP, RMI, and DNS-Rebinding.
 - [xssfinder](https://github.com/ac0d3r/xssfinder)｜A tool for detecting DOM-Based XSS using taint analysis, based on Chrome Headless for dynamic semantic analysis of JavaScript.
 - [TrollAppDuplicator](https://github.com/BreakOnCrash/TrollAppDuplicator) | iOS App duplicator for TrollStore
-- [go-embed-extractor](https://github.com/BreakOnCrash/go-embed-extractor)｜Extracting Go embeds
 
 ### PR
 - [NSEcho/furlzz](https://github.com/NSEcho/furlzz)
@@ -28,10 +27,13 @@
 - Found in-the-wild 0-day, Clash(Go) CSRF-to-RCE bug (Oct 5, 2022).
 
 ## Toy program
+- [go-symbolic-execution](https://github.com/BreakOnCrash/go-symbolic-execution) | Go white-box symbolic execution demo
 - [fbuzzer](https://github.com/BreakOnCrash/fbuzzer) | A Frida-based toy in-process fuzzer 📣
+- [go-embed-extractor](https://github.com/BreakOnCrash/go-embed-extractor)｜Extracting Go embeds 💽
+- [inx](https://github.com/BreakOnCrash/inx)｜Inject *.dylib into target process (like Frida) on macOS (arm64 and x86_64) 💉
 - [TrollR2ool](https://github.com/BreakOnCrash/TrollR2ool) | iOS Runtime analysis tool 🧌
-- [inx](https://github.com/BreakOnCrash/inx)｜Inject *.dylib into target process (like Frida) on macOS (arm64 and x86_64).
-- [gf.imipy.com](https://gf.imipy.com/) - Today's meal picker.
+---
+- [gf.imipy.com](https://gf.imipy.com/) - Today's meal picker 🥣
 - [pinger](https://github.com/ac0d3r/pingser) - Transfer custom messages via `ICMP`.
 - [v2hreo](https://github.com/ac0d3r/v2hreo) - V2ray macOS Menu Bar Application with <img src="https://img.shields.io/badge/-292e33?logo=swift" height="18"> + CGO.
 - [webportscan](https://github.com/ac0d3r/webportscan) - Scan local service (TCP) ports over Web page.
