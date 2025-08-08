@@ -31,8 +31,6 @@ Thread 0x00000003341ab000 (most recent call first):
 <details>
     <summary>Directory Traversal in sing-box-for-apple iCloud Path Parameter</summary>
 
-- 仓库不支持提issue，就直接提PR
-
 singbox 是支持通过 urlscheme 去创建配置文件的，就想审计这部分能不能目录穿越，跟踪到[NewProfileView.createProfileBackground](https://github.com/SagerNet/sing-box-for-apple/blob/main/ApplicationLibrary/Views/Profile/NewProfileView.swift#L171C30-L171C53) 函数 `let profileConfig = profileConfigDirectory.appendingPathComponent("config_\(nextProfileID).json")` 文件名被改写后就不存在漏洞了。
 
 创建 iCloud 类型配置时，path 参数存在目录穿越BUG：[code](https://github.com/SagerNet/sing-box-for-apple/blob/main/ApplicationLibrary/Views/Profile/NewProfileView.swift#L205-L210)
