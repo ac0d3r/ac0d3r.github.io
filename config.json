@@ -1,0 +1,14 @@
+{
+    "title": "zznQ",
+    "subTitle": "Enjoy breaking things.",
+    "email": "admin@imipy.com",
+    "avatarUrl": "https://blog.imipy.com/imgs/avatar.png",
+    "GMEEK_VERSION": "main",
+    "singlePage": [
+        "about", "link"
+    ],
+    "i18n": "EN",
+    "startSite":"01/05/2018",
+    "needComment": 1,
+    "script":"<script src='https://blog.imipy.com/plugins/GmeekTOC.js'></script>"
+}
