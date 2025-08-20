@@ -1,7 +1,7 @@
 > zznQの捉虫日记
-  我并不是一名专业的漏洞挖掘研究员，偶尔会对生活和工作接触到或感兴趣的软件进行简单研究。
+  我偶尔会对感兴趣的开源软件进行安全研究。
   这里会记录下我捉虫的思路，大多数会很水，但希望能越捉越好。
-  我主要分为了三类：BUG(算不上漏洞的)、Vulnerability、Tool(挖掘工具的研究)。
+  主要分为三类：BUG(算不上漏洞的)、Vulnerability、Tool(挖掘工具的研究)。
 
 # BUG
 
@@ -63,6 +63,16 @@ root cause 是它的上游依赖库：https://github.com/hajimehoshi/go-mp3 ，g
 # Tool
 
 <details>
+<summary>Symbolic Execution</summary>
+
+---
+
+- [Symbolic Execution](https://docs.angr.io/en/latest/core-concepts/symbolic.html)
+- Go白盒符号执行：将IR(SSA)转换为SMT约束，然后使用 [z3](https://github.com/Z3Prover/z3) 进行推理：[go-symbolic-execution demo](https://github.com/BreakOnCrash/go-symbolic-execution)
+
+</details>
+
+<details>
 <summary>Stalker in Fuzzing</summary>
 
 ---
@@ -74,7 +84,5 @@ Stalker 基于动态重新编译：当一个线程即将执行下一条指令前
 
 
 后续我为[furlzz - iOS URL schemes fuzzer](https://github.com/NSEcho/furlzz) 使用Stalker添加覆盖率反馈。
-
-
 
 </details>
