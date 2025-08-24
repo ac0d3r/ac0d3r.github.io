@@ -1,17 +1,17 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>zznQ</title><link>https://ac0d3r.github.io</link><description>Enjoy breaking things.</description><copyright>zznQ</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://blog.imipy.com/imgs/avatar.png</url><title>avatar</title><link>https://ac0d3r.github.io</link></image><lastBuildDate>Wed, 20 Aug 2025 11:40:57 +0000</lastBuildDate><managingEditor>zznQ</managingEditor><ttl>60</ttl><webMaster>zznQ</webMaster><item><title>zznQ's Bug Hunting Diary</title><link>https://ac0d3r.github.io/post/zznq%27s-bug-hunting-diary.html</link><description>&gt; zznQの捉虫日记
+<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>zznQ</title><link>https://ac0d3r.github.io</link><description>Enjoy breaking things.</description><copyright>zznQ</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://blog.imipy.com/imgs/avatar.png</url><title>avatar</title><link>https://ac0d3r.github.io</link></image><lastBuildDate>Sun, 24 Aug 2025 09:21:15 +0000</lastBuildDate><managingEditor>zznQ</managingEditor><ttl>60</ttl><webMaster>zznQ</webMaster><item><title>zznQ's Bug Hunting Diary</title><link>https://ac0d3r.github.io/post/zznq%27s-bug-hunting-diary.html</link><description>&gt; zznQの捉虫日记
   我偶尔会对感兴趣的开源软件进行安全研究。
   这里会记录下我捉虫的思路，大多数会很水，但希望能越捉越好。
-  主要分为三类：BUG(算不上漏洞的)、Vulnerability、Tool(挖掘工具的研究)。
+  主要分为三类：Research(internal, tools)、BUG(算不上漏洞的)、Vulnerability。
 
-# BUG
+# Research
 
 &lt;details&gt;
-&lt;summary&gt;A memory error bug caused by race conditions in multithreaded use of curl_cffi&lt;/summary&gt;
+&lt;summary&gt;String Comparison Timing Attack&lt;/summary&gt;
 
 ---
 
-在试用 [grok2api_python](https://github.</description><guid isPermaLink="true">https://ac0d3r.github.io/post/zznq%27s-bug-hunting-diary.html</guid><pubDate>Fri, 08 Aug 2025 10:58:40 +0000</pubDate></item><item><title>静态程序分析入门之Go实践笔记</title><link>https://ac0d3r.github.io/post/%E9%9D%99%E6%80%81%E7%A8%8B%E5%BA%8F%E5%88%86%E6%9E%90%E5%85%A5%E9%97%A8%E4%B9%8Bgo%E5%AE%9E%E8%B7%B5%E7%AC%94%E8%AE%B0.html</link><description># 学习课程
+&gt; [CWE-1254: Incorrect Comparison Logic Granularity](https://cwe.</description><guid isPermaLink="true">https://ac0d3r.github.io/post/zznq%27s-bug-hunting-diary.html</guid><pubDate>Fri, 08 Aug 2025 10:58:40 +0000</pubDate></item><item><title>静态程序分析入门之Go实践笔记</title><link>https://ac0d3r.github.io/post/%E9%9D%99%E6%80%81%E7%A8%8B%E5%BA%8F%E5%88%86%E6%9E%90%E5%85%A5%E9%97%A8%E4%B9%8Bgo%E5%AE%9E%E8%B7%B5%E7%AC%94%E8%AE%B0.html</link><description># 学习课程
 &gt; [南京大学（李樾、谭添老师）的课程《软件分析》](https://tai-e.</description><guid isPermaLink="true">https://ac0d3r.github.io/post/%E9%9D%99%E6%80%81%E7%A8%8B%E5%BA%8F%E5%88%86%E6%9E%90%E5%85%A5%E9%97%A8%E4%B9%8Bgo%E5%AE%9E%E8%B7%B5%E7%AC%94%E8%AE%B0.html</guid><pubDate>Mon, 21 Apr 2025 16:26:29 +0000</pubDate></item><item><title>Records of macOS Malware Analysis</title><link>https://ac0d3r.github.io/post/records-of-macos-malware-analysis.html</link><description>## AtomicStealer - BrewApp&#13;
 **Summary**&#13;
 &#13;

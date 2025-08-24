@@ -13,35 +13,35 @@
 <meta name="description" content="> zznQの捉虫日记
   我偶尔会对感兴趣的开源软件进行安全研究。
   这里会记录下我捉虫的思路，大多数会很水，但希望能越捉越好。
-  主要分为三类：BUG(算不上漏洞的)、Vulnerability、Tool(挖掘工具的研究)。
+  主要分为三类：Research(internal, tools)、BUG(算不上漏洞的)、Vulnerability。
 
-# BUG
+# Research
 
 <details>
-<summary>A memory error bug caused by race conditions in multithreaded use of curl_cffi</summary>
+<summary>String Comparison Timing Attack</summary>
 
 ---
 
-在试用 [grok2api_python](https://github.">
+> [CWE-1254: Incorrect Comparison Logic Granularity](https://cwe.">
 <meta property="og:title" content="zznQ's Bug Hunting Diary">
 <meta property="og:description" content="> zznQの捉虫日记
   我偶尔会对感兴趣的开源软件进行安全研究。
   这里会记录下我捉虫的思路，大多数会很水，但希望能越捉越好。
-  主要分为三类：BUG(算不上漏洞的)、Vulnerability、Tool(挖掘工具的研究)。
+  主要分为三类：Research(internal, tools)、BUG(算不上漏洞的)、Vulnerability。
 
-# BUG
+# Research
 
 <details>
-<summary>A memory error bug caused by race conditions in multithreaded use of curl_cffi</summary>
+<summary>String Comparison Timing Attack</summary>
 
 ---
 
-在试用 [grok2api_python](https://github.">
+> [CWE-1254: Incorrect Comparison Logic Granularity](https://cwe.">
 <meta property="og:type" content="article">
 <meta property="og:url" content="https://ac0d3r.github.io/post/zznq%27s-bug-hunting-diary.html">
 <meta property="og:image" content="https://blog.imipy.com/imgs/avatar.png">
 <title>zznQ's Bug Hunting Diary</title>
-
+<link href="//unpkg.com/@wooorm/starry-night@2.1.1/style/both.css" rel="stylesheet" />
 
 
 </head>
@@ -111,8 +111,66 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 <p>zznQの捉虫日记<br>
 我偶尔会对感兴趣的开源软件进行安全研究。<br>
 这里会记录下我捉虫的思路，大多数会很水，但希望能越捉越好。<br>
-主要分为三类：BUG(算不上漏洞的)、Vulnerability、Tool(挖掘工具的研究)。</p>
+主要分为三类：Research(internal, tools)、BUG(算不上漏洞的)、Vulnerability。</p>
 </blockquote>
+<h1>Research</h1>
+<details>
+<summary>String Comparison Timing Attack</summary>
+<hr>
+<blockquote>
+<p><a href="https://cwe.mitre.org/data/definitions/1254.html" rel="nofollow">CWE-1254: Incorrect Comparison Logic Granularity</a></p>
+</blockquote>
+<h2>What happened to the Go built-in <code class="notranslate">==</code>?</h2>
+<div class="highlight highlight-source-go"><pre class="notranslate"><span class="pl-k">func</span> <span class="pl-s1">Check</span>(<span class="pl-s1">a</span>, <span class="pl-s1">b</span> <span class="pl-smi">string</span>) <span class="pl-smi">bool</span> {
+	<span class="pl-k">return</span> <span class="pl-s1">a</span> <span class="pl-c1">==</span> <span class="pl-s1">b</span>
+}</pre></div>
+<p>分析编译 <code class="notranslate">go build -gcflags="-S" main.go</code>，简化汇编如下：</p>
+<pre class="notranslate"><code class="notranslate">0x0000 00000 TEXT    main.Check(SB), ABIInternal, $48-32
+...
+0x0020 00032 PCDATA  $3, $1
+0x0020 00032 CMP     R3, R1
+0x0024 00036 BEQ     48
+0x0028 00040 MOVD    ZR, R0
+0x002c 00044 JMP     64
+0x0030 00048 MOVD    R1, R3
+0x0034 00052 MOVD    R2, R1
+0x0038 00056 MOVD    R3, R2
+0x003c 00060 PCDATA  $1, $1
+0x003c 00060 CALL    runtime.memequal(SB)
+0x0040 00064 MOVD    -8(RSP), R29
+0x0044 00068 MOVD.P  48(RSP), R30
+0x0048 00072 RET     (R30)
+...
+</code></pre>
+<p>对比长度，如果长度相等就再使用运行 runtime.memequal 进行比较字符串。</p>
+<pre class="notranslate"><code class="notranslate">0x0020 00032 CMP     R3, R1
+0x0024 00036 BEQ     48
+</code></pre>
+<p>go 源码中有根据不同CPU架构去实现 <code class="notranslate">runtime.memequal</code> 函数 <code class="notranslate">src/internal/bytealg/equal_*.s</code><br>
+这里以arm64为例：<a href="https://github.com/golang/go/blob/master/src/internal/bytealg/equal_arm64.s">equal_arm64.s</a></p>
+<p>在性能上有高度优化，early-exit机制使其容易受到时序攻击，比如零长度，相同指针，不同长度快速返回；在对字节块比较时不相同时退出等。</p>
+<p>改进：</p>
+<ol>
+<li>使用 <code class="notranslate">crypto/subtle.ConstantTimeCompare</code> 进行安全比较</li>
+<li>避免直接使用 <code class="notranslate">==</code> 或 <code class="notranslate">bytes.Equal</code> 比较敏感数据</li>
+</ol>
+</details>
+<details>
+<summary>Symbolic Execution</summary>
+<hr>
+<ul>
+<li><a href="https://docs.angr.io/en/latest/core-concepts/symbolic.html" rel="nofollow">Symbolic Execution</a></li>
+<li>Go白盒符号执行：将IR(SSA)转换为SMT约束，然后使用 <a href="https://github.com/Z3Prover/z3">z3</a> 进行推理：<a href="https://github.com/BreakOnCrash/go-symbolic-execution">go-symbolic-execution demo</a></li>
+</ul>
+</details>
+<details>
+<summary>Stalker in Fuzzing</summary>
+<hr>
+<p>关于 Stalker 的设计思路：<a href="https://medium.com/@oleavr/anatomy-of-a-code-tracer-b081aadb0df8" rel="nofollow">Anatomy of a code tracer</a><br>
+Stalker 基于动态重新编译：当一个线程即将执行下一条指令前，先将目标指令拷贝一份到新建的内存中，然后在新内存中对代码进行插桩，如下图所示:</p>
+<p><a target="_blank" rel="noopener noreferrer nofollow" href="https://camo.githubusercontent.com/c6e4f78de31b3e819e1764b799315ebf22e7fbcf708ea74e9540dceab38d0be9/68747470733a2f2f6d69726f2e6d656469756d2e636f6d2f76322f726573697a653a6669743a313430302f666f726d61743a776562702f312a387244374c765455456c644c37775250446a57684b512e706e67"><img src="https://camo.githubusercontent.com/c6e4f78de31b3e819e1764b799315ebf22e7fbcf708ea74e9540dceab38d0be9/68747470733a2f2f6d69726f2e6d656469756d2e636f6d2f76322f726573697a653a6669743a313430302f666f726d61743a776562702f312a387244374c765455456c644c37775250446a57684b512e706e67" alt="" data-canonical-src="https://miro.medium.com/v2/resize:fit:1400/format:webp/1*8rD7LvTUEldL7wRPDjWhKQ.png" style="max-width: 100%;"></a></p>
+<p>后续我为<a href="https://github.com/NSEcho/furlzz">furlzz - iOS URL schemes fuzzer</a> 使用Stalker添加覆盖率反馈。</p>
+</details>
 <h1>BUG</h1>
 <details>
 <summary>A memory error bug caused by race conditions in multithreaded use of curl_cffi</summary>
@@ -146,24 +204,7 @@ Thread 0x00000003341ab000 (most recent call first):
 <a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/e858fc10-3c23-4736-91a5-7c0dd0de4ad5"><img width="500" height="408" alt="Image" src="https://github.com/user-attachments/assets/e858fc10-3c23-4736-91a5-7c0dd0de4ad5" style="max-width: 100%; height: auto; max-height: 408px;"></a>
 <p>root cause 是它的上游依赖库：<a href="https://github.com/hajimehoshi/go-mp3">https://github.com/hajimehoshi/go-mp3</a> ，go-mp3 仓库已归档，即只能在报告在 beep 仓库。解决方法我想只能是用 <code class="notranslate">recover()</code> 去捕获panic。</p>
 </details>
-<h1>Vulnerability</h1>
-<h1>Tool</h1>
-<details>
-<summary>Symbolic Execution</summary>
-<hr>
-<ul>
-<li><a href="https://docs.angr.io/en/latest/core-concepts/symbolic.html" rel="nofollow">Symbolic Execution</a></li>
-<li>Go白盒符号执行：将IR(SSA)转换为SMT约束，然后使用 <a href="https://github.com/Z3Prover/z3">z3</a> 进行推理：<a href="https://github.com/BreakOnCrash/go-symbolic-execution">go-symbolic-execution demo</a></li>
-</ul>
-</details>
-<details>
-<summary>Stalker in Fuzzing</summary>
-<hr>
-<p>关于 Stalker 的设计思路：<a href="https://medium.com/@oleavr/anatomy-of-a-code-tracer-b081aadb0df8" rel="nofollow">Anatomy of a code tracer</a><br>
-Stalker 基于动态重新编译：当一个线程即将执行下一条指令前，先将目标指令拷贝一份到新建的内存中，然后在新内存中对代码进行插桩，如下图所示:</p>
-<p><a target="_blank" rel="noopener noreferrer nofollow" href="https://camo.githubusercontent.com/c6e4f78de31b3e819e1764b799315ebf22e7fbcf708ea74e9540dceab38d0be9/68747470733a2f2f6d69726f2e6d656469756d2e636f6d2f76322f726573697a653a6669743a313430302f666f726d61743a776562702f312a387244374c765455456c644c37775250446a57684b512e706e67"><img src="https://camo.githubusercontent.com/c6e4f78de31b3e819e1764b799315ebf22e7fbcf708ea74e9540dceab38d0be9/68747470733a2f2f6d69726f2e6d656469756d2e636f6d2f76322f726573697a653a6669743a313430302f666f726d61743a776562702f312a387244374c765455456c644c37775250446a57684b512e706e67" alt="" data-canonical-src="https://miro.medium.com/v2/resize:fit:1400/format:webp/1*8rD7LvTUEldL7wRPDjWhKQ.png" style="max-width: 100%;"></a></p>
-<p>后续我为<a href="https://github.com/NSEcho/furlzz">furlzz - iOS URL schemes fuzzer</a> 使用Stalker添加覆盖率反馈。</p>
-</details></div>
+<h1>Vulnerability</h1></div>
 <div style="font-size:small;margin-top:8px;float:right;"></div>
 
 <button class="btn btn-block" type="button" onclick="openComments()" id="cmButton">comments</button>
