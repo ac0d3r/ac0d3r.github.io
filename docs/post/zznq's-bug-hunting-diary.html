@@ -17,10 +17,7 @@
 
 # Research
 
-<details>
-<summary>String Comparison Timing Attack</summary>
-
----
+## String Comparison Timing Attack
 
 > [CWE-1254: Incorrect Comparison Logic Granularity](https://cwe.">
 <meta property="og:title" content="zznQ's Bug Hunting Diary">
@@ -31,10 +28,7 @@
 
 # Research
 
-<details>
-<summary>String Comparison Timing Attack</summary>
-
----
+## String Comparison Timing Attack
 
 > [CWE-1254: Incorrect Comparison Logic Granularity](https://cwe.">
 <meta property="og:type" content="article">
@@ -114,13 +108,11 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 主要分为三类：Research(internal, tools)、BUG(算不上漏洞的)、Vulnerability。</p>
 </blockquote>
 <h1>Research</h1>
-<details>
-<summary>String Comparison Timing Attack</summary>
-<hr>
+<h2>String Comparison Timing Attack</h2>
 <blockquote>
 <p><a href="https://cwe.mitre.org/data/definitions/1254.html" rel="nofollow">CWE-1254: Incorrect Comparison Logic Granularity</a></p>
 </blockquote>
-<h2>What happened to the Go built-in <code class="notranslate">==</code>?</h2>
+<p><strong>What happened to the Go built-in <code class="notranslate">==</code>?</strong></p>
 <div class="highlight highlight-source-go"><pre class="notranslate"><span class="pl-k">func</span> <span class="pl-s1">Check</span>(<span class="pl-s1">a</span>, <span class="pl-s1">b</span> <span class="pl-smi">string</span>) <span class="pl-smi">bool</span> {
 	<span class="pl-k">return</span> <span class="pl-s1">a</span> <span class="pl-c1">==</span> <span class="pl-s1">b</span>
 }</pre></div>
@@ -154,27 +146,18 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 <li>使用 <code class="notranslate">crypto/subtle.ConstantTimeCompare</code> 进行安全比较</li>
 <li>避免直接使用 <code class="notranslate">==</code> 或 <code class="notranslate">bytes.Equal</code> 比较敏感数据</li>
 </ol>
-</details>
-<details>
-<summary>Symbolic Execution</summary>
-<hr>
+<h2>Symbolic Execution</h2>
 <ul>
 <li><a href="https://docs.angr.io/en/latest/core-concepts/symbolic.html" rel="nofollow">Symbolic Execution</a></li>
 <li>Go白盒符号执行：将IR(SSA)转换为SMT约束，然后使用 <a href="https://github.com/Z3Prover/z3">z3</a> 进行推理：<a href="https://github.com/BreakOnCrash/go-symbolic-execution">go-symbolic-execution demo</a></li>
 </ul>
-</details>
-<details>
-<summary>Stalker in Fuzzing</summary>
-<hr>
+<h2>Stalker in Fuzzing</h2>
 <p>关于 Stalker 的设计思路：<a href="https://medium.com/@oleavr/anatomy-of-a-code-tracer-b081aadb0df8" rel="nofollow">Anatomy of a code tracer</a><br>
 Stalker 基于动态重新编译：当一个线程即将执行下一条指令前，先将目标指令拷贝一份到新建的内存中，然后在新内存中对代码进行插桩，如下图所示:</p>
 <p><a target="_blank" rel="noopener noreferrer nofollow" href="https://camo.githubusercontent.com/c6e4f78de31b3e819e1764b799315ebf22e7fbcf708ea74e9540dceab38d0be9/68747470733a2f2f6d69726f2e6d656469756d2e636f6d2f76322f726573697a653a6669743a313430302f666f726d61743a776562702f312a387244374c765455456c644c37775250446a57684b512e706e67"><img src="https://camo.githubusercontent.com/c6e4f78de31b3e819e1764b799315ebf22e7fbcf708ea74e9540dceab38d0be9/68747470733a2f2f6d69726f2e6d656469756d2e636f6d2f76322f726573697a653a6669743a313430302f666f726d61743a776562702f312a387244374c765455456c644c37775250446a57684b512e706e67" alt="" data-canonical-src="https://miro.medium.com/v2/resize:fit:1400/format:webp/1*8rD7LvTUEldL7wRPDjWhKQ.png" style="max-width: 100%;"></a></p>
 <p>后续我为<a href="https://github.com/NSEcho/furlzz">furlzz - iOS URL schemes fuzzer</a> 使用Stalker添加覆盖率反馈。</p>
-</details>
 <h1>BUG</h1>
-<details>
-<summary>A memory error bug caused by race conditions in multithreaded use of curl_cffi</summary>
-<hr>
+<h2>A memory error bug caused by race conditions in multithreaded use of curl_cffi</h2>
 <p>在试用 <a href="https://github.com/xLmiler/grok2api_python">grok2api_python</a> 时会多次出现这个错误：</p>
 <p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/a791dfa1-3bcc-4673-9bb2-4da62fd39310"><img src="https://github.com/user-attachments/assets/a791dfa1-3bcc-4673-9bb2-4da62fd39310" alt="" style="max-width: 100%;"></a></p>
 <p>我看了下依赖库，首先定位到curl_cffi。它通过访问低级C接口操作堆栈，这里可能会存在问题。打印完整的堆栈信息：</p>
@@ -187,23 +170,16 @@ Thread 0x00000003341ab000 (most recent call first):
   File "../grok2api_python/.venv/lib/python3.12/site-packages/curl_cffi/requests/session.py", line 593 in perform
   ...
 </code></pre>
-<p>进一步分析发现，问题的根因是在多线程并发情况下使用 curl_cffi 的 <a href="https://curl-cffi.readthedocs.io/en/latest/quick_start.html#streaming-response" rel="nofollow">streaming</a> 功能时，存在条件竞争，导致内存错误。</p>
-</details>
-<details>
-    <summary>Directory Traversal in sing-box-for-apple iCloud Path Parameter</summary>
-<hr>
+<p>进一步分析发现，问题的根因是在多线程并发情况下使用 curl_cffi 的 <a href="https://curl-cffi.readthedocs.io/en/latest/quick_start.html#streaming-response" rel="nofollow">streaming</a> 对资源操作的地方(perform,clean_after_perform)，存在条件竞争，导致内存错误。</p>
+<h2>Directory Traversal in sing-box-for-apple iCloud Path Parameter</h2>
 <p>singbox 是支持通过 urlscheme 去创建配置文件的，就想审计这部分能不能目录穿越，跟踪到<a href="https://github.com/SagerNet/sing-box-for-apple/blob/main/ApplicationLibrary/Views/Profile/NewProfileView.swift#L171C30-L171C53">NewProfileView.createProfileBackground</a> 函数 <code class="notranslate">let profileConfig = profileConfigDirectory.appendingPathComponent("config_\(nextProfileID).json")</code> 文件名被改写后就不存在漏洞了。</p>
 <p>创建 iCloud 类型配置时，path 参数存在目录穿越BUG：<a href="https://github.com/SagerNet/sing-box-for-apple/blob/main/ApplicationLibrary/Views/Profile/NewProfileView.swift#L205-L210">code</a></p>
 <p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/3081e849-53c6-440e-bb89-6911ec7ea285"><img src="https://github.com/user-attachments/assets/3081e849-53c6-440e-bb89-6911ec7ea285" alt="" style="max-width: 100%;"></a></p>
 <p>singbox 开启了AppSandbox，既无法穿越到容器目录外，也不能远程调用，只能在本地创建，故只能算个水BUG。</p>
-</details>
-<details>
-<summary>Slice Out-of-Bounds Panic in beep(mp3.Decode)</summary>
-<hr>
+<h2>Slice Out-of-Bounds Panic in beep(mp3.Decode)</h2>
 <p>通过 go fuzzing 发现的bug：</p>
-<a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/e858fc10-3c23-4736-91a5-7c0dd0de4ad5"><img width="500" height="408" alt="Image" src="https://github.com/user-attachments/assets/e858fc10-3c23-4736-91a5-7c0dd0de4ad5" style="max-width: 100%; height: auto; max-height: 408px;"></a>
+<p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/e858fc10-3c23-4736-91a5-7c0dd0de4ad5"><img width="500" height="408" alt="Image" src="https://github.com/user-attachments/assets/e858fc10-3c23-4736-91a5-7c0dd0de4ad5" style="max-width: 100%; height: auto; max-height: 408px;"></a></p>
 <p>root cause 是它的上游依赖库：<a href="https://github.com/hajimehoshi/go-mp3">https://github.com/hajimehoshi/go-mp3</a> ，go-mp3 仓库已归档，即只能在报告在 beep 仓库。解决方法我想只能是用 <code class="notranslate">recover()</code> 去捕获panic。</p>
-</details>
 <h1>Vulnerability</h1></div>
 <div style="font-size:small;margin-top:8px;float:right;"></div>
 
