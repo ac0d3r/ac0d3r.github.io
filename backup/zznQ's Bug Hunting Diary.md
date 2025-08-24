@@ -67,7 +67,7 @@ Stalker 基于动态重新编译：当一个线程即将执行下一条指令前
 
 # BUG
 
-## Directory Traversal in sing-box-for-apple(iCloud)
+## Limited Path Traversal in sing-box-for-apple
 
 singbox 是支持通过 urlscheme 去创建配置文件的，就想审计这部分能不能目录穿越，跟踪到[NewProfileView.createProfileBackground](https://github.com/SagerNet/sing-box-for-apple/blob/main/ApplicationLibrary/Views/Profile/NewProfileView.swift#L171C30-L171C53) 函数 `let profileConfig = profileConfigDirectory.appendingPathComponent("config_\(nextProfileID).json")` 文件名被改写后就不存在漏洞了。
 
