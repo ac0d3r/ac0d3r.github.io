@@ -29,7 +29,7 @@
   <tr>
     <td><a href="https://github.com/advisories/GHSA-w6p4-84vc-qc2w">CVE-2025-5030</a></td>
     <td><a href="https://github.com/Ackites/KillWxapkg">KillWxapkg</a></td>
-    <td>Arbitrary File Write, RCE</td>
+    <td>Arbitrary File Overwrite, RCE</td>
   </tr>
   <tr>
     <td><a href="https://github.com/advisories/GHSA-pqqp-7cp8-vxvf">CVE-2025-5031</a></td>
