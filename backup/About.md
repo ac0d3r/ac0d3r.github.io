@@ -11,20 +11,26 @@
 - [TrollAppDuplicator](https://github.com/BreakOnCrash/TrollAppDuplicator) | iOS App duplicator for TrollStore
 
 ### PR
-- [Hemmelig.app](https://github.com/HemmeligOrg/Hemmelig.app/pulls?q=is%3Apr+is%3Aclosed+author%3Aac0d3r)
-  - Fix: Public secrets can be opened without a decryption key
-  - Fix: toggle Editor between read-only and editable
-- [NSEcho/furlzz](https://github.com/NSEcho/furlzz/pulls?q=is%3Apr+is%3Aclosed+author%3Aac0d3r)
-  - Add coverage guided with Stalker
-  - fix(init): use passed-in type when creating config
-- [Tencent/AI-Infra-Guard](https://github.com/Tencent/AI-Infra-Guard/pulls?q=is%3Apr+is%3Aclosed+author%3Aac0d3r)
-  - Optimize the Fingerprint DSL parser (build AST and support short-circuit)
-  - Fix out-of-bounds panic when quoted string ends with a backslash
-- [saferwall/elf](https://github.com/saferwall/elf/pulls?q=is%3Apr+is%3Aclosed+author%3Aac0d3r)
-  - Fix parsing of ELF section header
+- [NSEcho/furlzz](https://github.com/NSEcho/furlzz)
+  - [Add coverage guided with Stalker](https://github.com/NSEcho/furlzz/pull/53)
+  - [fix(init): use passed-in type when creating config](https://github.com/NSEcho/furlzz/pull/52)
+- [Tencent/AI-Infra-Guard](https://github.com/Tencent/AI-Infra-Guard)
+  - [Optimize the Fingerprint DSL parser (build AST and support short-circuit)](https://github.com/Tencent/AI-Infra-Guard/pull/20)
+  - [Fix out-of-bounds panic when quoted string ends with a backslash](https://github.com/Tencent/AI-Infra-Guard/pull/27)
+- [saferwall/elf](https://github.com/saferwall/elf/pull/4): Fix parsing of ELF section header
 
 ## Vulnerability Research
 <table>
+  <tr>
+    <td>CVE-2025-10975</td>
+    <td><a href="https://github.com/GuanxingLu/vlarl">vlarl</a></td>
+    <td>Insecure Deserialization, RCE</td>
+  </tr>
+  <tr>
+    <td>CVE-2025-10974</td>
+    <td><a href="https://github.com/giantspatula/SewKinect">SewKinect</a></td>
+    <td>Insecure Deserialization, RCE</td>
+  </tr>
   <tr>
     <td><a href="https://github.com/advisories/GHSA-3x36-997r-xj57">CVE-2025-8729</a></td>
     <td><a href="https://github.com/MigoXLab/LMeterX">LMeterX</a></td>
@@ -33,7 +39,7 @@
   <tr>
     <td><a href="https://github.com/advisories/GHSA-w6p4-84vc-qc2w">CVE-2025-5030</a></td>
     <td><a href="https://github.com/Ackites/KillWxapkg">KillWxapkg</a></td>
-    <td>Arbitrary File Overwrite, RCE</td>
+    <td>Arbitrary File Write, RCE</td>
   </tr>
   <tr>
     <td><a href="https://github.com/advisories/GHSA-pqqp-7cp8-vxvf">CVE-2025-5031</a></td>
