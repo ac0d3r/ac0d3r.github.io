@@ -5,6 +5,81 @@
 
 # Research
 
+## vulnhuntr source code analysis
+
+> vulnhuntr 基于 llm+静态分析 来挖掘 Python 项目安全漏洞。
+
+1. **收集代码文件**
+
+- 忽略下列文件：
+    - 路径以及目录：`/setup.py, /test, /example, /docs, /site-packages, .venv, virtualenv, /dist`
+    - 包含的文件名：`test_, conftest, _test.py`
+
+- 不指定目录时，默认查找 Web(Django,Flask,FastAPI...),Websocket以及网络服务等相关的代码文件。
+
+2. **初始化 LLM**
+
+- 读取项目README，拼接`README_SUMMARY_PROMPT_TEMPLATE`让 LLM 总结项目。
+- 准备系统提示词：`SYS_PROMPT_TEMPLATE` + readme_summary，
+
+**系统提示词核心：**
+  - 任务是进行详尽的静态代码分析，聚焦于远程可利用的漏洞，包括LFI、RCE、SSRF、AFO、SQLI、XSS和IDOR
+  - 仔细跟踪远程用户输入到高风险函数的路径。
+  - 如果代码链不完整，可在响应中请求额外上下文（<context_code>标签）。
+  - 利用提供的README总结（<readme_summary>）了解应用目的和潜在攻击面。
+  - 输出为JSON格式，符合指定的响应模式（<response_format>）
+
+3. **分析代码**
+
+分析代码它分为两个阶段：初始分析 和 二级分析，通过LLM逐步深入分析代码。通过 workflow 更清晰：
+
+```mermaid
+flowchart TD
+    C[收集代码文件]
+    C --> D{用户指定 --analyze 参数?}
+    D -->|是| E[确定分析路径（绝对或相对）]
+    D -->|否| F[扫描网络相关文件]
+    E --> G[设置 files_to_analyze]
+    F --> G
+    G --> H[初始化LLM（用于README总结）]
+    H --> I[获取README内容]
+    I --> J{README存在?}
+    J -->|是| K[调用LLM总结README]
+    J -->|否| L[设置summary为空]
+    K --> M[提取总结内容]
+    L --> N[构建系统提示词（包含README总结）]
+    M --> N
+    N --> O[重新初始化LLM（带系统提示）]
+    O --> P[遍历 files_to_analyze 中的每个文件]
+    P --> Q[读取文件内容]
+    Q --> R{文件有内容?}
+    R -->|否| S[跳过文件]
+    R -->|是| T[构建初始分析提示]
+    T --> U[调用LLM进行初始分析]
+    U --> V[打印初始报告]
+    V --> W{置信度 > 0 且有漏洞类型?}
+    W -->|否| X[结束文件分析]
+    W -->|是| Y[遍历每个漏洞类型]
+    Y --> Z[初始化二级分析变量]
+    Z --> AA[循环7次迭代]
+    AA --> BB[构建漏洞特定提示]
+    BB --> CC[调用LLM进行二级分析]
+    CC --> DD[处理上下文请求（提取代码）]
+    DD --> EE{有新上下文?}
+    EE -->|是| FF[更新存储，继续循环]
+    EE -->|否| GG[检查重复上下文]
+    GG --> HH{重复请求?}
+    HH -->|否| II[允许一次，继续]
+    HH -->|是| JJ[停止循环]
+    FF --> AA
+    II --> AA
+    JJ --> KK[打印最终报告]
+    KK --> Y
+    X --> P
+    S --> P
+    P --> LL[结束]
+```
+
 ## String Comparison Timing Attack
 
 > [CWE-1254: Incorrect Comparison Logic Granularity](https://cwe.mitre.org/data/definitions/1254.html)
