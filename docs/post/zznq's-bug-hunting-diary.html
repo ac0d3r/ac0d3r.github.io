@@ -11,9 +11,9 @@
         document.documentElement.setAttribute("data-color-mode", theme);
     </script>
 <meta name="description" content="> zznQの捉虫日记
-  我偶尔会对感兴趣的开源软件进行安全研究。
+  我偶尔对感兴趣的软件进行安全研究。
   这里会记录下我捉虫的思路，大多数会很水，但希望能越捉越好。
-  主要分为三类：Research(internal, tools)、BUG(算不上漏洞的)、Vulnerability。
+  主要为：Research(internal, tools)、BUG等。
 
 # Research
 
@@ -22,9 +22,9 @@
 > [CWE-1254: Incorrect Comparison Logic Granularity](https://cwe.">
 <meta property="og:title" content="zznQ's Bug Hunting Diary">
 <meta property="og:description" content="> zznQの捉虫日记
-  我偶尔会对感兴趣的开源软件进行安全研究。
+  我偶尔对感兴趣的软件进行安全研究。
   这里会记录下我捉虫的思路，大多数会很水，但希望能越捉越好。
-  主要分为三类：Research(internal, tools)、BUG(算不上漏洞的)、Vulnerability。
+  主要为：Research(internal, tools)、BUG等。
 
 # Research
 
@@ -103,9 +103,9 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
     <div id="content">
 <div class="markdown-body" id="postBody"><blockquote>
 <p>zznQの捉虫日记<br>
-我偶尔会对感兴趣的开源软件进行安全研究。<br>
+我偶尔对感兴趣的软件进行安全研究。<br>
 这里会记录下我捉虫的思路，大多数会很水，但希望能越捉越好。<br>
-主要分为三类：Research(internal, tools)、BUG(算不上漏洞的)、Vulnerability。</p>
+主要为：Research(internal, tools)、BUG等。</p>
 </blockquote>
 <h1>Research</h1>
 <h2>String Comparison Timing Attack</h2>
@@ -164,8 +164,7 @@ Stalker 基于动态重新编译：当一个线程即将执行下一条指令前
 <h2>Slice Out-of-Bounds Panic in beep</h2>
 <p>通过 go fuzzing 发现的bug：</p>
 <p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/e858fc10-3c23-4736-91a5-7c0dd0de4ad5"><img width="500" height="408" alt="Image" src="https://github.com/user-attachments/assets/e858fc10-3c23-4736-91a5-7c0dd0de4ad5" style="max-width: 100%; height: auto; max-height: 408px;"></a></p>
-<p>root cause 是它的上游依赖库：<a href="https://github.com/hajimehoshi/go-mp3">https://github.com/hajimehoshi/go-mp3</a> ，go-mp3 仓库已归档，即只能在报告在 beep 仓库。解决方法我想只能是用 <code class="notranslate">recover()</code> 去捕获panic。</p>
-<h1>Vulnerability</h1></div>
+<p>root cause 是它的上游依赖库：<a href="https://github.com/hajimehoshi/go-mp3">https://github.com/hajimehoshi/go-mp3</a> ，go-mp3 仓库已归档，即只能在报告在 beep 仓库。解决方法我想只能是用 <code class="notranslate">recover()</code> 去捕获panic。</p></div>
 <div style="font-size:small;margin-top:8px;float:right;"></div>
 
 <button class="btn btn-block" type="button" onclick="openComments()" id="cmButton">comments</button>
