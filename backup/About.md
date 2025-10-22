@@ -68,7 +68,7 @@
   <tr>
     <td>N/A/Oct 5, 2022</td>
     <td>Clash</td>
-    <td>In-the-wild 0-day CSRF-to-RCE bug</td>
+    <td>In-the-wild 0-day 1click-RCE</td>
   </tr>
 </table>
 
