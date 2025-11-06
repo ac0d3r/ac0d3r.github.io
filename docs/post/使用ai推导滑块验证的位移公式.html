@@ -90,12 +90,7 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 <div class="markdown-body" id="postBody"><h2>前提</h2>
 <p>上一篇<a href="https://blog.imipy.com/post/find-slider-captcha-position-with-opencv-template-matching.html" rel="nofollow">文章</a>介绍了使用<code class="notranslate">Template Matching</code>定位到缺口位置，再模拟鼠标去滑动元素就可以了。<br>
 但是我遇到一个有趣的案例：</p>
-<p><br>
-<video controls="" width="300"><br>
-<source type="video/mp4"><br>
-您的浏览器不支持 video 标签。<br>
-</video><br>
-</p>
+<p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/9ee83179-06b5-4aa1-888e-9af04769170f"><img src="https://github.com/user-attachments/assets/9ee83179-06b5-4aa1-888e-9af04769170f" alt="Image" style="max-width: 100%;"></a></p>
 <p>如这个视频所示，滑块和拼图的移动关系并非线性：：先慢、再均速、最后快。但它们之间肯定存在某种数据关系。</p>
 <h2>采集数据</h2>
 <p>在浏览器上使用JS采集slider和puzzle两个元素对应的移动数据（style:<code class="notranslate">left:xxpx</code>）：</p>
