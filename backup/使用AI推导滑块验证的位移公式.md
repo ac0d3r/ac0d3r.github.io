@@ -3,7 +3,10 @@
 上一篇[文章](https://blog.imipy.com/post/find-slider-captcha-position-with-opencv-template-matching.html)介绍了使用`Template Matching`定位到缺口位置，再模拟鼠标去滑动元素就可以了。
 但是我遇到一个有趣的案例：
 
-https://github.com/user-attachments/assets/f5b1badb-3837-441f-a4e3-8ba6214c4d22
+<video controls width="300">
+  <source src="https://github.com/user-attachments/assets/f5b1badb-3837-441f-a4e3-8ba6214c4d22" type="video/mp4">
+  您的浏览器不支持 video 标签。
+</video>
 
 如这个视频所示，滑块和拼图的移动关系并非线性：：先慢、再均速、最后快。但它们之间肯定存在某种数据关系。
 
