@@ -5,11 +5,11 @@
 
 ![Image](https://github.com/user-attachments/assets/9ee83179-06b5-4aa1-888e-9af04769170f)
 
-如这个视频所示，滑块和拼图的移动关系并非线性：：先慢、再均速、最后快。但它们之间肯定存在某种数据关系。
+如这个视频所示，滑块和拼图的移动关系并非线性：先慢、再均速、最后快。但它们之间肯定存在某种数学关系。
 
 ## 采集数据
 
-在浏览器上使用JS采集slider和puzzle两个元素对应的移动数据（style:`left:xxpx`）：
+在浏览器上使用JS采集滑块和拼图两个元素对应的移动数据（style:`left:xxpx`）：
 
 ```javascript
 const slider = document.querySelector('#captcha-sliding-slider');
