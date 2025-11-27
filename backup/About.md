@@ -11,6 +11,8 @@
 - [TrollAppDuplicator](https://github.com/BreakOnCrash/TrollAppDuplicator) | iOS App duplicator for TrollStore
 
 ### PR
+- [moonD4rk/HackBrowserData](https://github.com/moonD4rk/HackBrowserData/pulls?q=is%3Apr+author%3Aac0d3r+is%3Aclosed)
+  - Decrypt the browser master key on macOS via gcore(CVE-2025-24204)
 - [Tencent/AI-Infra-Guard](https://github.com/Tencent/AI-Infra-Guard/pulls?q=is%3Apr+is%3Aclosed+author%3Aac0d3r)
   - Optimize the Fingerprint DSL parser (build AST and support short-circuit)
   - Fix out-of-bounds panic when quoted string ends with a backslash
