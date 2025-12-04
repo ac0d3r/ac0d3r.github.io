@@ -9,22 +9,23 @@
 - [Hyuga](https://github.com/ac0d3r/Hyuga)｜A tool for monitoring Out-of-Band (OOB) traffic, supporting DNS, HTTP, LDAP, RMI, and DNS-Rebinding. <img src="https://img.shields.io/github/stars/ac0d3r/Hyuga?logo=github" height="18" alt="Hyuga stars">
 - [xssfinder](https://github.com/ac0d3r/xssfinder)｜A tool for detecting DOM-Based XSS using taint analysis, based on Chrome Headless for dynamic semantic analysis of JavaScript. <img src="https://img.shields.io/github/stars/ac0d3r/xssfinder?logo=github" height="18" alt="xssfinder stars">
 - [TrollAppDuplicator](https://github.com/BreakOnCrash/TrollAppDuplicator) | iOS App duplicator for TrollStore <img src="https://img.shields.io/github/stars/BreakOnCrash/TrollAppDuplicator?logo=github" height="18" alt="TrollAppDuplicator stars">
+- [go-embed-extractor](https://github.com/BreakOnCrash/go-embed-extractor)｜Extracting Go embeds <img src="https://img.shields.io/github/stars/BreakOnCrash/go-embed-extractor?logo=github" height="18" alt="TrollAppDuplicator stars">
 
 ### PR
-
-- [Tencent/AI-Infra-Guard](https://github.com/Tencent/AI-Infra-Guard/pulls?q=is%3Apr+is%3Aclosed+author%3Aac0d3r) <img src="https://img.shields.io/github/stars/Tencent/AI-Infra-Guard?logo=github" height="18" alt="AI-Infra-Guard stars"> <a href="https://www.blackhat.com/eu-25/arsenal/schedule/index.html#aigai-infra-guard-48381" target="_blank"><img src="https://github.com/user-attachments/assets/2b86faa4-6efa-4269-a48d-91e46faeac21" alt="Tencent/AI-Infra-Guard | blackhat" width="120" height="37"></a>
+- [Tencent/AI-Infra-Guard](https://github.com/Tencent/AI-Infra-Guard/pulls?q=is%3Apr+is%3Aclosed+author%3Aac0d3r) <img src="https://img.shields.io/github/stars/Tencent/AI-Infra-Guard?logo=github" height="18"> <a href="https://www.blackhat.com/eu-25/arsenal/schedule/index.html#aigai-infra-guard-48381" target="_blank"><img src="https://github.com/user-attachments/assets/2b86faa4-6efa-4269-a48d-91e46faeac21" height="30"></a>
   - Optimize the Fingerprint DSL parser (build AST and support short-circuit)
   - Fix out-of-bounds panic when quoted string ends with a backslash
-- [moonD4rk/HackBrowserData](https://github.com/moonD4rk/HackBrowserData/pulls?q=is%3Apr+author%3Aac0d3r+is%3Aclosed) <img src="https://img.shields.io/github/stars/moonD4rk/HackBrowserData?logo=github" height="18" alt="HackBrowserData stars">
+- [moonD4rk/HackBrowserData](https://github.com/moonD4rk/HackBrowserData/pulls?q=is%3Apr+author%3Aac0d3r+is%3Aclosed) <img src="https://img.shields.io/github/stars/moonD4rk/HackBrowserData?logo=github" height="18">
   - Decrypt the browser master key on macOS via gcore(CVE-2025-24204)
-- [NSEcho/furlzz](https://github.com/NSEcho/furlzz/pulls?q=is%3Apr+is%3Aclosed+author%3Aac0d3r) <img src="https://img.shields.io/github/stars/NSEcho/furlzz?logo=github" height="18" alt="furlzz stars">
+- [NSEcho/furlzz](https://github.com/NSEcho/furlzz/pulls?q=is%3Apr+is%3Aclosed+author%3Aac0d3r) <img src="https://img.shields.io/github/stars/NSEcho/furlzz?logo=github" height="18">
   - Add coverage guided with Stalker
   - fix(init): use passed-in type when creating config
-- [Hemmelig.app](https://github.com/HemmeligOrg/Hemmelig.app/pulls?q=is%3Apr+is%3Aclosed+author%3Aac0d3r) <img src="https://img.shields.io/github/stars/HemmeligOrg/Hemmelig.app?logo=github" height="18" alt="Hemmelig.app stars">
+- [Hemmelig.app](https://github.com/HemmeligOrg/Hemmelig.app/pulls?q=is%3Apr+is%3Aclosed+author%3Aac0d3r) <img src="https://img.shields.io/github/stars/HemmeligOrg/Hemmelig.app?logo=github" height="18">
   - Fix: Public secrets can be opened without a decryption key
   - Fix: toggle Editor between read-only and editable
-- [saferwall/elf](https://github.com/saferwall/elf/pulls?q=is%3Apr+is%3Aclosed+author%3Aac0d3r) <img src="https://img.shields.io/github/stars/saferwall/elf?logo=github" height="18" alt="saferwall/elf stars">
+- [saferwall/elf](https://github.com/saferwall/elf/pulls?q=is%3Apr+is%3Aclosed+author%3Aac0d3r) <img src="https://img.shields.io/github/stars/saferwall/elf?logo=github" height="18">
   - Fix parsing of ELF section header
+- [boy-hack/hack-requests](https://github.com/boy-hack/hack-requests/pulls?q=is%3Apr+author%3Aac0d3r+is%3Aclosed) <img src="https://img.shields.io/github/stars/boy-hack/hack-requests?logo=github" height="18">
 
 ## Vulnerability Research
 <table>
@@ -76,10 +77,9 @@
 </table>
 
 ## Toy program
-- [go-symbolic-execution](https://github.com/BreakOnCrash/go-symbolic-execution) | Go white-box symbolic execution demo
 - [fbuzzer](https://github.com/BreakOnCrash/fbuzzer) | A Frida-based toy in-process fuzzer 📣
-- [go-embed-extractor](https://github.com/BreakOnCrash/go-embed-extractor)｜Extracting Go embeds 💽
 - [inx](https://github.com/BreakOnCrash/inx)｜Inject *.dylib into target process (like Frida) on macOS (arm64 and x86_64) 💉
+- [go-symbolic-execution](https://github.com/BreakOnCrash/go-symbolic-execution) | Go white-box symbolic execution demo 👨🏻‍💻
 - [TrollR2ool](https://github.com/BreakOnCrash/TrollR2ool) | iOS Runtime analysis tool 🧌
 ---
 - [gf.imipy.com](https://gf.imipy.com/) - Today's meal picker 🥣
