@@ -6,10 +6,10 @@
 
 ## Open Source Projects
 
-- [Hyuga](https://github.com/ac0d3r/Hyuga)｜A tool for monitoring Out-of-Band (OOB) traffic, supporting DNS, HTTP, LDAP, RMI, and DNS-Rebinding. <img src="https://img.shields.io/github/stars/ac0d3r/Hyuga?logo=github" height="18" alt="Hyuga stars">
-- [xssfinder](https://github.com/ac0d3r/xssfinder)｜A tool for detecting DOM-Based XSS using taint analysis, based on Chrome Headless for dynamic semantic analysis of JavaScript. <img src="https://img.shields.io/github/stars/ac0d3r/xssfinder?logo=github" height="18" alt="xssfinder stars">
-- [TrollAppDuplicator](https://github.com/BreakOnCrash/TrollAppDuplicator) | iOS App duplicator for TrollStore <img src="https://img.shields.io/github/stars/BreakOnCrash/TrollAppDuplicator?logo=github" height="18" alt="TrollAppDuplicator stars">
-- [go-embed-extractor](https://github.com/BreakOnCrash/go-embed-extractor)｜Extracting Go embeds <img src="https://img.shields.io/github/stars/BreakOnCrash/go-embed-extractor?logo=github" height="18" alt="TrollAppDuplicator stars">
+- [Hyuga](https://github.com/ac0d3r/Hyuga)｜A tool for monitoring Out-of-Band (OOB) traffic, supporting DNS, HTTP, LDAP, RMI, and DNS-Rebinding. <img src="https://img.shields.io/github/stars/ac0d3r/Hyuga?logo=github" height="18">
+- [xssfinder](https://github.com/ac0d3r/xssfinder)｜A tool for detecting DOM-Based XSS using taint analysis, based on Chrome Headless for dynamic semantic analysis of JavaScript. <img src="https://img.shields.io/github/stars/ac0d3r/xssfinder?logo=github" height="18">
+- [TrollAppDuplicator](https://github.com/BreakOnCrash/TrollAppDuplicator) | iOS App duplicator for TrollStore <img src="https://img.shields.io/github/stars/BreakOnCrash/TrollAppDuplicator?logo=github" height="18">
+- [go-embed-extractor](https://github.com/BreakOnCrash/go-embed-extractor)｜Extracting Go embeds <img src="https://img.shields.io/github/stars/BreakOnCrash/go-embed-extractor?logo=github" height="18">
 
 ### PR
 - [Tencent/AI-Infra-Guard](https://github.com/Tencent/AI-Infra-Guard/pulls?q=is%3Apr+is%3Aclosed+author%3Aac0d3r) <img src="https://img.shields.io/github/stars/Tencent/AI-Infra-Guard?logo=github" height="18"> <a href="https://www.blackhat.com/eu-25/arsenal/schedule/index.html#aigai-infra-guard-48381" target="_blank"><img src="https://github.com/user-attachments/assets/2b86faa4-6efa-4269-a48d-91e46faeac21" height="30"></a>
@@ -31,12 +31,17 @@
 <table>
   <tr>
     <td><a href="https://huntr.com/bounties/921ba5d4-f1d0-4c66-9764-4f72dffe7acd">CVE-2025-1975</a></td>
-    <td><a href="https://github.com/ollama/ollama">Ollama</a> <img src="https://img.shields.io/github/stars/ollama/ollama?logo=github" height="18" alt="Ollama stars"></td>
+    <td><a href="https://github.com/ollama/ollama">Ollama</a> <img src="https://img.shields.io/github/stars/ollama/ollama?logo=github" height="18"></td>
     <td>DoS</td>
   </tr>
   <tr>
+    <td>CVE-2025-14606</td>
+    <td><a href="https://github.com/tiny-craft/tiny-rdm">Tiny RDM</a> <img src="https://img.shields.io/github/stars/tiny-craft/tiny-rdm?logo=github" height="18"></td>
+    <td>Insecure Deserialization, RCE</td>
+  </tr>
+  <tr>
     <td>CVE-2025-5030</td>
-    <td><a href="https://github.com/Ackites/KillWxapkg">KillWxapkg</a> <img src="https://img.shields.io/github/stars/Ackites/KillWxapkg?logo=github" height="18" alt="KillWxapkg stars"></td>
+    <td><a href="https://github.com/Ackites/KillWxapkg">KillWxapkg</a> <img src="https://img.shields.io/github/stars/Ackites/KillWxapkg?logo=github" height="18"></td>
     <td>Arbitrary File Write, RCE</td>
   </tr>
   <tr>
@@ -46,22 +51,22 @@
   </tr>
   <tr>
     <td>CVE-2025-10975</td>
-    <td><a href="https://github.com/GuanxingLu/vlarl">vlarl</a> <img src="https://img.shields.io/github/stars/GuanxingLu/vlarl?logo=github" height="18" alt="vlarl stars"></td>
+    <td><a href="https://github.com/GuanxingLu/vlarl">vlarl</a> <img src="https://img.shields.io/github/stars/GuanxingLu/vlarl?logo=github" height="18"></td>
     <td>Insecure Deserialization, RCE</td>
   </tr>
   <tr>
     <td>CVE-2025-8729</td>
-    <td><a href="https://github.com/MigoXLab/LMeterX">LMeterX</a> <img src="https://img.shields.io/github/stars/MigoXLab/LMeterX?logo=github" height="18" alt="LMeterX stars"></td>
+    <td><a href="https://github.com/MigoXLab/LMeterX">LMeterX</a> <img src="https://img.shields.io/github/stars/MigoXLab/LMeterX?logo=github" height="18"></td>
     <td>Path Traversal</td>
   </tr>
   <tr>
     <td>CVE-2025-10974</td>
-    <td><a href="https://github.com/giantspatula/SewKinect">SewKinect</a> <img src="https://img.shields.io/github/stars/giantspatula/SewKinect?logo=github" height="18" alt="SewKinect stars"></td>
+    <td><a href="https://github.com/giantspatula/SewKinect">SewKinect</a> <img src="https://img.shields.io/github/stars/giantspatula/SewKinect?logo=github" height="18"></td>
     <td>Insecure Deserialization, RCE</td>
   </tr>
   <tr>
     <td>CVE-2024-2007</td>
-    <td><a href="https://github.com/OpenBMB/XAgent">XAgent</a> <img src="https://img.shields.io/github/stars/OpenBMB/XAgent?logo=github" height="18" alt="XAgent stars"></td>
+    <td><a href="https://github.com/OpenBMB/XAgent">XAgent</a> <img src="https://img.shields.io/github/stars/OpenBMB/XAgent?logo=github" height="18"></td>
     <td>Container Escape</td>
   </tr>
   <tr>
