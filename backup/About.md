@@ -15,6 +15,7 @@
 - [Tencent/AI-Infra-Guard](https://github.com/Tencent/AI-Infra-Guard/pulls?q=is%3Apr+is%3Aclosed+author%3Aac0d3r) <img src="https://img.shields.io/github/stars/Tencent/AI-Infra-Guard?logo=github" height="18"> <a href="https://www.blackhat.com/eu-25/arsenal/schedule/index.html#aigai-infra-guard-48381" target="_blank"><img src="https://github.com/user-attachments/assets/2b86faa4-6efa-4269-a48d-91e46faeac21" height="30"></a>
   - Optimize the Fingerprint DSL parser (build AST and support short-circuit)
   - Fix out-of-bounds panic when quoted string ends with a backslash
+  - Perf: reduce Docker image size
 - [moonD4rk/HackBrowserData](https://github.com/moonD4rk/HackBrowserData/pulls?q=is%3Apr+author%3Aac0d3r+is%3Aclosed) <img src="https://img.shields.io/github/stars/moonD4rk/HackBrowserData?logo=github" height="18">
   - Decrypt the browser master key on macOS via gcore(CVE-2025-24204)
 - [NSEcho/furlzz](https://github.com/NSEcho/furlzz/pulls?q=is%3Apr+is%3Aclosed+author%3Aac0d3r) <img src="https://img.shields.io/github/stars/NSEcho/furlzz?logo=github" height="18">
@@ -35,19 +36,25 @@
     <td>DoS</td>
   </tr>
   <tr>
+    <td>CVE-2025-15453</td>
+    <td><a href="https://github.com/milvus-io/milvus">milvus</a> <img src="https://img.shields.io/github/stars/milvus-io/milvus?logo=github" height="18"></td>
+    <td>REE, (By 0x1f and ac0d3r)</td>
+  </tr>
+  <tr>
     <td>CVE-2025-14606</td>
     <td><a href="https://github.com/tiny-craft/tiny-rdm">Tiny RDM</a> <img src="https://img.shields.io/github/stars/tiny-craft/tiny-rdm?logo=github" height="18"></td>
     <td>Insecure Deserialization, RCE</td>
   </tr>
   <tr>
-    <td>CVE-2025-5030</td>
+    <td>CVE-2025-5030<br>CVE-2025-5031</td>
     <td><a href="https://github.com/Ackites/KillWxapkg">KillWxapkg</a> <img src="https://img.shields.io/github/stars/Ackites/KillWxapkg?logo=github" height="18"></td>
-    <td>Arbitrary File Write, RCE</td>
+    <td>Arbitrary File Write, RCE<br>DoS</td>
   </tr>
   <tr>
-    <td>CVE-2025-5031</td>
-    <td><a href="https://github.com/Ackites/KillWxapkg">KillWxapkg</a></td>
-    <td>DoS</td>
+    <td><a href="https://github.com/advisories/GHSA-6556-fwc2-fg2p">GHSA-6556-fwc2-fg2p</a><br>
+    <a href="https://github.com/advisories/GHSA-rrxm-2pvv-m66x">GHSA-rrxm-2pvv-m66x</a><br></td>
+    <td><a href="https://github.com/mmaitre314/picklescan">picklescan</a> <img src="https://img.shields.io/github/stars/mmaitre314/picklescan?logo=github" height="18"></td>
+    <td>Pickle deserialization detection bypass</td>
   </tr>
   <tr>
     <td>CVE-2025-10975</td>
