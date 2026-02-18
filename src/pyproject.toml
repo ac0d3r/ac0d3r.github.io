@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gmeek"
+version = "0.0.0"
+requires-python = ">=3.8"
+dependencies = [
+  "PyGithub",
+  "requests",
+  "xpinyin",
+  "feedgen",
+  "Jinja2",
+  "transliterate",
+]
+
+[tool.setuptools]
+py-modules = ["Gmeek"]

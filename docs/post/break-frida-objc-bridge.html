@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html data-color-mode="light" data-dark-theme="dark" data-light-theme="light" lang="en">
+<head>
+    <meta content="text/html; charset=utf-8" http-equiv="content-type" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <link href='https://mirrors.sustech.edu.cn/cdnjs/ajax/libs/Primer/21.0.7/primer.css' rel='stylesheet' />
+    
+    <link rel="icon" href="/imgs/avatar.png"><script>
+        let theme = localStorage.getItem("meek_theme") || "light";
+        document.documentElement.setAttribute("data-color-mode", theme);
+    </script>
+<meta name="description" content="> This article was first published on the [tttang Community](https://tttang.">
+<meta property="og:title" content="Break frida-objc-bridge">
+<meta property="og:description" content="> This article was first published on the [tttang Community](https://tttang.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://blog.imipy.com/post/break-frida-objc-bridge.html">
+<meta property="og:image" content="/imgs/avatar.png">
+<title>Break frida-objc-bridge</title>
+<link href="//unpkg.com/@wooorm/starry-night@2.1.1/style/both.css" rel="stylesheet" />
+
+
+</head>
+<style>
+body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;padding: 45px;font-size: 16px;font-family: sans-serif;line-height: 1.25;}
+#header{display:flex;padding-bottom:8px;border-bottom: 1px solid var(--borderColor-muted, var(--color-border-muted));margin-bottom: 16px;}
+#footer {margin-top:64px; text-align: center;font-size: small;}
+
+</style>
+
+<style>
+.postTitle{margin: auto 0;font-size:40px;font-weight:bold;}
+.title-right{display:flex;margin:auto 0 0 auto;}
+.title-right .circle{padding: 14px 16px;margin-right:8px;}
+#postBody{border-bottom: 1px solid var(--color-border-default);padding-bottom:36px;}
+#postBody hr{height:2px;}
+#cmButton{height:48px;margin-top:48px;}
+#comments{margin-top:64px;}
+.g-emoji{font-size:24px;}
+@media (max-width: 600px) {
+    body {padding: 8px;}
+    .postTitle{font-size:24px;}
+}
+.copy-feedback {
+    display: none;
+    position: absolute;
+    top: 10px;
+    right: 50px;
+    color: var(--color-fg-on-emphasis);
+    background-color: var(--color-fg-muted);
+    border-radius: 3px;
+    padding: 5px 8px;
+    font-size: 12px;
+}
+</style>
+
+
+
+
+<body>
+    <div id="header">
+<h1 class="postTitle">Break frida-objc-bridge</h1>
+<div class="title-right">
+    <a href="https://blog.imipy.com" id="buttonHome" class="btn btn-invisible circle" title="home">
+        <svg class="octicon" width="16" height="16">
+            <path id="pathHome" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+
+    <a class="btn btn-invisible circle" onclick="modeSwitch();" title="switch theme">
+        <svg class="octicon" width="16" height="16" >
+            <path id="themeSwitch" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+
+</div>
+</div>
+    <div id="content">
+<div class="markdown-body" id="postBody"><blockquote>
+<p>This article was first published on the <a href="https://tttang.com/archive/1889/" rel="nofollow">tttang Community</a>.</p>
+</blockquote>
+<h2>Introduction</h2>
+<p>In the previously published article <a href="https://blog.imipy.com/post/reverse-engineering-wechat-on-macos--building-a-forensic-tool.html" rel="nofollow">"Reverse Engineering WeChat on macOS: Building a Forensic Tool"</a>, I used the Frida tool to extract chat database key from memory. The Frida <code class="notranslate">ObjC</code> APIs are primarily provided by <a href="https://github.com/frida/frida-objc-bridge">frida-objc-bridge</a>. Since there’s limited documentation on this topic online, I decided to explore its internal workings out of curiosity. This article starts with an understanding of the <code class="notranslate">Objective-C Runtime</code>, including concepts like <strong>Sending Messages</strong> and <strong>Method Swizzling</strong>, and then the internal implementation of <code class="notranslate">frida-objc-bridge</code>, especially the <code class="notranslate">choose</code> method. Finally, I will implement a tool using <code class="notranslate">Objective-C</code> to inject a dylib into remote processes.</p>
+<h2>Objective-C Runtime</h2>
+<p>The <a href="https://developer.apple.com/documentation/objectivec/objective-c_runtime?language=objc" rel="nofollow">Objective-C Runtime</a> is a runtime library that provides support for the dynamic properties of the Objective-C language, and as such is linked to by all Objective-C apps. Objective-C runtime library support functions are implemented in the shared library found at <code class="notranslate">/usr/lib/libobjc.A.dylib</code>.</p>
+<h3>Sending Messages</h3>
+<p>Objective-C is a dynamic language, meaning object types are determined at runtime, including function name lookups.</p>
+<p>In Objective-C, calling a class method involves sending a message to an object, which includes the method name and the expected parameters. At runtime, the corresponding function is looked up by name and invoked. This requires the compiled code to retain all relevant object method names for runtime use.</p>
+<hr>
+<div class="highlight highlight-source-objc"><pre class="notranslate"><span class="pl-c"><span class="pl-c">//</span> message_send_demo.m</span>
+#<span class="pl-k">import</span> <span class="pl-s"><span class="pl-pds">&lt;</span>Foundation/Foundation.h<span class="pl-pds">&gt;</span></span>
+
+<span class="pl-k">@interface</span> <span class="pl-en">AClass</span> : <span class="pl-e">NSObject</span>
+<span class="pl-k">@end</span>
+<span class="pl-k">@implementation</span> <span class="pl-en">AClass</span> : <span class="pl-e">NSObject</span>
+<span class="pl-k">@end</span>
+
+<span class="pl-k">int</span> <span class="pl-en">main</span>() {
+  <span class="pl-c1">id</span> a = <span class="pl-s"><span class="pl-pds">@"</span>this is NSString<span class="pl-pds">"</span></span>;
+  [a <span class="pl-c1">characterAtIndex:</span><span class="pl-c1">1</span>];
+
+  <span class="pl-c1">id</span> acls = [AClass <span class="pl-c1">new</span>];
+  [acls <span class="pl-c1">characterAtIndex:</span><span class="pl-c1">2</span>];
+}</pre></div>
+<p>Even though the objc code above attempts to call a non-existent method, it compiles successfully but throws an exception at runtime:</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate">$ clang -framework Foundation message_send_demo.m -o demo
+$ ./demo
+2023-04-18 11:38:07.537 demo[15135:508503] -[AClass characterAtIndex:]: unrecognized selector sent to instance 0x156e0bbc0
+2023-04-18 11:38:07.538 demo[15135:508503] <span class="pl-k">***</span> Terminating app due to uncaught exception <span class="pl-s"><span class="pl-pds">'</span>NSInvalidArgumentException<span class="pl-pds">'</span></span>, reason: <span class="pl-s"><span class="pl-pds">'</span>-[AClass characterAtIndex:]: unrecognized selector sent to instance 0x156e0bbc0<span class="pl-pds">'</span></span>
+<span class="pl-k">***</span> First throw call stack:
+(
+        0   CoreFoundation                      0x00000001c4d35148 __exceptionPreprocess + 240
+        1   libobjc.A.dylib                     0x00000001c4a7fe04 objc_exception_throw + 60
+        2   CoreFoundation                      0x00000001c4dc8ef8 -[NSObject(NSObject) __retain_OA] + 0
+        3   CoreFoundation                      0x00000001c4c94494 ___forwarding___ + 1764
+        4   CoreFoundation                      0x00000001c4c93cf0 _CF_forwarding_prep_0 + 96
+        5   demo                                0x0000000104797f64 main + 84
+        6   dyld                                0x000000010482508c start + 520
+)
+libc++abi: terminating with uncaught exception of <span class="pl-c1">type</span> NSException
+[1]    15135 abort      ./demo</pre></div>
+<p>Method calls in Objective-C are performed using the function <code class="notranslate">objc_msgSend(void /* id self, SEL op, ... */)</code>, which sends a message to the object. For instance, <code class="notranslate">[a characterAtIndex:1]</code> translates to <code class="notranslate">objc_msgSend(id self, @selector(characterAtIndex:), 1)</code> at compile time. To understand this further, let’s analyze the id and SEL data types, uncovering the mechanics of <strong>Sending Messages</strong> in Objective-C.</p>
+<hr>
+<p>The <a href="https://developer.apple.com/documentation/objectivec/id?language=objc" rel="nofollow">id</a> is a pointer to any (<code class="notranslate">NSObject</code>) class instance(Unlike void* in C, it points to a known structure). The <code class="notranslate">id</code> type is defined in <a href="https://github.com/apple-oss-distributions/objc4/blob/main/runtime/objc.h#L38">runtime/objc.h</a> as:</p>
+<div class="highlight highlight-source-c"><pre class="notranslate"><span class="pl-c">/// An opaque type that represents an Objective-C class.</span>
+<span class="pl-k">typedef</span> <span class="pl-k">struct</span> <span class="pl-smi">objc_class</span> <span class="pl-c1">*</span><span class="pl-smi">Class</span>;
+
+<span class="pl-c">/// Represents an instance of a class.</span>
+<span class="pl-k">struct</span> <span class="pl-smi">objc_object</span> {
+    <span class="pl-smi">Class</span> _Nonnull <span class="pl-c1">isa</span>  <span class="pl-c1">OBJC_ISA_AVAILABILITY</span>;
+};
+
+<span class="pl-c">/// A pointer to an instance of a class.</span>
+<span class="pl-k">typedef</span> <span class="pl-k">struct</span> <span class="pl-smi">objc_object</span> <span class="pl-c1">*</span><span class="pl-smi">id</span>;</pre></div>
+<p>Here, id is a pointer to an <code class="notranslate">objc_object</code>, whose <code class="notranslate">isa</code> field points to the <code class="notranslate">objc_class</code> structure. The <code class="notranslate">objc_class</code> structure is defined in <a href="https://github.com/opensource-apple/objc4/blob/master/runtime/runtime.h#L55">runtime.h</a>:</p>
+<div class="highlight highlight-source-c"><pre class="notranslate"><span class="pl-k">struct</span> <span class="pl-smi">objc_class</span> {
+    <span class="pl-smi">Class</span> <span class="pl-c1">isa</span>  <span class="pl-c1">OBJC_ISA_AVAILABILITY</span>;
+
+<span class="pl-k">#if</span> !<span class="pl-s1">__OBJC2__</span>
+    <span class="pl-smi">Class</span> <span class="pl-c1">super_class</span>                                        <span class="pl-smi">OBJC2_UNAVAILABLE</span>;
+    <span class="pl-k">const</span> <span class="pl-smi">char</span> <span class="pl-c1">*</span><span class="pl-c1">name</span>                                         <span class="pl-c1">OBJC2_UNAVAILABLE</span>;
+    <span class="pl-smi">long <span class="pl-smi">version</span></span>                                             <span class="pl-c1">OBJC2_UNAVAILABLE</span>;
+    <span class="pl-smi">long <span class="pl-smi">info</span></span>                                                <span class="pl-c1">OBJC2_UNAVAILABLE</span>;
+    <span class="pl-smi">long <span class="pl-smi">instance_size</span></span>                                       <span class="pl-c1">OBJC2_UNAVAILABLE</span>;
+    <span class="pl-k">struct</span> <span class="pl-smi">objc_ivar_list</span> <span class="pl-c1">*</span><span class="pl-c1">ivars</span>                             <span class="pl-c1">OBJC2_UNAVAILABLE</span>;
+    <span class="pl-k">struct</span> <span class="pl-smi">objc_method_list</span> <span class="pl-c1">*</span><span class="pl-c1">*</span><span class="pl-c1">methodLists</span>                    <span class="pl-c1">OBJC2_UNAVAILABLE</span>;
+    <span class="pl-k">struct</span> <span class="pl-smi">objc_cache</span> <span class="pl-c1">*</span><span class="pl-c1">cache</span>                                 <span class="pl-c1">OBJC2_UNAVAILABLE</span>;
+    <span class="pl-k">struct</span> <span class="pl-smi">objc_protocol_list</span> <span class="pl-c1">*</span><span class="pl-c1">protocols</span>                     <span class="pl-c1">OBJC2_UNAVAILABLE</span>;
+<span class="pl-k">#endif</span>
+
+} <span class="pl-c1">OBJC2_UNAVAILABLE</span>;</pre></div>
+<p>The <code class="notranslate">objc_class</code> structure includes a name (<code class="notranslate">name</code>), a pointer to its superclass (<code class="notranslate">super_class</code>), a pointer to instance variables (<code class="notranslate">ivars</code>), a method list (<code class="notranslate">methodLists</code>), a cache (<code class="notranslate">cache</code>), and finally, a pointer to the protocol list (<code class="notranslate">protocols</code>).</p>
+<p><code class="notranslate">objc_method_list</code>: Think of it as an array, with each element being an <code class="notranslate">objc_method</code> structure:</p>
+<div class="highlight highlight-source-c"><pre class="notranslate"><span class="pl-k">struct</span> <span class="pl-smi">objc_method</span> {
+    <span class="pl-smi">SEL</span> <span class="pl-c1">method_name</span>                                          <span class="pl-smi">OBJC2_UNAVAILABLE</span>;
+    <span class="pl-smi">char</span> <span class="pl-c1">*</span><span class="pl-c1">method_types</span>                                       <span class="pl-smi">OBJC2_UNAVAILABLE</span>;
+    <span class="pl-smi">IMP</span> <span class="pl-c1">method_imp</span>                                           <span class="pl-smi">OBJC2_UNAVAILABLE</span>;
+}                                                            <span class="pl-c1">OBJC2_UNAVAILABLE</span>;
+
+<span class="pl-k">struct</span> <span class="pl-smi">objc_method_list</span> {
+    <span class="pl-k">struct</span> <span class="pl-smi">objc_method_list</span> <span class="pl-c1">*</span><span class="pl-c1">obsolete</span>                        <span class="pl-c1">OBJC2_UNAVAILABLE</span>;
+
+    <span class="pl-smi">int</span> <span class="pl-c1">method_count</span>                                         <span class="pl-smi">OBJC2_UNAVAILABLE</span>;
+<span class="pl-k">#ifdef</span> <span class="pl-s1">__LP64__</span>
+    <span class="pl-smi">int</span> <span class="pl-c1">space</span>                                                <span class="pl-c1">OBJC2_UNAVAILABLE</span>;
+<span class="pl-k">#endif</span>
+    <span class="pl-c">/* variable length structure */</span>
+    <span class="pl-k">struct</span> <span class="pl-smi">objc_method</span> <span class="pl-c1">method_list</span>[<span class="pl-c1">1</span>]                        <span class="pl-smi">OBJC2_UNAVAILABLE</span>;
+}                                                            <span class="pl-c1">OBJC2_UNAVAILABLE</span>;</pre></div>
+<p>Key fields include:</p>
+<ul>
+<li>method_name: <code class="notranslate">SEL(@selector)</code>.</li>
+<li>method_types: <a href="https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/ObjCRuntimeGuide/Articles/ocrtTypeEncodings.html" rel="nofollow"><strong>Type Encodings</strong></a>。</li>
+<li>method_imp: a pointer to the actual method's implementation address and can accept a variable number of arguments. The first argument represents the object of type <code class="notranslate">id</code>, and the second is the selector.</li>
+</ul>
+<p><a href="https://developer.apple.com/documentation/objectivec/sel" rel="nofollow">SEL</a>: A <a href="https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/ObjectiveC/Chapters/ocSelectors.html" rel="nofollow">Selector</a> uniquely identifying a method. Its definition:</p>
+<div class="highlight highlight-source-c"><pre class="notranslate"><span class="pl-k">typedef</span> <span class="pl-k">struct</span> <span class="pl-smi">objc_selector</span> <span class="pl-c1">*</span><span class="pl-smi">SEL</span>;</pre></div>
+<p>When calling <code class="notranslate">objc_msgSend</code>, the function uses the <code class="notranslate">isa</code> pointer to traverse the <code class="notranslate">methodLists</code>, searching for the <code class="notranslate">method_name</code> specified by the selector. Below is a visual representation of the structure and lookup process:</p>
+<p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/5983c340-f8be-49de-bc0d-d500f127b724"><img src="https://github.com/user-attachments/assets/5983c340-f8be-49de-bc0d-d500f127b724" alt="image" style="max-width: 100%;"></a></p>
+<h2>Method Swizzling</h2>
+<p>Frida uses <strong>Method Swizzling</strong> to inject or modify <code class="notranslate">ObjC</code> methods. A common implementation is:</p>
+<div class="highlight highlight-source-objc"><pre class="notranslate">...
+<span class="pl-k">void</span> <span class="pl-en">hookMethod</span>(<span class="pl-c1">Class</span> originalClass, <span class="pl-c1">SEL</span> originalSelector, <span class="pl-c1">Class</span> swizzledClass, <span class="pl-c1">SEL</span> swizzledSelector){
+    <span class="pl-c1">Method</span> originalMethod = <span class="pl-c1">class_getInstanceMethod</span>(originalClass, originalSelector);
+    <span class="pl-c1">Method</span> swizzledMethod = <span class="pl-c1">class_getInstanceMethod</span>(swizzledClass, swizzledSelector);
+    <span class="pl-k">if</span> (originalMethod &amp;&amp; swizzledMethod){
+        <span class="pl-c1">method_exchangeImplementations</span>(originalMethod, swizzledMethod);
+    }
+}
+...
+<span class="pl-k">@interface</span> <span class="pl-en">NSObject</span> (TargetClass)
++ (<span class="pl-k">void</span>) <span class="pl-en">hookApp</span>;
+<span class="pl-k">@end</span>
+
+<span class="pl-k">@implementation</span> <span class="pl-en">NSObject</span> (TargetClass)
+- (<span class="pl-k">void</span>)<span class="pl-en">hook_hello</span><span class="pl-en">:</span>(<span class="pl-k">char</span>)<span class="pl-smi">arg2</span>
+{
+	<span class="pl-c"><span class="pl-c">//</span> TODO ...</span>
+	<span class="pl-c"><span class="pl-c">//</span> [self hook_hello:arg2] now hook_hello -&gt; hello imp</span>
+}
+
++ (<span class="pl-k">void</span>) <span class="pl-en">hookApp</span>
+{
+    <span class="pl-c1">hookMethod</span>(<span class="pl-c1">objc_getClass</span>(<span class="pl-s"><span class="pl-pds">"</span>TargetClass<span class="pl-pds">"</span></span>),
+               <span class="pl-k">@selector</span>(<span class="pl-c1">hello:</span>),
+               [<span class="pl-c1">self</span> <span class="pl-c1">class</span>],
+               <span class="pl-k">@selector</span>(<span class="pl-c1">hook_hello:</span>));
+}
+<span class="pl-k">@end</span></pre></div>
+<p>In this example, we use <a href="https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/ProgrammingWithObjectiveC/CustomizingExistingClasses/CustomizingExistingClasses.html" rel="nofollow">Categories</a> to extend the <code class="notranslate">TargetClass</code> and swap the implementations of <code class="notranslate">hello:</code> and <code class="notranslate">hook_hello:</code> using <code class="notranslate">method_exchangeImplementations</code>.</p>
+<p>Post-swapping, calling <code class="notranslate">[self hook_hello:arg2]</code> invokes the original hello: method due to the swapped pointers. A visual representation:</p>
+<p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/c957b59a-4906-45d7-a49e-280169ee4d6f"><img src="https://github.com/user-attachments/assets/c957b59a-4906-45d7-a49e-280169ee4d6f" alt="image" style="max-width: 100%;"></a></p>
+<hr>
+<p>There is another approach that does not require defining class <code class="notranslate">Categories</code>. Instead, the original function's <code class="notranslate">imp</code> pointer can be replaced using <code class="notranslate">method_setImplementation</code>.</p>
+<div class="highlight highlight-source-objc"><pre class="notranslate"><span class="pl-k">static</span> <span class="pl-c1">IMP</span> real_isEqualToString = <span class="pl-c1">NULL</span>;
+<span class="pl-k">static</span> <span class="pl-c1">BOOL</span> <span class="pl-en">custom_isEqualToString</span>(<span class="pl-c1">id</span> self, <span class="pl-c1">SEL</span> _cmd, <span class="pl-c1">NSString</span> *s) {
+	<span class="pl-c"><span class="pl-c">//</span> TODO ...</span>
+	<span class="pl-k">return</span> ((<span class="pl-c1">BOOL</span>(*)(<span class="pl-c1">id</span>, <span class="pl-c1">SEL</span>, <span class="pl-c1">NSString</span> *))real_isEqualToString)(self, _cmd, s);
+}
+
+real_isEqualToString = <span class="pl-c1">method_setImplementation</span>(
+      <span class="pl-c1">class_getInstanceMethod</span>(<span class="pl-c1">NSClassFromString</span>(<span class="pl-s"><span class="pl-pds">@"</span>__NSCFString<span class="pl-pds">"</span></span>),
+                              <span class="pl-k">@selector</span>(<span class="pl-c1">isEqualToString:</span>)),
+      (<span class="pl-c1">IMP</span>)custom_isEqualToString);</pre></div>
+<p>Here, the <code class="notranslate">isEqualToString:</code> implementation is replaced by <code class="notranslate">custom_isEqualToString</code>. The original implementation is stored in <code class="notranslate">real_isEqualToString</code>. A visual representation:</p>
+<p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/a0143af6-fdd4-4077-b71a-289194964aca"><img src="https://github.com/user-attachments/assets/a0143af6-fdd4-4077-b71a-289194964aca" alt="image" style="max-width: 100%;"></a></p>
+<h2><strong>Frida</strong></h2>
+<p>The Frida project operates at a relatively low level and is quite complex. I learned about Frida's design and structure through EvilPan's <a href="https://evilpan.com/2022/04/05/frida-internal/" rel="nofollow">Frida Internal</a> series of articles. Frida can be divided into four layers based on its encapsulation hierarchy:</p>
+<ol>
+<li><strong>Inline-hook framework at the CPU instruction set level:</strong> <code class="notranslate">frida-gum</code>
+<ul>
+<li>Includes inline hooking, code tracing with Stalker, memory access monitoring via <code class="notranslate">MemoryAccessMonitor</code>, as well as features like symbol resolution, stack unwinding, memory scanning, dynamic code generation, and relocation.</li>
+</ul>
+</li>
+<li>JavaScript engine integration for script extensibility: <code class="notranslate">gum-js</code></li>
+<li>Runtime process injection, script loading, and RPC communication management: <code class="notranslate">frida-core</code></li>
+<li>JavaScript modules and their interfaces tailored for specific runtime environments: Examples include <code class="notranslate">frida-java-bridge</code>, <code class="notranslate">frida-objc-bridge</code>, and others.</li>
+</ol>
+<h3>Process Injection</h3>
+<p>In the Darwin environment, the injection function in <code class="notranslate">frida-core</code> is <a href="https://github.com/frida/frida-core/blob/main/src/darwin/frida-helper-backend-glue.m#L2209">_frida_darwin_helper_backend_inject_into_task</a>. This function is quite complex. In simple terms, it generates a piece of shellcode that essentially performs an operation similar to <code class="notranslate">dlopen("frida-agent.dylib")</code>, and then, using a series of Mach APIs, creates a thread in the target process to execute the shellcode.</p>
+<h3><strong>Frida Objc Bridge</strong></h3>
+<p><code class="notranslate">frida-objc-bridge</code> is essentially implemented as a hack targeting the runtime of the corresponding high-level language, built on top of <code class="notranslate">gum-js</code>. These are collectively referred to as the bridges for their respective languages. In the runtime, <a href="https://github.com/frida/frida-gum/blob/main/bindings/gumjs/runtime/objc.js">gumjs</a> introduces it (<code class="notranslate">Frida._objc = require('frida-objc-bridge')</code>). This is the foundation for the <code class="notranslate">ObjC.*</code> interfaces we use when writing Frida JavaScript scripts.</p>
+<h4>/lib/api.js</h4>
+<p>The <code class="notranslate">api.js</code> file loads the <code class="notranslate">libobjc.A.dylib</code> dynamic library to import Objective-C APIs, such as <code class="notranslate">objc_getClassList</code>, <code class="notranslate">class_getInstanceMethod</code>, and others.</p>
+<div class="highlight highlight-source-js"><pre class="notranslate">...
+<span class="pl-k">function</span> <span class="pl-en">getApi</span><span class="pl-kos">(</span><span class="pl-kos">)</span> <span class="pl-kos">{</span>
+...
+    <span class="pl-k">const</span> <span class="pl-s1">pending</span> <span class="pl-c1">=</span> <span class="pl-kos">[</span>
+        <span class="pl-kos">{</span>
+            <span class="pl-c1">module</span>: <span class="pl-s">"libsystem_malloc.dylib"</span><span class="pl-kos">,</span>
+            <span class="pl-c1">functions</span>: <span class="pl-kos">{</span>
+                <span class="pl-s">"free"</span>: <span class="pl-kos">[</span><span class="pl-s">'void'</span><span class="pl-kos">,</span> <span class="pl-kos">[</span><span class="pl-s">'pointer'</span><span class="pl-kos">]</span><span class="pl-kos">]</span>
+            <span class="pl-kos">}</span>
+        <span class="pl-kos">}</span><span class="pl-kos">,</span> <span class="pl-kos">{</span>
+            <span class="pl-c1">module</span>: <span class="pl-s">"libobjc.A.dylib"</span><span class="pl-kos">,</span>
+            <span class="pl-c1">functions</span>: <span class="pl-kos">{</span>
+                <span class="pl-s">"objc_msgSend"</span>: <span class="pl-k">function</span> <span class="pl-kos">(</span><span class="pl-s1">address</span><span class="pl-kos">)</span> <span class="pl-kos">{</span>
+                    <span class="pl-smi">this</span><span class="pl-kos">.</span><span class="pl-c1">objc_msgSend</span> <span class="pl-c1">=</span> <span class="pl-s1">address</span><span class="pl-kos">;</span>
+                <span class="pl-kos">}</span><span class="pl-kos">,</span>
+                <span class="pl-s">"objc_msgSend_stret"</span>: <span class="pl-k">function</span> <span class="pl-kos">(</span><span class="pl-s1">address</span><span class="pl-kos">)</span> <span class="pl-kos">{</span>
+                    <span class="pl-smi">this</span><span class="pl-kos">.</span><span class="pl-c1">objc_msgSend_stret</span> <span class="pl-c1">=</span> <span class="pl-s1">address</span><span class="pl-kos">;</span>
+                <span class="pl-kos">}</span><span class="pl-kos">,</span>
+                <span class="pl-s">"objc_msgSend_fpret"</span>: <span class="pl-k">function</span> <span class="pl-kos">(</span><span class="pl-s1">address</span><span class="pl-kos">)</span> <span class="pl-kos">{</span>
+                    <span class="pl-smi">this</span><span class="pl-kos">.</span><span class="pl-c1">objc_msgSend_fpret</span> <span class="pl-c1">=</span> <span class="pl-s1">address</span><span class="pl-kos">;</span>
+                <span class="pl-kos">}</span><span class="pl-kos">,</span>
+                <span class="pl-s">"objc_msgSendSuper"</span>: <span class="pl-k">function</span> <span class="pl-kos">(</span><span class="pl-s1">address</span><span class="pl-kos">)</span> <span class="pl-kos">{</span>
+                    <span class="pl-smi">this</span><span class="pl-kos">.</span><span class="pl-c1">objc_msgSendSuper</span> <span class="pl-c1">=</span> <span class="pl-s1">address</span><span class="pl-kos">;</span>
+                <span class="pl-kos">}</span><span class="pl-kos">,</span>
+                <span class="pl-s">"objc_msgSendSuper_stret"</span>: <span class="pl-k">function</span> <span class="pl-kos">(</span><span class="pl-s1">address</span><span class="pl-kos">)</span> <span class="pl-kos">{</span>
+                    <span class="pl-smi">this</span><span class="pl-kos">.</span><span class="pl-c1">objc_msgSendSuper_stret</span> <span class="pl-c1">=</span> <span class="pl-s1">address</span><span class="pl-kos">;</span>
+                <span class="pl-kos">}</span><span class="pl-kos">,</span>
+                <span class="pl-s">"objc_msgSendSuper_fpret"</span>: <span class="pl-k">function</span> <span class="pl-kos">(</span><span class="pl-s1">address</span><span class="pl-kos">)</span> <span class="pl-kos">{</span>
+                    <span class="pl-smi">this</span><span class="pl-kos">.</span><span class="pl-c1">objc_msgSendSuper_fpret</span> <span class="pl-c1">=</span> <span class="pl-s1">address</span><span class="pl-kos">;</span>
+                <span class="pl-kos">}</span><span class="pl-kos">,</span>
+                <span class="pl-s">"objc_getClassList"</span>: <span class="pl-kos">[</span><span class="pl-s">'int'</span><span class="pl-kos">,</span> <span class="pl-kos">[</span><span class="pl-s">'pointer'</span><span class="pl-kos">,</span> <span class="pl-s">'int'</span><span class="pl-kos">]</span><span class="pl-kos">]</span><span class="pl-kos">,</span>
+                <span class="pl-s">"objc_lookUpClass"</span>: <span class="pl-kos">[</span><span class="pl-s">'pointer'</span><span class="pl-kos">,</span> <span class="pl-kos">[</span><span class="pl-s">'pointer'</span><span class="pl-kos">]</span><span class="pl-kos">]</span><span class="pl-kos">,</span>
+                <span class="pl-s">"objc_allocateClassPair"</span>: <span class="pl-kos">[</span><span class="pl-s">'pointer'</span><span class="pl-kos">,</span> <span class="pl-kos">[</span><span class="pl-s">'pointer'</span><span class="pl-kos">,</span> <span class="pl-s">'pointer'</span><span class="pl-kos">,</span> <span class="pl-s">'pointer'</span><span class="pl-kos">]</span><span class="pl-kos">]</span><span class="pl-kos">,</span>
+                <span class="pl-s">"objc_disposeClassPair"</span>: <span class="pl-kos">[</span><span class="pl-s">'void'</span><span class="pl-kos">,</span> <span class="pl-kos">[</span><span class="pl-s">'pointer'</span><span class="pl-kos">]</span><span class="pl-kos">]</span><span class="pl-kos">,</span>
+                <span class="pl-s">"objc_registerClassPair"</span>: <span class="pl-kos">[</span><span class="pl-s">'void'</span><span class="pl-kos">,</span> <span class="pl-kos">[</span><span class="pl-s">'pointer'</span><span class="pl-kos">]</span><span class="pl-kos">]</span><span class="pl-kos">,</span>
+                <span class="pl-s">"class_isMetaClass"</span>: <span class="pl-kos">[</span><span class="pl-s">'bool'</span><span class="pl-kos">,</span> <span class="pl-kos">[</span><span class="pl-s">'pointer'</span><span class="pl-kos">]</span><span class="pl-kos">]</span><span class="pl-kos">,</span>
+                <span class="pl-s">"class_getName"</span>: <span class="pl-kos">[</span><span class="pl-s">'pointer'</span><span class="pl-kos">,</span> <span class="pl-kos">[</span><span class="pl-s">'pointer'</span><span class="pl-kos">]</span><span class="pl-kos">]</span><span class="pl-kos">,</span>
+                <span class="pl-s">"class_getImageName"</span>: <span class="pl-kos">[</span><span class="pl-s">'pointer'</span><span class="pl-kos">,</span> <span class="pl-kos">[</span><span class="pl-s">'pointer'</span><span class="pl-kos">]</span><span class="pl-kos">]</span><span class="pl-kos">,</span>
+                <span class="pl-s">"class_copyProtocolList"</span>: <span class="pl-kos">[</span><span class="pl-s">'pointer'</span><span class="pl-kos">,</span> <span class="pl-kos">[</span><span class="pl-s">'pointer'</span><span class="pl-kos">,</span> <span class="pl-s">'pointer'</span><span class="pl-kos">]</span><span class="pl-kos">]</span><span class="pl-kos">,</span>
+                <span class="pl-s">"class_copyMethodList"</span>: <span class="pl-kos">[</span><span class="pl-s">'pointer'</span><span class="pl-kos">,</span> <span class="pl-kos">[</span><span class="pl-s">'pointer'</span><span class="pl-kos">,</span> <span class="pl-s">'pointer'</span><span class="pl-kos">]</span><span class="pl-kos">]</span><span class="pl-kos">,</span>
+                <span class="pl-s">"class_getClassMethod"</span>: <span class="pl-kos">[</span><span class="pl-s">'pointer'</span><span class="pl-kos">,</span> <span class="pl-kos">[</span><span class="pl-s">'pointer'</span><span class="pl-kos">,</span> <span class="pl-s">'pointer'</span><span class="pl-kos">]</span><span class="pl-kos">]</span><span class="pl-kos">,</span>
+                <span class="pl-s">"class_getInstanceMethod"</span>: <span class="pl-kos">[</span><span class="pl-s">'pointer'</span><span class="pl-kos">,</span> <span class="pl-kos">[</span><span class="pl-s">'pointer'</span><span class="pl-kos">,</span> <span class="pl-s">'pointer'</span><span class="pl-kos">]</span><span class="pl-kos">]</span><span class="pl-kos">,</span>
+                <span class="pl-s">"class_getSuperclass"</span>: <span class="pl-kos">[</span><span class="pl-s">'pointer'</span><span class="pl-kos">,</span> <span class="pl-kos">[</span><span class="pl-s">'pointer'</span><span class="pl-kos">]</span><span class="pl-kos">]</span><span class="pl-kos">,</span>
+                <span class="pl-s">"class_addProtocol"</span>: <span class="pl-kos">[</span><span class="pl-s">'bool'</span><span class="pl-kos">,</span> <span class="pl-kos">[</span><span class="pl-s">'pointer'</span><span class="pl-kos">,</span> <span class="pl-s">'pointer'</span><span class="pl-kos">]</span><span class="pl-kos">]</span><span class="pl-kos">,</span>
+                <span class="pl-s">"class_addMethod"</span>: <span class="pl-kos">[</span><span class="pl-s">'bool'</span><span class="pl-kos">,</span> <span class="pl-kos">[</span><span class="pl-s">'pointer'</span><span class="pl-kos">,</span> <span class="pl-s">'pointer'</span><span class="pl-kos">,</span> <span class="pl-s">'pointer'</span><span class="pl-kos">,</span> <span class="pl-s">'pointer'</span><span class="pl-kos">]</span><span class="pl-kos">]</span><span class="pl-kos">,</span>
+                <span class="pl-s">"class_copyIvarList"</span>: <span class="pl-kos">[</span><span class="pl-s">'pointer'</span><span class="pl-kos">,</span> <span class="pl-kos">[</span><span class="pl-s">'pointer'</span><span class="pl-kos">,</span> <span class="pl-s">'pointer'</span><span class="pl-kos">]</span><span class="pl-kos">]</span><span class="pl-kos">,</span>
+                <span class="pl-s">"objc_getProtocol"</span>: <span class="pl-kos">[</span><span class="pl-s">'pointer'</span><span class="pl-kos">,</span> <span class="pl-kos">[</span><span class="pl-s">'pointer'</span><span class="pl-kos">]</span><span class="pl-kos">]</span><span class="pl-kos">,</span>
+                <span class="pl-s">"objc_copyProtocolList"</span>: <span class="pl-kos">[</span><span class="pl-s">'pointer'</span><span class="pl-kos">,</span> <span class="pl-kos">[</span><span class="pl-s">'pointer'</span><span class="pl-kos">]</span><span class="pl-kos">]</span><span class="pl-kos">,</span>
+                <span class="pl-s">"objc_allocateProtocol"</span>: <span class="pl-kos">[</span><span class="pl-s">'pointer'</span><span class="pl-kos">,</span> <span class="pl-kos">[</span><span class="pl-s">'pointer'</span><span class="pl-kos">]</span><span class="pl-kos">]</span><span class="pl-kos">,</span>
+                <span class="pl-s">"objc_registerProtocol"</span>: <span class="pl-kos">[</span><span class="pl-s">'void'</span><span class="pl-kos">,</span> <span class="pl-kos">[</span><span class="pl-s">'pointer'</span><span class="pl-kos">]</span><span class="pl-kos">]</span><span class="pl-kos">,</span>
+                <span class="pl-s">"protocol_getName"</span>: <span class="pl-kos">[</span><span class="pl-s">'pointer'</span><span class="pl-kos">,</span> <span class="pl-kos">[</span><span class="pl-s">'pointer'</span><span class="pl-kos">]</span><span class="pl-kos">]</span><span class="pl-kos">,</span>
+                <span class="pl-s">"protocol_copyMethodDescriptionList"</span>: <span class="pl-kos">[</span><span class="pl-s">'pointer'</span><span class="pl-kos">,</span> <span class="pl-kos">[</span><span class="pl-s">'pointer'</span><span class="pl-kos">,</span> <span class="pl-s">'bool'</span><span class="pl-kos">,</span> <span class="pl-s">'bool'</span><span class="pl-kos">,</span> <span class="pl-s">'pointer'</span><span class="pl-kos">]</span><span class="pl-kos">]</span><span class="pl-kos">,</span>
+                <span class="pl-s">"protocol_copyPropertyList"</span>: <span class="pl-kos">[</span><span class="pl-s">'pointer'</span><span class="pl-kos">,</span> <span class="pl-kos">[</span><span class="pl-s">'pointer'</span><span class="pl-kos">,</span> <span class="pl-s">'pointer'</span><span class="pl-kos">]</span><span class="pl-kos">]</span><span class="pl-kos">,</span>
+                <span class="pl-s">"protocol_copyProtocolList"</span>: <span class="pl-kos">[</span><span class="pl-s">'pointer'</span><span class="pl-kos">,</span> <span class="pl-kos">[</span><span class="pl-s">'pointer'</span><span class="pl-kos">,</span> <span class="pl-s">'pointer'</span><span class="pl-kos">]</span><span class="pl-kos">]</span><span class="pl-kos">,</span>
+                <span class="pl-s">"protocol_addProtocol"</span>: <span class="pl-kos">[</span><span class="pl-s">'void'</span><span class="pl-kos">,</span> <span class="pl-kos">[</span><span class="pl-s">'pointer'</span><span class="pl-kos">,</span> <span class="pl-s">'pointer'</span><span class="pl-kos">]</span><span class="pl-kos">]</span><span class="pl-kos">,</span>
+                <span class="pl-s">"protocol_addMethodDescription"</span>: <span class="pl-kos">[</span><span class="pl-s">'void'</span><span class="pl-kos">,</span> <span class="pl-kos">[</span><span class="pl-s">'pointer'</span><span class="pl-kos">,</span> <span class="pl-s">'pointer'</span><span class="pl-kos">,</span> <span class="pl-s">'pointer'</span><span class="pl-kos">,</span> <span class="pl-s">'bool'</span><span class="pl-kos">,</span> <span class="pl-s">'bool'</span><span class="pl-kos">]</span><span class="pl-kos">]</span><span class="pl-kos">,</span>
+                <span class="pl-s">"ivar_getName"</span>: <span class="pl-kos">[</span><span class="pl-s">'pointer'</span><span class="pl-kos">,</span> <span class="pl-kos">[</span><span class="pl-s">'pointer'</span><span class="pl-kos">]</span><span class="pl-kos">]</span><span class="pl-kos">,</span>
+                <span class="pl-s">"ivar_getTypeEncoding"</span>: <span class="pl-kos">[</span><span class="pl-s">'pointer'</span><span class="pl-kos">,</span> <span class="pl-kos">[</span><span class="pl-s">'pointer'</span><span class="pl-kos">]</span><span class="pl-kos">]</span><span class="pl-kos">,</span>
+                <span class="pl-s">"ivar_getOffset"</span>: <span class="pl-kos">[</span><span class="pl-s">'pointer'</span><span class="pl-kos">,</span> <span class="pl-kos">[</span><span class="pl-s">'pointer'</span><span class="pl-kos">]</span><span class="pl-kos">]</span><span class="pl-kos">,</span>
+                <span class="pl-s">"object_isClass"</span>: <span class="pl-kos">[</span><span class="pl-s">'bool'</span><span class="pl-kos">,</span> <span class="pl-kos">[</span><span class="pl-s">'pointer'</span><span class="pl-kos">]</span><span class="pl-kos">]</span><span class="pl-kos">,</span>
+                <span class="pl-s">"object_getClass"</span>: <span class="pl-kos">[</span><span class="pl-s">'pointer'</span><span class="pl-kos">,</span> <span class="pl-kos">[</span><span class="pl-s">'pointer'</span><span class="pl-kos">]</span><span class="pl-kos">]</span><span class="pl-kos">,</span>
+                <span class="pl-s">"object_getClassName"</span>: <span class="pl-kos">[</span><span class="pl-s">'pointer'</span><span class="pl-kos">,</span> <span class="pl-kos">[</span><span class="pl-s">'pointer'</span><span class="pl-kos">]</span><span class="pl-kos">]</span><span class="pl-kos">,</span>
+                <span class="pl-s">"method_getName"</span>: <span class="pl-kos">[</span><span class="pl-s">'pointer'</span><span class="pl-kos">,</span> <span class="pl-kos">[</span><span class="pl-s">'pointer'</span><span class="pl-kos">]</span><span class="pl-kos">]</span><span class="pl-kos">,</span>
+                <span class="pl-s">"method_getTypeEncoding"</span>: <span class="pl-kos">[</span><span class="pl-s">'pointer'</span><span class="pl-kos">,</span> <span class="pl-kos">[</span><span class="pl-s">'pointer'</span><span class="pl-kos">]</span><span class="pl-kos">]</span><span class="pl-kos">,</span>
+                <span class="pl-s">"method_getImplementation"</span>: <span class="pl-kos">[</span><span class="pl-s">'pointer'</span><span class="pl-kos">,</span> <span class="pl-kos">[</span><span class="pl-s">'pointer'</span><span class="pl-kos">]</span><span class="pl-kos">]</span><span class="pl-kos">,</span>
+                <span class="pl-s">"method_setImplementation"</span>: <span class="pl-kos">[</span><span class="pl-s">'pointer'</span><span class="pl-kos">,</span> <span class="pl-kos">[</span><span class="pl-s">'pointer'</span><span class="pl-kos">,</span> <span class="pl-s">'pointer'</span><span class="pl-kos">]</span><span class="pl-kos">]</span><span class="pl-kos">,</span>
+                <span class="pl-s">"property_getName"</span>: <span class="pl-kos">[</span><span class="pl-s">'pointer'</span><span class="pl-kos">,</span> <span class="pl-kos">[</span><span class="pl-s">'pointer'</span><span class="pl-kos">]</span><span class="pl-kos">]</span><span class="pl-kos">,</span>
+                <span class="pl-s">"property_copyAttributeList"</span>: <span class="pl-kos">[</span><span class="pl-s">'pointer'</span><span class="pl-kos">,</span> <span class="pl-kos">[</span><span class="pl-s">'pointer'</span><span class="pl-kos">,</span> <span class="pl-s">'pointer'</span><span class="pl-kos">]</span><span class="pl-kos">]</span><span class="pl-kos">,</span>
+                <span class="pl-s">"sel_getName"</span>: <span class="pl-kos">[</span><span class="pl-s">'pointer'</span><span class="pl-kos">,</span> <span class="pl-kos">[</span><span class="pl-s">'pointer'</span><span class="pl-kos">]</span><span class="pl-kos">]</span><span class="pl-kos">,</span>
+                <span class="pl-s">"sel_registerName"</span>: <span class="pl-kos">[</span><span class="pl-s">'pointer'</span><span class="pl-kos">,</span> <span class="pl-kos">[</span><span class="pl-s">'pointer'</span><span class="pl-kos">]</span><span class="pl-kos">]</span><span class="pl-kos">,</span>
+                <span class="pl-s">"class_getInstanceSize"</span>: <span class="pl-kos">[</span><span class="pl-s">'pointer'</span><span class="pl-kos">,</span> <span class="pl-kos">[</span><span class="pl-s">'pointer'</span><span class="pl-kos">]</span><span class="pl-kos">]</span>
+            <span class="pl-kos">}</span><span class="pl-kos">,</span>
+            <span class="pl-c1">optionals</span>: <span class="pl-kos">{</span>
+                <span class="pl-s">"objc_msgSend_stret"</span>: <span class="pl-s">'ABI'</span><span class="pl-kos">,</span>
+                <span class="pl-s">"objc_msgSend_fpret"</span>: <span class="pl-s">'ABI'</span><span class="pl-kos">,</span>
+                <span class="pl-s">"objc_msgSendSuper_stret"</span>: <span class="pl-s">'ABI'</span><span class="pl-kos">,</span>
+                <span class="pl-s">"objc_msgSendSuper_fpret"</span>: <span class="pl-s">'ABI'</span><span class="pl-kos">,</span>
+                <span class="pl-s">"object_isClass"</span>: <span class="pl-s">'iOS8'</span>
+            <span class="pl-kos">}</span>
+        <span class="pl-kos">}</span><span class="pl-kos">,</span>
+			...
+    <span class="pl-kos">]</span><span class="pl-kos">;</span>
+<span class="pl-kos">}</span></pre></div>
+<h4>/lib/fastpaths.js</h4>
+<p>The <code class="notranslate">/lib/fastpaths.js</code> file implements a <code class="notranslate">choose</code> method that can search for ObjC instances of a class in memory. The source code is primarily divided into two parts: C and JavaScript. The JavaScript part handles calling and encapsulating the C code:</p>
+<div class="highlight highlight-source-js"><pre class="notranslate">...
+<span class="pl-k">function</span> <span class="pl-en">compileModule</span><span class="pl-kos">(</span><span class="pl-kos">)</span> <span class="pl-kos">{</span>
+    <span class="pl-k">const</span> <span class="pl-kos">{</span>
+        objc_getClassList<span class="pl-kos">,</span>
+        class_getSuperclass<span class="pl-kos">,</span>
+        class_getInstanceSize<span class="pl-kos">,</span>
+    <span class="pl-kos">}</span> <span class="pl-c1">=</span> <span class="pl-en">getApi</span><span class="pl-kos">(</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+
+    <span class="pl-k">const</span> <span class="pl-s1">selfTask</span> <span class="pl-c1">=</span> <span class="pl-v">Memory</span><span class="pl-kos">.</span><span class="pl-en">alloc</span><span class="pl-kos">(</span><span class="pl-c1">4</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+    <span class="pl-s1">selfTask</span><span class="pl-kos">.</span><span class="pl-en">writeU32</span><span class="pl-kos">(</span><span class="pl-v">Module</span><span class="pl-kos">.</span><span class="pl-en">getExportByName</span><span class="pl-kos">(</span><span class="pl-c1">null</span><span class="pl-kos">,</span> <span class="pl-s">'mach_task_self_'</span><span class="pl-kos">)</span><span class="pl-kos">.</span><span class="pl-en">readU32</span><span class="pl-kos">(</span><span class="pl-kos">)</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+
+    <span class="pl-k">const</span> <span class="pl-s1">cm</span> <span class="pl-c1">=</span> <span class="pl-k">new</span> <span class="pl-v">CModule</span><span class="pl-kos">(</span><span class="pl-s1">code</span><span class="pl-kos">,</span> <span class="pl-kos">{</span>
+        objc_getClassList<span class="pl-kos">,</span>
+        class_getSuperclass<span class="pl-kos">,</span>
+        class_getInstanceSize<span class="pl-kos">,</span>
+        <span class="pl-c1">malloc_get_all_zones</span>: <span class="pl-v">Module</span><span class="pl-kos">.</span><span class="pl-en">getExportByName</span><span class="pl-kos">(</span><span class="pl-s">'/usr/lib/system/libsystem_malloc.dylib'</span><span class="pl-kos">,</span> <span class="pl-s">'malloc_get_all_zones'</span><span class="pl-kos">)</span><span class="pl-kos">,</span>
+        selfTask<span class="pl-kos">,</span>
+    <span class="pl-kos">}</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+
+    <span class="pl-k">const</span> <span class="pl-s1">_choose</span> <span class="pl-c1">=</span> <span class="pl-k">new</span> <span class="pl-v">NativeFunction</span><span class="pl-kos">(</span><span class="pl-s1">cm</span><span class="pl-kos">.</span><span class="pl-c1">choose</span><span class="pl-kos">,</span> <span class="pl-s">'pointer'</span><span class="pl-kos">,</span> <span class="pl-kos">[</span><span class="pl-s">'pointer'</span><span class="pl-kos">,</span> <span class="pl-s">'bool'</span><span class="pl-kos">,</span> <span class="pl-s">'pointer'</span><span class="pl-kos">]</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+    <span class="pl-k">const</span> <span class="pl-s1">_destroy</span> <span class="pl-c1">=</span> <span class="pl-k">new</span> <span class="pl-v">NativeFunction</span><span class="pl-kos">(</span><span class="pl-s1">cm</span><span class="pl-kos">.</span><span class="pl-c1">destroy</span><span class="pl-kos">,</span> <span class="pl-s">'void'</span><span class="pl-kos">,</span> <span class="pl-kos">[</span><span class="pl-s">'pointer'</span><span class="pl-kos">]</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+
+    <span class="pl-k">return</span> <span class="pl-kos">{</span>
+        <span class="pl-c1">handle</span>: <span class="pl-s1">cm</span><span class="pl-kos">,</span>
+        <span class="pl-en">choose</span><span class="pl-kos">(</span><span class="pl-s1">klass</span><span class="pl-kos">,</span> <span class="pl-s1">considerSubclasses</span><span class="pl-kos">)</span> <span class="pl-kos">{</span>
+            <span class="pl-k">const</span> <span class="pl-s1">result</span> <span class="pl-c1">=</span> <span class="pl-kos">[</span><span class="pl-kos">]</span><span class="pl-kos">;</span>
+
+            <span class="pl-k">const</span> <span class="pl-s1">countPtr</span> <span class="pl-c1">=</span> <span class="pl-v">Memory</span><span class="pl-kos">.</span><span class="pl-en">alloc</span><span class="pl-kos">(</span><span class="pl-c1">4</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+            <span class="pl-k">const</span> <span class="pl-s1">matches</span> <span class="pl-c1">=</span> <span class="pl-s1">_choose</span><span class="pl-kos">(</span><span class="pl-s1">klass</span><span class="pl-kos">,</span> <span class="pl-s1">considerSubclasses</span> ? <span class="pl-c1">1</span> : <span class="pl-c1">0</span><span class="pl-kos">,</span> <span class="pl-s1">countPtr</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+            <span class="pl-k">try</span> <span class="pl-kos">{</span>
+                <span class="pl-k">const</span> <span class="pl-s1">count</span> <span class="pl-c1">=</span> <span class="pl-s1">countPtr</span><span class="pl-kos">.</span><span class="pl-en">readU32</span><span class="pl-kos">(</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+                <span class="pl-k">for</span> <span class="pl-kos">(</span><span class="pl-k">let</span> <span class="pl-s1">i</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span><span class="pl-kos">;</span> <span class="pl-s1">i</span> <span class="pl-c1">!==</span> <span class="pl-s1">count</span><span class="pl-kos">;</span> <span class="pl-s1">i</span><span class="pl-c1">++</span><span class="pl-kos">)</span>
+                    <span class="pl-s1">result</span><span class="pl-kos">.</span><span class="pl-en">push</span><span class="pl-kos">(</span><span class="pl-s1">matches</span><span class="pl-kos">.</span><span class="pl-en">add</span><span class="pl-kos">(</span><span class="pl-s1">i</span> <span class="pl-c1">*</span> <span class="pl-s1">pointerSize</span><span class="pl-kos">)</span><span class="pl-kos">.</span><span class="pl-en">readPointer</span><span class="pl-kos">(</span><span class="pl-kos">)</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+            <span class="pl-kos">}</span> <span class="pl-k">finally</span> <span class="pl-kos">{</span>
+                <span class="pl-s1">_destroy</span><span class="pl-kos">(</span><span class="pl-s1">matches</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+            <span class="pl-kos">}</span>
+
+            <span class="pl-k">return</span> <span class="pl-s1">result</span><span class="pl-kos">;</span>
+        <span class="pl-kos">}</span><span class="pl-kos">,</span>
+    <span class="pl-kos">}</span><span class="pl-kos">;</span>
+<span class="pl-kos">}</span></pre></div>
+<p>Explanation of the key code:</p>
+<ul>
+<li><code class="notranslate">selfTask</code> calls <code class="notranslate">mach_task_self()</code> to obtain the Task port of the current process.</li>
+<li>The <code class="notranslate">malloc_get_all_zones</code> function is imported from the <code class="notranslate">/usr/lib/system/libsystem_malloc.dylib</code> dynamic library. Its main purpose is to retrieve all heap memory regions.</li>
+<li><code class="notranslate">_choose</code> is the <code class="notranslate">choose</code> function from the C code, referenced using <code class="notranslate">NativeFunction</code>. It is then wrapped as <code class="notranslate">choose(klass, considerSubclasses)</code>, which becomes the <code class="notranslate">ObjC.choose(ObjC.classes.NSString)</code> interface we use.</li>
+</ul>
+<p>Trace the internals of the <code class="notranslate">choose</code> function:</p>
+<ol>
+<li>Using <code class="notranslate">objc_getClassList</code>, it iterates through all classes and their superclasses. If a class matches the target class, it is inserted into the <code class="notranslate">ctx.classes</code> hash table.</li>
+</ol>
+<div class="highlight highlight-source-c"><pre class="notranslate"><span class="pl-k">typedef</span> <span class="pl-k">struct</span> <span class="pl-smi">_ChooseContext</span>
+{
+    <span class="pl-smi">GHashTable</span> <span class="pl-c1">*</span><span class="pl-c1">classes</span>;
+    <span class="pl-smi">GArray</span> <span class="pl-c1">*</span><span class="pl-c1">matches</span>;
+} <span class="pl-smi">ChooseContext</span>;
+...
+<span class="pl-smi">Class</span> <span class="pl-c1">*</span><span class="pl-s1">klass</span>; <span class="pl-c">// Target class</span>
+<span class="pl-smi">ChooseContext</span> <span class="pl-s1">ctx</span>;
+...
+<span class="pl-en">collect_subclasses</span>(<span class="pl-s1">klass</span>, <span class="pl-s1">ctx</span>.<span class="pl-c1">classes</span>);
+...
+<span class="pl-k">static</span> <span class="pl-smi">void</span> <span class="pl-en">collect_subclasses</span>(<span class="pl-smi">Class</span> <span class="pl-s1">klass</span>, <span class="pl-smi">GHashTable</span> <span class="pl-c1">*</span><span class="pl-s1">result</span>)
+{
+	<span class="pl-smi">Class</span> <span class="pl-c1">*</span><span class="pl-s1">all_classes</span>;
+	<span class="pl-s1">count</span> <span class="pl-c1">=</span> <span class="pl-en">objc_getClassList</span>(<span class="pl-s1">all_classes</span>, <span class="pl-s1">count</span>);
+	<span class="pl-k">for</span> (<span class="pl-s1">i</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span>; <span class="pl-s1">i</span> <span class="pl-c1">!=</span> <span class="pl-s1">count</span>; <span class="pl-s1">i</span><span class="pl-c1">++</span>)
+    {
+        <span class="pl-smi">Class</span> <span class="pl-s1">candidate</span> <span class="pl-c1">=</span> <span class="pl-s1">all_classes</span>[<span class="pl-s1">i</span>];
+        <span class="pl-smi">Class</span> <span class="pl-s1">c</span>;
+
+        <span class="pl-s1">c</span> <span class="pl-c1">=</span> <span class="pl-s1">candidate</span>;
+        <span class="pl-k">do</span>
+        {
+            <span class="pl-k">if</span> (<span class="pl-s1">c</span> <span class="pl-c1">==</span> <span class="pl-s1">klass</span>)
+            {
+                <span class="pl-en">g_hash_table_insert</span>(<span class="pl-s1">result</span>, <span class="pl-s1">candidate</span>, <span class="pl-en">GSIZE_TO_POINTER</span>(<span class="pl-en">class_getInstanceSize</span>(<span class="pl-s1">candidate</span>)));
+                <span class="pl-k">break</span>;
+            }
+                <span class="pl-c">// class_getSuperclass: Return the class superclass</span>
+                <span class="pl-c">// https://developer.apple.com/documentation/objectivec/1418498-class_getsuperclass?language=objc</span>
+            <span class="pl-s1">c</span> <span class="pl-c1">=</span> <span class="pl-en">class_getSuperclass</span>(<span class="pl-s1">c</span>);
+        } <span class="pl-k">while</span> (<span class="pl-s1">c</span> <span class="pl-c1">!=</span> <span class="pl-c1">NULL</span>);
+    }
+}</pre></div>
+<ol start="2">
+<li>Get all heap memory regions in the current process.</li>
+</ol>
+<div class="highlight highlight-source-c"><pre class="notranslate">...
+<span class="pl-smi">vm_address_t</span> <span class="pl-c1">*</span><span class="pl-s1">malloc_zone_addresses</span>;
+<span class="pl-smi">unsigned</span> <span class="pl-s1">malloc_zone_count</span>;
+<span class="pl-s1">malloc_zone_count</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span>;
+<span class="pl-en">malloc_get_all_zones</span>(<span class="pl-en">mach_task_self</span>(), <span class="pl-s1">read_local_memory</span>, <span class="pl-c1">&amp;</span><span class="pl-s1">malloc_zone_addresses</span>, <span class="pl-c1">&amp;</span><span class="pl-s1">malloc_zone_count</span>);
+...</pre></div>
+<ol start="3">
+<li>Enumerate the allocated spaces in the heap:</li>
+</ol>
+<p><code class="notranslate">zone-&gt;introspect-&gt;enumerator(...)</code> enumerates all memory blocks in the specified memory region. <code class="notranslate">MALLOC_PTR_IN_USE_RANGE_TYPE</code> indicates that only the memory blocks that are in use (allocated) will be enumerated.</p>
+<div class="highlight highlight-source-c"><pre class="notranslate"><span class="pl-k">for</span> (<span class="pl-s1">i</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span>; <span class="pl-s1">i</span> <span class="pl-c1">!=</span> <span class="pl-s1">malloc_zone_count</span>; <span class="pl-s1">i</span><span class="pl-c1">++</span>)
+{
+    <span class="pl-smi">vm_address_t</span> <span class="pl-s1">zone_address</span> <span class="pl-c1">=</span> <span class="pl-s1">malloc_zone_addresses</span>[<span class="pl-s1">i</span>];
+    <span class="pl-smi">malloc_zone_t</span> <span class="pl-c1">*</span><span class="pl-s1">zone</span> <span class="pl-c1">=</span> (<span class="pl-smi">malloc_zone_t</span> <span class="pl-c1">*</span>)<span class="pl-s1">zone_address</span>;
+		...
+		<span class="pl-s1">zone</span><span class="pl-c1">-&gt;</span><span class="pl-c1">introspect</span><span class="pl-c1">-&gt;</span><span class="pl-en">enumerator</span>(<span class="pl-en">mach_task_self</span>(), <span class="pl-c1">&amp;</span><span class="pl-s1">ctx</span>, <span class="pl-c1">MALLOC_PTR_IN_USE_RANGE_TYPE</span>, <span class="pl-s1">zone_address</span>, <span class="pl-s1">read_local_memory</span>, <span class="pl-s1">collect_matches_in_ranges</span>)
+}</pre></div>
+<ol start="4">
+<li>Collect class instances: Enumerate the <code class="notranslate">ranges</code>, and for any address that points to a valid <code class="notranslate">isa</code> and corresponds to a class in the context's <code class="notranslate">classes</code>, add the instance to the <code class="notranslate">matches</code> list.</li>
+</ol>
+<div class="highlight highlight-source-c"><pre class="notranslate"><span class="pl-k">static</span> <span class="pl-smi">void</span> <span class="pl-en">collect_matches_in_ranges</span>(<span class="pl-smi">task_t</span> <span class="pl-s1">task</span>,
+													<span class="pl-smi">void</span> <span class="pl-c1">*</span><span class="pl-s1">user_data</span>,
+                          <span class="pl-smi">unsigned</span> <span class="pl-s1">type</span>,
+                          <span class="pl-smi">vm_range_t</span> <span class="pl-c1">*</span><span class="pl-s1">ranges</span>,
+                          <span class="pl-smi">unsigned</span> <span class="pl-s1">count</span>)
+{
+    <span class="pl-smi">ChooseContext</span> <span class="pl-c1">*</span><span class="pl-s1">ctx</span> <span class="pl-c1">=</span> <span class="pl-s1">user_data</span>;
+    <span class="pl-smi">GHashTable</span> <span class="pl-c1">*</span><span class="pl-s1">classes</span> <span class="pl-c1">=</span> <span class="pl-s1">ctx</span><span class="pl-c1">-&gt;</span><span class="pl-c1">classes</span>;
+    <span class="pl-smi">unsigned</span> <span class="pl-s1">i</span>;
+
+    <span class="pl-k">for</span> (<span class="pl-s1">i</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span>; <span class="pl-s1">i</span> <span class="pl-c1">&lt;</span> <span class="pl-s1">count</span>; <span class="pl-s1">i</span><span class="pl-c1">++</span>)
+    {
+        <span class="pl-smi">vm_range_t</span> <span class="pl-c1">*</span><span class="pl-s1">range</span> <span class="pl-c1">=</span> <span class="pl-c1">&amp;</span><span class="pl-s1">ranges</span>[<span class="pl-s1">i</span>];
+				<span class="pl-smi">gconstpointer</span> <span class="pl-s1">candidate</span> <span class="pl-c1">=</span> <span class="pl-en">GSIZE_TO_POINTER</span>(<span class="pl-s1">range</span><span class="pl-c1">-&gt;</span><span class="pl-c1">address</span>);
+        <span class="pl-s1">isa</span> <span class="pl-c1">=</span> <span class="pl-c1">*</span>(<span class="pl-smi">gconstpointer</span> <span class="pl-c1">*</span>)<span class="pl-s1">candidate</span>;
+				...
+        <span class="pl-s1">instance_size</span> <span class="pl-c1">=</span> <span class="pl-en">GPOINTER_TO_UINT</span>(<span class="pl-en">g_hash_table_lookup</span>(<span class="pl-s1">classes</span>, <span class="pl-s1">isa</span>));
+        <span class="pl-k">if</span> (<span class="pl-s1">instance_size</span> <span class="pl-c1">!=</span> <span class="pl-c1">0</span> <span class="pl-c1">&amp;&amp;</span> <span class="pl-s1">range</span><span class="pl-c1">-&gt;</span><span class="pl-c1">size</span> &gt;= <span class="pl-s1">instance_size</span>)
+        {
+            <span class="pl-en">g_array_append_val</span>(<span class="pl-s1">ctx</span><span class="pl-c1">-&gt;</span><span class="pl-c1">matches</span>, <span class="pl-s1">candidate</span>);
+        }
+    }
+}</pre></div>
+<p>These are all the internal details of the <code class="notranslate">choose</code> method.</p>
+<p>Next, I will demonstrate how to use Objective-C to inject a dynamic library into a target process, locate CLASS instances in the target process's memory, and execute their methods.</p>
+<h3>Choose Demo</h3>
+<ul>
+<li>Target Demo:</li>
+</ul>
+<div class="highlight highlight-source-objc"><pre class="notranslate"><span class="pl-c"><span class="pl-c">//</span> example_target.m</span>
+#<span class="pl-k">import</span> <span class="pl-s"><span class="pl-pds">&lt;</span>Foundation/Foundation.h<span class="pl-pds">&gt;</span></span>
+
+<span class="pl-k">@interface</span> <span class="pl-en">TEST</span> : <span class="pl-e">NSObject</span>
+- (<span class="pl-k">void</span>)<span class="pl-en">dododo</span>;
+<span class="pl-k">@end</span>
+
+<span class="pl-k">@implementation</span> <span class="pl-en">TEST</span>
+- (<span class="pl-k">void</span>)<span class="pl-en">dododo</span> {
+  <span class="pl-c1">NSLog</span>(<span class="pl-s"><span class="pl-pds">@"</span>you did it!<span class="pl-pds">"</span></span>);
+}
+<span class="pl-k">@end</span>
+
+<span class="pl-k">int</span> <span class="pl-en">main</span>(<span class="pl-k">int</span> argc, <span class="pl-k">const</span> <span class="pl-k">char</span> *argv[]) {
+  @autoreleasepool {
+    <span class="pl-c1">NSLog</span>(<span class="pl-s"><span class="pl-pds">@"</span>pid -&gt; <span class="pl-c1">%d</span><span class="pl-pds">"</span></span>, <span class="pl-c1">getpid</span>());
+    <span class="pl-c"><span class="pl-c">//</span> create TEST instrance</span>
+    TEST *t = [[TEST <span class="pl-c1">alloc</span>] <span class="pl-c1">init</span>];
+    <span class="pl-k">while</span> (<span class="pl-c1">YES</span>) {}
+  }
+  <span class="pl-k">return</span> <span class="pl-c1">0</span>;
+}</pre></div>
+<ul>
+<li>Iterate through memory to locate instances of the <code class="notranslate">TEST</code> class and execute the <code class="notranslate">dododo</code> method:</li>
+</ul>
+<div class="highlight highlight-source-objc"><pre class="notranslate"><span class="pl-c"><span class="pl-c">//</span> example_choose.m</span>
+<span class="pl-c"><span class="pl-c">//</span> @Base: https://gist.github.com/samdmarshall/17f4e66b5e2e579fd396</span>
+
+#<span class="pl-k">import</span> <span class="pl-s"><span class="pl-pds">&lt;</span>Foundation/Foundation.h<span class="pl-pds">&gt;</span></span>
+#<span class="pl-k">import</span> <span class="pl-s"><span class="pl-pds">&lt;</span>mach/mach_vm.h<span class="pl-pds">&gt;</span></span>
+#<span class="pl-k">import</span> <span class="pl-s"><span class="pl-pds">&lt;</span>malloc/malloc.h<span class="pl-pds">&gt;</span></span>
+#<span class="pl-k">import</span> <span class="pl-s"><span class="pl-pds">&lt;</span>objc/message.h<span class="pl-pds">&gt;</span></span>
+#<span class="pl-k">import</span> <span class="pl-s"><span class="pl-pds">&lt;</span>objc/runtime.h<span class="pl-pds">&gt;</span></span>
+
+#<span class="pl-k">if</span> defined(__arm64__)
+#<span class="pl-k">define</span> <span class="pl-en">OBJC_ISA_MASK</span> <span class="pl-c1">0xffffffff8ULL</span>
+#<span class="pl-k">elif</span> defined(__i386__) <span class="pl-c"><span class="pl-c">//</span> TODO</span>
+#<span class="pl-k">define</span> <span class="pl-en">OBJC_ISA_MASK</span> <span class="pl-c1">0x7ffffffffff8ULL</span>
+#<span class="pl-k">endif</span>
+
+<span class="pl-c"><span class="pl-c">//</span> TODO Target class</span>
+#<span class="pl-k">define</span> <span class="pl-en">CLASS</span> <span class="pl-s"><span class="pl-pds">"</span>TEST<span class="pl-pds">"</span></span>
+
+<span class="pl-c1">Class</span> cls;
+<span class="pl-c1">size_t</span> cls_size;
+
+<span class="pl-k">void</span> <span class="pl-en">CanHasObjects</span>(<span class="pl-c1">task_t</span> task, <span class="pl-k">void</span> *context, <span class="pl-k">unsigned</span> type,
+                   <span class="pl-c1">vm_range_t</span> *ranges, <span class="pl-k">unsigned</span> count) {
+  <span class="pl-k">unsigned</span> i;
+  <span class="pl-k">for</span> (i = <span class="pl-c1">0</span>; i &lt; count; i++) {
+    <span class="pl-c1">vm_range_t</span> *range = &amp;ranges[i];
+    <span class="pl-c1">uintptr_t</span> *address = ((<span class="pl-c1">uintptr_t</span> *)range-&gt;<span class="pl-smi">address</span>);
+    <span class="pl-c1">uintptr_t</span> *isa;
+
+    <span class="pl-k">if</span> (address == <span class="pl-c1">NULL</span>) {
+      <span class="pl-k">continue</span>;
+    }
+
+    isa = (<span class="pl-c1">uintptr_t</span> *)address[<span class="pl-c1">0</span>];
+#<span class="pl-k">ifdef</span> OBJC_ISA_MASK
+    isa = (<span class="pl-c1">uintptr_t</span> *)((<span class="pl-k">unsigned</span> <span class="pl-k">long</span> <span class="pl-k">long</span>)isa &amp; OBJC_ISA_MASK);
+#<span class="pl-k">endif</span>
+
+    <span class="pl-k">if</span> (isa &gt; <span class="pl-c1">0</span> &amp;&amp; range-&gt;<span class="pl-smi">size</span> &gt;= <span class="pl-k">sizeof</span>(<span class="pl-c1">Class</span>) &amp;&amp; cls == (<span class="pl-c1">Class</span>)isa) {
+#<span class="pl-k">ifdef</span> DEBUG
+      <span class="pl-c1">printf</span>(<span class="pl-s"><span class="pl-pds">"</span>[+] fond isa(<span class="pl-c1">%p</span>)-&gt;'<span class="pl-c1">%s</span>' instance <span class="pl-c1">%p</span> <span class="pl-cce">\n</span><span class="pl-pds">"</span></span>, isa,
+             <span class="pl-c1">object_getClassName</span>((<span class="pl-c1">Class</span>)isa), address);
+#<span class="pl-k">endif</span>
+      <span class="pl-c"><span class="pl-c">//</span> TODO run taget class function</span>
+      ((<span class="pl-c1">void</span> (*)(<span class="pl-c1">id</span>, <span class="pl-c1">SEL</span>))objc_msgSend)((__bridge <span class="pl-c1">id</span>)address,
+                                        <span class="pl-k">@selector</span>(<span class="pl-c1">dododo</span>));
+    }
+  }
+}
+
+<span class="pl-k">static</span> <span class="pl-k">void</span> <span class="pl-en">__attribute__</span>((constructor)) initialize(<span class="pl-k">void</span>) {
+  @autoreleasepool {
+    cls = <span class="pl-c1">NSClassFromString</span>([<span class="pl-c1">NSString</span> <span class="pl-c1">stringWithFormat:</span><span class="pl-s"><span class="pl-pds">@"</span><span class="pl-c1">%s</span><span class="pl-pds">"</span></span>, CLASS]);
+    <span class="pl-k">if</span> (cls == <span class="pl-c1">Nil</span>) {
+#<span class="pl-k">ifdef</span> DEBUG
+      <span class="pl-c1">printf</span>(<span class="pl-s"><span class="pl-pds">"</span>[-] Class not found<span class="pl-cce">\n</span><span class="pl-pds">"</span></span>);
+#<span class="pl-k">endif</span>
+      <span class="pl-k">return</span>;
+    }
+
+    cls_size = <span class="pl-c1">class_getInstanceSize</span>(cls);
+    <span class="pl-k">if</span> (cls_size == <span class="pl-c1">0</span>) {
+#<span class="pl-k">ifdef</span> DEBUG
+      <span class="pl-c1">printf</span>(<span class="pl-s"><span class="pl-pds">"</span>[-] Class Instance size is <span class="pl-c1">%zu</span><span class="pl-cce">\n</span><span class="pl-pds">"</span></span>, cls_size);
+#<span class="pl-k">endif</span>
+      <span class="pl-k">return</span>;
+    }
+
+#<span class="pl-k">ifdef</span> DEBUG
+    <span class="pl-c1">printf</span>(<span class="pl-s"><span class="pl-pds">"</span>[+] Class <span class="pl-c1">%p</span> Instance size is <span class="pl-c1">%zu</span><span class="pl-cce">\n</span><span class="pl-pds">"</span></span>, cls, cls_size);
+#<span class="pl-k">endif</span>
+
+    <span class="pl-c1">vm_address_t</span> *zones;
+    <span class="pl-k">unsigned</span> count, i = <span class="pl-c1">0</span>;
+    <span class="pl-c1">kern_return_t</span> r =
+        <span class="pl-c1">malloc_get_all_zones</span>(<span class="pl-c1">mach_task_self</span>(), <span class="pl-c1">NULL</span>, &amp;zones, &amp;count);
+    <span class="pl-k">if</span> (r == KERN_SUCCESS) {
+      <span class="pl-k">for</span> (i = <span class="pl-c1">0</span>; i &lt; count; i++) {
+        <span class="pl-c1">vm_address_t</span> zone_address = zones[i];
+        <span class="pl-c1">malloc_zone_t</span> *zone = (<span class="pl-c1">malloc_zone_t</span> *)zone_address;
+
+        <span class="pl-k">if</span> (zone != <span class="pl-c1">NULL</span> &amp;&amp; zone-&gt;<span class="pl-smi">introspect</span> != <span class="pl-c1">NULL</span>) {
+          zone-&gt;<span class="pl-smi">introspect</span>-&gt;<span class="pl-c1">enumerator</span>(<span class="pl-c1">mach_task_self</span>(), <span class="pl-c1">NULL</span>,
+                                       MALLOC_PTR_IN_USE_RANGE_TYPE,
+                                       zone_address, <span class="pl-c1">NULL</span>, &amp;CanHasObjects);
+        }
+      }
+    }
+  }
+}</pre></div>
+<ul>
+<li>
+<p><a href="https://github.com/BreakOnCrash/inx">inx</a> is an open-source tool I developed. It allows you to inject <code class="notranslate">.dylib</code> files into target processes on macOS (both arm64 and x86_64).</p>
+</li>
+<li>
+<p>Run And Test</p>
+</li>
+</ul>
+<div class="highlight highlight-source-shell"><pre class="notranslate">$ clang -shared -framework Foundation examples/example_dylib.m -o tests/libexample.dylib
+$ clang -framework Foundation examples/example_target.m  -o tests/example_target
+<span class="pl-c"><span class="pl-c">#</span> run target process</span>
+$ ./example_target
+<span class="pl-c"><span class="pl-c">#</span> inject libchoose.dylib</span>
+$ sudo ./bin/inx [] /path/libchoose.dylib</pre></div>
+<p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/933031b0-f100-4c27-8c4a-ebc1a30b791e"><img src="https://github.com/user-attachments/assets/933031b0-f100-4c27-8c4a-ebc1a30b791e" alt="" style="max-width: 100%;"></a></p>
+<h2>Reference</h2>
+<ul>
+<li><a href="https://developer.apple.com/documentation/objectivec/objective-c_runtime?language=objc" rel="nofollow">https://developer.apple.com/documentation/objectivec/objective-c_runtime</a></li>
+<li><a href="https://tech.meituan.com/2015/08/12/deep-understanding-object-c-of-method-caching.html" rel="nofollow">https://tech.meituan.com/2015/08/12/deep-understanding-object-c-of-method-caching.html</a></li>
+<li><a href="https://evilpan.com/2022/04/05/frida-internal/" rel="nofollow">https://evilpan.com/2022/04/05/frida-internal/</a></li>
+<li><a href="https://www.todayios.com/find-ios-heap-object/" rel="nofollow">https://www.todayios.com/find-ios-heap-object/</a></li>
+</ul>
+</div>
+<div style="font-size:small;margin-top:8px;float:right;"></div>
+
+<button class="btn btn-block" type="button" onclick="openComments()" id="cmButton">comments</button>
+<div class="comments" id="comments"></div>
+
+</div>
+    <div id="footer"><div id="footer1">Copyright © <span id="copyrightYear"></span> <a href="https://blog.imipy.com">zznQ</a></div>
+<div id="footer2">
+</div>
+
+<script>
+var now=new Date();
+document.getElementById("copyrightYear").innerHTML=now.getFullYear();
+
+if("01/05/2018"!=""){
+    var startSite=new Date("01/05/2018");
+    var diff=now.getTime()-startSite.getTime();
+    var diffDay=Math.floor(diff/(1000*60*60*24));
+    document.getElementById("runday").innerHTML="run "+diffDay+" days"+" • ";
+}
+</script></div>
+</body>
+<script>
+var IconList={'sun': 'M8 10.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM8 12a4 4 0 100-8 4 4 0 000 8zM8 0a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0V.75A.75.75 0 018 0zm0 13a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 018 13zM2.343 2.343a.75.75 0 011.061 0l1.06 1.061a.75.75 0 01-1.06 1.06l-1.06-1.06a.75.75 0 010-1.06zm9.193 9.193a.75.75 0 011.06 0l1.061 1.06a.75.75 0 01-1.06 1.061l-1.061-1.06a.75.75 0 010-1.061zM16 8a.75.75 0 01-.75.75h-1.5a.75.75 0 010-1.5h1.5A.75.75 0 0116 8zM3 8a.75.75 0 01-.75.75H.75a.75.75 0 010-1.5h1.5A.75.75 0 013 8zm10.657-5.657a.75.75 0 010 1.061l-1.061 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 0zm-9.193 9.193a.75.75 0 010 1.06l-1.06 1.061a.75.75 0 11-1.061-1.06l1.06-1.061a.75.75 0 011.061 0z', 'moon': 'M9.598 1.591a.75.75 0 01.785-.175 7 7 0 11-8.967 8.967.75.75 0 01.961-.96 5.5 5.5 0 007.046-7.046.75.75 0 01.175-.786zm1.616 1.945a7 7 0 01-7.678 7.678 5.5 5.5 0 107.678-7.678z', 'sync': 'M1.705 8.005a.75.75 0 0 1 .834.656 5.5 5.5 0 0 0 9.592 2.97l-1.204-1.204a.25.25 0 0 1 .177-.427h3.646a.25.25 0 0 1 .25.25v3.646a.25.25 0 0 1-.427.177l-1.38-1.38A7.002 7.002 0 0 1 1.05 8.84a.75.75 0 0 1 .656-.834ZM8 2.5a5.487 5.487 0 0 0-4.131 1.869l1.204 1.204A.25.25 0 0 1 4.896 6H1.25A.25.25 0 0 1 1 5.75V2.104a.25.25 0 0 1 .427-.177l1.38 1.38A7.002 7.002 0 0 1 14.95 7.16a.75.75 0 0 1-1.49.178A5.5 5.5 0 0 0 8 2.5Z', 'home': 'M6.906.664a1.749 1.749 0 0 1 2.187 0l5.25 4.2c.415.332.657.835.657 1.367v7.019A1.75 1.75 0 0 1 13.25 15h-3.5a.75.75 0 0 1-.75-.75V9H7v5.25a.75.75 0 0 1-.75.75h-3.5A1.75 1.75 0 0 1 1 13.25V6.23c0-.531.242-1.034.657-1.366l5.25-4.2Zm1.25 1.171a.25.25 0 0 0-.312 0l-5.25 4.2a.25.25 0 0 0-.094.196v7.019c0 .138.112.25.25.25H5.5V8.25a.75.75 0 0 1 .75-.75h3.5a.75.75 0 0 1 .75.75v5.25h2.75a.25.25 0 0 0 .25-.25V6.23a.25.25 0 0 0-.094-.195Z', 'github': 'M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z', 'copy': 'M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25Z M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25Z', 'check': 'M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0Z'};
+var utterancesLoad=0;
+
+let themeSettings={
+    "dark": ["dark","moon","#00f0ff","dark-blue"],
+    "light": ["light","sun","#ff5000","github-light"],
+    "auto": ["auto","sync","","preferred-color-scheme"]
+};
+function changeTheme(mode, icon, color, utheme){
+    document.documentElement.setAttribute("data-color-mode",mode);
+    document.getElementById("themeSwitch").setAttribute("d",value=IconList[icon]);
+    document.getElementById("themeSwitch").parentNode.style.color=color;
+    if(utterancesLoad==1){utterancesTheme(utheme);}
+}
+function modeSwitch(){
+    let currentMode=document.documentElement.getAttribute('data-color-mode');
+    let newMode = currentMode === "light" ? "dark" : currentMode === "dark" ? "auto" : "light";
+    localStorage.setItem("meek_theme", newMode);
+    if(themeSettings[newMode]){
+        changeTheme(...themeSettings[newMode]);
+    }
+}
+function utterancesTheme(theme){
+    const message={type:'set-theme',theme: theme};
+    const iframe=document.getElementsByClassName('utterances-frame')[0];
+    iframe.contentWindow.postMessage(message,'https://utteranc.es');
+}
+if(themeSettings[theme]){changeTheme(...themeSettings[theme]);}
+</script>
+
+<script>
+document.getElementById("pathHome").setAttribute("d",IconList["home"]);
+
+
+
+function openComments(){
+    cm=document.getElementById("comments");
+    cmButton=document.getElementById("cmButton");
+    cmButton.disabled=true;
+    cmButton.innerHTML="loading";
+    span=document.createElement("span");
+    span.setAttribute("class","AnimatedEllipsis");
+    cmButton.appendChild(span);
+
+    script=document.createElement("script");
+    script.setAttribute("src","https://utteranc.es/client.js");
+    script.setAttribute("repo","ac0d3r/ac0d3r.github.io");
+    script.setAttribute("issue-term","title");
+    
+    if(localStorage.getItem("meek_theme")=="dark"){script.setAttribute("theme","dark-blue");}
+    else if(localStorage.getItem("meek_theme")=="light") {script.setAttribute("theme","github-light");}
+    else{script.setAttribute("theme","preferred-color-scheme");}
+    
+    script.setAttribute("crossorigin","anonymous");
+    script.setAttribute("async","");
+    cm.appendChild(script);
+
+    int=self.setInterval("iFrameLoading()",200);
+}
+
+function iFrameLoading(){
+    var utterances=document.getElementsByClassName('utterances');
+    if(utterances.length==1){
+        if(utterances[0].style.height!=""){
+            utterancesLoad=1;
+            int=window.clearInterval(int);
+            document.getElementById("cmButton").style.display="none";
+            console.log("utterances Load OK");
+        }
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const createClipboardHTML = (codeContent, additionalClasses = '') => `
+        <pre class="notranslate"><code class="notranslate">${codeContent}</code></pre>
+        <div class="clipboard-container position-absolute right-0 top-0 ${additionalClasses}">
+            <clipboard-copy class="ClipboardButton btn m-2 p-0" role="button" style="display: inherit;">
+                <svg height="16" width="16" class="octicon octicon-copy m-2"><path d="${IconList["copy"]}"></path></svg>
+                <svg height="16" width="16" class="octicon octicon-check color-fg-success m-2 d-none"><path d="${IconList["check"]}"></path></svg>
+            </clipboard-copy>
+            <div class="copy-feedback">Copied!</div>
+        </div>
+    `;
+
+    const handleCodeElements = (selector = '') => {
+        document.querySelectorAll(selector).forEach(codeElement => {
+            const codeContent = codeElement.innerHTML;
+            const newStructure = document.createElement('div');
+            newStructure.className = 'snippet-clipboard-content position-relative overflow-auto';
+            newStructure.innerHTML = createClipboardHTML(codeContent);
+
+            const parentElement = codeElement.parentElement;
+            if (selector.includes('highlight')) {
+                parentElement.insertBefore(newStructure, codeElement.nextSibling);
+                parentElement.removeChild(codeElement);
+            } else {
+                parentElement.parentElement.replaceChild(newStructure, parentElement);
+            }
+        });
+    };
+
+    handleCodeElements('pre.notranslate > code.notranslate');
+    handleCodeElements('div.highlight > pre.notranslate');
+
+    let currentFeedback = null;
+    document.querySelectorAll('clipboard-copy').forEach(copyButton => {
+        copyButton.addEventListener('click', () => {
+            const codeContent = copyButton.closest('.snippet-clipboard-content').innerText;
+            const tempTextArea = document.createElement('textarea');
+            tempTextArea.value = codeContent;
+            document.body.appendChild(tempTextArea);
+            tempTextArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempTextArea);
+
+            const copyIcon = copyButton.querySelector('.octicon-copy');
+            const checkIcon = copyButton.querySelector('.octicon-check');
+            const copyFeedback = copyButton.nextElementSibling;
+
+            if (currentFeedback && currentFeedback !== copyFeedback) {currentFeedback.style.display = 'none';}
+            currentFeedback = copyFeedback;
+
+            copyIcon.classList.add('d-none');
+            checkIcon.classList.remove('d-none');
+            copyFeedback.style.display = 'block';
+            copyButton.style.borderColor = 'var(--color-success-fg)';
+
+            setTimeout(() => {
+                copyIcon.classList.remove('d-none');
+                checkIcon.classList.add('d-none');
+                copyFeedback.style.display = 'none';
+                copyButton.style.borderColor = '';
+            }, 2000);
+        });
+    });
+});
+
+</script>
+
+
+<script src="https://blog.imipy.com/plugins/GmeekTOC.js"></script>
+<script src="https://blog.imipy.com/plugins/lightbox.js"></script>
+</html>

@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html data-color-mode="light" data-dark-theme="dark" data-light-theme="light" lang="en">
+<head>
+    <meta content="text/html; charset=utf-8" http-equiv="content-type" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <link href='https://mirrors.sustech.edu.cn/cdnjs/ajax/libs/Primer/21.0.7/primer.css' rel='stylesheet' />
+    
+    <link rel="icon" href="/imgs/avatar.png"><script>
+        let theme = localStorage.getItem("meek_theme") || "light";
+        document.documentElement.setAttribute("data-color-mode", theme);
+    </script>
+<meta name="description" content="# 学习课程
+> [南京大学（李樾、谭添老师）的课程《软件分析》](https://tai-e.">
+<meta property="og:title" content="静态程序分析入门之Go实践笔记">
+<meta property="og:description" content="# 学习课程
+> [南京大学（李樾、谭添老师）的课程《软件分析》](https://tai-e.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://blog.imipy.com/post/%E9%9D%99%E6%80%81%E7%A8%8B%E5%BA%8F%E5%88%86%E6%9E%90%E5%85%A5%E9%97%A8%E4%B9%8Bgo%E5%AE%9E%E8%B7%B5%E7%AC%94%E8%AE%B0.html">
+<meta property="og:image" content="/imgs/avatar.png">
+<title>静态程序分析入门之Go实践笔记</title>
+<link href="//unpkg.com/@wooorm/starry-night@2.1.1/style/both.css" rel="stylesheet" />
+
+
+</head>
+<style>
+body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;padding: 45px;font-size: 16px;font-family: sans-serif;line-height: 1.25;}
+#header{display:flex;padding-bottom:8px;border-bottom: 1px solid var(--borderColor-muted, var(--color-border-muted));margin-bottom: 16px;}
+#footer {margin-top:64px; text-align: center;font-size: small;}
+
+</style>
+
+<style>
+.postTitle{margin: auto 0;font-size:40px;font-weight:bold;}
+.title-right{display:flex;margin:auto 0 0 auto;}
+.title-right .circle{padding: 14px 16px;margin-right:8px;}
+#postBody{border-bottom: 1px solid var(--color-border-default);padding-bottom:36px;}
+#postBody hr{height:2px;}
+#cmButton{height:48px;margin-top:48px;}
+#comments{margin-top:64px;}
+.g-emoji{font-size:24px;}
+@media (max-width: 600px) {
+    body {padding: 8px;}
+    .postTitle{font-size:24px;}
+}
+.copy-feedback {
+    display: none;
+    position: absolute;
+    top: 10px;
+    right: 50px;
+    color: var(--color-fg-on-emphasis);
+    background-color: var(--color-fg-muted);
+    border-radius: 3px;
+    padding: 5px 8px;
+    font-size: 12px;
+}
+</style>
+
+
+
+
+<body>
+    <div id="header">
+<h1 class="postTitle">静态程序分析入门之Go实践笔记</h1>
+<div class="title-right">
+    <a href="https://blog.imipy.com" id="buttonHome" class="btn btn-invisible circle" title="home">
+        <svg class="octicon" width="16" height="16">
+            <path id="pathHome" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+
+    <a class="btn btn-invisible circle" onclick="modeSwitch();" title="switch theme">
+        <svg class="octicon" width="16" height="16" >
+            <path id="themeSwitch" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+
+</div>
+</div>
+    <div id="content">
+<div class="markdown-body" id="postBody"><h1>学习课程</h1>
+<blockquote>
+<p><a href="https://tai-e.pascal-lab.net/lectures.html" rel="nofollow">南京大学（李樾、谭添老师）的课程《软件分析》</a></p>
+</blockquote>
+<p>各类笔记：</p>
+<ul>
+<li><a href="https://ranger-nju.gitbook.io/static-program-analysis-book" rel="nofollow">Static Program Analysis Book</a></li>
+<li><a href="https://fushuling.com/index.php/2025/01/08/%e9%9d%99%e6%80%81%e5%88%86%e6%9e%90%e5%85%a5%e9%97%a8/" rel="nofollow">静态分析入门</a></li>
+<li><a href="https://www.geekby.site/2022/02/%E9%9D%99%E6%80%81%E7%A8%8B%E5%BA%8F%E5%88%86%E6%9E%90%E7%B3%BB%E5%88%97%E4%B8%80/" rel="nofollow">geekby - 静态程序分析</a></li>
+</ul>
+<h1>编译与静态分析的关系</h1>
+<p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/f15f4537-1145-48ef-b4c3-ecf7b61e572b"><img src="https://github.com/user-attachments/assets/f15f4537-1145-48ef-b4c3-ecf7b61e572b" height="350" style="max-width: 100%; height: auto; max-height: 350px;"></a></p>
+<p>在 <a href="https://go.dev/src/cmd/compile/README" rel="nofollow">Introduction to the Go compiler</a> 也能看到相似的流程，静态分析主要发生在IR层，生成机器码后端部分(back-end)那就是编译器所考虑的了。</p>
+<ul>
+<li>词法分析器（Scanner）结合正则表达式(Regular Expression) ，通过词法分析（Lexical Analysis）将源码翻译为 token。</li>
+<li>语法分析器（Parser）根据上下文无关文法（Context-Free Grammar）通过语法分析（Syntax Analysis），将 tokens 解析为抽象语法树（Abstract Syntax Tree, AST）</li>
+<li>语义分析器（Type Checker），结合属性文法（Attribute Grammar），通过语义分析（Semantic Analysis），将 AST 解析为 decorated AST</li>
+<li>Translator 将 decorated AST 翻译为中间表示形式（Intermediate Representation, IR）通常是三地址码会(Three address code, 3AC)，并基于 IR 做静态分析。</li>
+<li>Code Generator，将 IR 转换为机器代码。</li>
+</ul>
+<h1>了解Go内部实现</h1>
+<h2>Scanner</h2>
+<p>Go的token定义在<a href="https://github.com/golang/go/blob/master/src/go/token/token.go">token.go</a>文件，还包含对<a href="https://github.com/golang/go/blob/master/src/go/token/token.go#L331-L341">标识符</a>，<a href="https://github.com/golang/go/blob/master/src/go/token/token.go#L322-L326">关键词</a>等判断。</p>
+<p><a href="https://github.com/golang/go/blob/master/src/go/scanner/scanner.go#L80-L974">Scan</a> 方法实现词法分析将源码翻译为tokens。</p>
+<p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/607207d4-df06-46f4-9714-168e635cd3e3"><img src="https://github.com/user-attachments/assets/607207d4-df06-46f4-9714-168e635cd3e3" height="250" style="max-width: 100%; height: auto; max-height: 250px;"></a></p>
+<h2>Parser</h2>
+<p>获得tokens流后通过文法（Grammar）将其处理为AST(Abstract Syntax Tree，抽象语法树)，<a href="https://go.dev/ref/spec" rel="nofollow">Go 编程语言规范</a> 有关于文法说明：</p>
+<div class="highlight highlight-source-prolog"><pre class="notranslate"><span class="pl-en">SourceFile</span> = <span class="pl-v">PackageClause</span> <span class="pl-s">";"</span> { <span class="pl-v">ImportDecl</span> <span class="pl-s">";"</span> } { <span class="pl-v">TopLevelDecl</span> <span class="pl-s">";"</span> } <span class="pl-k">.</span>
+<span class="pl-en">PackageClause</span> = <span class="pl-s">"package"</span> <span class="pl-v">PackageName</span> <span class="pl-k">.</span>
+<span class="pl-en">PackageName</span>   = <span class="pl-c1">identifier</span> <span class="pl-k">.</span>
+
+<span class="pl-en">ImportDecl</span> = <span class="pl-s">"import"</span> ( <span class="pl-v">ImportSpec</span> | <span class="pl-s">"("</span> { <span class="pl-v">ImportSpec</span> <span class="pl-s">";"</span> } <span class="pl-s">")"</span> ) <span class="pl-k">.</span>
+<span class="pl-en">ImportSpec</span> = [ <span class="pl-s">"."</span> | <span class="pl-v">PackageName</span> ] <span class="pl-v">ImportPath</span> <span class="pl-k">.</span>
+<span class="pl-en">ImportPath</span> = <span class="pl-c1">string_lit</span> <span class="pl-k">.</span>
+
+<span class="pl-en">Declaration</span>  = <span class="pl-v">ConstDecl</span> | <span class="pl-v">TypeDecl</span> | <span class="pl-v">VarDecl</span> <span class="pl-k">.</span>
+<span class="pl-en">TopLevelDecl</span> = <span class="pl-v">Declaration</span> | <span class="pl-v">FunctionDecl</span> | <span class="pl-v">MethodDecl</span> <span class="pl-k">.</span></pre></div>
+<p>每个 Go 源代码文件最终都会被解析成一个独立的抽象语法树，所以语法树最顶层的结构或者开始符号都是 SourceFile。<br>
+每一个文件都包含一个 package 的定义以及可选的 import 声明和其他的顶层声明，顶层声明包括：常量，类型，别名，变量，函数等。</p>
+<p>除此之外，<a href="https://go.dev/ref/spec" rel="nofollow">Go 编程语言规范</a> 还包含了 Types,Blocks,Declarations,Expressions,Statements 等文法。</p>
+<hr>
+<p><a href="https://github.com/golang/go/blob/master/src/go/ast/ast.go#L32-L54">go/ast</a> 中定义<code class="notranslate">Node</code>,<code class="notranslate">Expr</code>,<code class="notranslate">Stmt</code>,<code class="notranslate">Decl</code>几个接口，其中表达式(expression),语句(statement)和声明(declaration)是语法的三个主体，Node是基类接口任何类型的主体都是Node，用于标记该节点位置的开始和结束。</p>
+<p>使用 <code class="notranslate">go/parser</code> 来解析下代码看看AST的结构：</p>
+<div class="highlight highlight-source-go"><pre class="notranslate"><span class="pl-c1">...</span>
+<span class="pl-k">import</span> (
+	<span class="pl-s">"go/ast"</span>
+	<span class="pl-s">"go/parser"</span>
+	<span class="pl-s">"go/token"</span>
+)
+
+<span class="pl-k">func</span> <span class="pl-s1">TestParser</span>() {
+	<span class="pl-s1">fs</span> <span class="pl-c1">:=</span> <span class="pl-s1">token</span>.<span class="pl-c1">NewFileSet</span>()
+	<span class="pl-s1">src</span> <span class="pl-c1">:=</span> <span class="pl-s">`package foo</span>
+<span class="pl-s"></span>
+<span class="pl-s">import (</span>
+<span class="pl-s">	"fmt"</span>
+<span class="pl-s">	"time"</span>
+<span class="pl-s">)</span>
+<span class="pl-s"></span>
+<span class="pl-s">var a string</span>
+<span class="pl-s"></span>
+<span class="pl-s">func foo() {</span>
+<span class="pl-s">	if a != "" {</span>
+<span class="pl-s">		fmt.Println(a)</span>
+<span class="pl-s">	}</span>
+<span class="pl-s"></span>
+<span class="pl-s">	for i:=0; i&lt;10; i++{</span>
+<span class="pl-s">		fmt.Println(i)</span>
+<span class="pl-s">	}</span>
+<span class="pl-s"></span>
+<span class="pl-s">	fmt.Println(time.Now())</span>
+<span class="pl-s">}</span>
+<span class="pl-s">`</span>
+	<span class="pl-s1">fast</span>, <span class="pl-s1">_</span> <span class="pl-c1">:=</span> <span class="pl-s1">parser</span>.<span class="pl-c1">ParseFile</span>(<span class="pl-s1">fs</span>, <span class="pl-s">"foo.go"</span>, <span class="pl-s1">src</span>, <span class="pl-s1">parser</span>.<span class="pl-c1">ParseComments</span>)
+	<span class="pl-s1">ast</span>.<span class="pl-c1">Print</span>(<span class="pl-s1">fs</span>, <span class="pl-s1">fast</span>)
+}</pre></div>
+<p>除了可以用 <code class="notranslate">ast.Print</code> 打印语法树，还可以使用可视化工具<a href="https://yuroyoro.github.io/goast-viewer/" rel="nofollow">goast-viewer</a>：</p>
+<p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/c1fa6d56-fd96-49f3-b26e-3bde5f14226c"><img src="https://github.com/user-attachments/assets/c1fa6d56-fd96-49f3-b26e-3bde5f14226c" height="350" style="max-width: 100%; height: auto; max-height: 350px;"></a></p>
+<p>Go文件的AST结构大致如图(参考<a href="https://draven.co/golang/docs/part1-prerequisite/ch02-compile/golang-compile-intro/" rel="nofollow">《Go 语言设计与实现》</a>)：</p>
+<p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/73cb0347-1ea2-415f-9257-27a6ae0fc9e6"><img src="https://github.com/user-attachments/assets/73cb0347-1ea2-415f-9257-27a6ae0fc9e6" height="350" style="max-width: 100%; height: auto; max-height: 350px;"></a></p>
+<h2>IR</h2>
+<p>IR 是编译器或静态分析工具将源代码转换为一种便于分析和优化的中间形式，通常是与源语言和目标平台无关的表示。它保留了程序的语义，方便后续分析、优化和代码生成。</p>
+<p>IR 可以是多种形式，如AST（抽象语法树）、三地址码、图、或字节码。</p>
+<p><strong>IR的分类：</strong></p>
+<ul>
+<li>树IR：AST(Abstract Syntax Tree)</li>
+<li>线性IR：3AC(Three Address Code)</li>
+<li>图IR：CFG(Control Flow Graph), SSA(Static Single Assignment Form), PDG(Program Dependence Graph) ...</li>
+</ul>
+<p><strong>静态分析为什么使用IR而非AST呢？</strong></p>
+<p>AST 是一个语法树的形式，是一个高层级的形式，更加接近程序的源代码，语言相关的，适合做快速的类型检测，但是缺少了<strong>控制流</strong>、<strong>数据流</strong>的信息。</p>
+<p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/3313e50c-e326-4796-bfbe-4d4d6ae14303"><img src="https://github.com/user-attachments/assets/3313e50c-e326-4796-bfbe-4d4d6ae14303" height="250" style="max-width: 100%; height: auto; max-height: 250px;"></a></p>
+<ul>
+<li>AST 是 high-level 且接近语法结构的，而 IR 是 low-level 且接近机器代码的。</li>
+<li>AST 是依赖于语言的，IR 通常是独立于语言的：三地址码会被分析器重点关注，因为可以将各种前端语言统一翻译成同一种 IR 再加以优化。</li>
+<li>AST 适合快速类型检查，IR 的结构更加紧凑和统一：在 AST 中包含了很多非终结符所占用的结点（body, assign 等），而 IR 中不会需要到这些信息。</li>
+<li>AST 缺少控制流信息，IR 包含了控制流信息：AST 中只是有结点表明了这是一个 do-while 结构，但是无法看出控制流信息；而 IR 中的 goto 等信息可以轻易看出控制流。</li>
+</ul>
+<p>因此 IR 更适合作为静态分析的基础。</p>
+<h3>GoSSA</h3>
+<p>Go的编译器在中间表示（IR）中使用 SSA（静态单赋值，Static Single Assignment） 形式。</p>
+<p>这个图从左到右分别是：AST,CFG,SSA，SSA 是基于 CFG 的一种：</p>
+<p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/f866a311-5889-43e3-a8d7-c99cb00a0c31"><img src="https://github.com/user-attachments/assets/f866a311-5889-43e3-a8d7-c99cb00a0c31" height="250" style="max-width: 100%; height: auto; max-height: 250px;"></a></p>
+<p>CFG 是一个过程或程序的抽象表现，是用在编译器中的一个抽象数据结构，由编译器在内部维护，代表了一个程序执行过程中会遍历到的所有路径。它用图的形式表示一个过程内所有基本块执行的可能流向, 也能反映一个过程的实时执行过程。</p>
+<ul>
+<li>CFG 的节点是基本块（Basic Blocks），表示一组顺序执行的语句；边表示控制流跳转（如 if 分支、循环、或 goto）。</li>
+<li>将函数的语句组织成基本块（Basic Blocks），每个基本块是一组顺序执行的指令，没有中间的跳转或分支。</li>
+</ul>
+<p>在 <a href="https://cs.opensource.google/go/x/tools" rel="nofollow">Go Tools</a> 仓库其中包含各种工具和包，主要用于 Go 程序的静态分析。<code class="notranslate">go/cfg</code> 为 Go 函数提供将AST生成为一个简单的控制流图：</p>
+<div class="highlight highlight-source-go"><pre class="notranslate"><span class="pl-c1">...</span>
+<span class="pl-s1">fs</span> <span class="pl-c1">:=</span> <span class="pl-s1">token</span>.<span class="pl-c1">NewFileSet</span>()
+<span class="pl-s1">src</span> <span class="pl-c1">:=</span> <span class="pl-s">`package foo</span>
+<span class="pl-s"></span>
+<span class="pl-s">func max(a, b int) int {</span>
+<span class="pl-s">    if a &gt; b {</span>
+<span class="pl-s">        return a</span>
+<span class="pl-s">    }</span>
+<span class="pl-s">    return b</span>
+<span class="pl-s">}</span>
+<span class="pl-s">`</span>
+<span class="pl-s1">fast</span>, <span class="pl-s1">_</span> <span class="pl-c1">:=</span> <span class="pl-s1">parser</span>.<span class="pl-c1">ParseFile</span>(<span class="pl-s1">fs</span>, <span class="pl-s">"foo.go"</span>, <span class="pl-s1">src</span>, <span class="pl-s1">parser</span>.<span class="pl-c1">ParseComments</span>)
+<span class="pl-c">// find max func decl</span>
+<span class="pl-k">var</span> <span class="pl-s1">funcDecl</span> <span class="pl-c1">*</span>ast.<span class="pl-smi">FuncDecl</span>
+<span class="pl-k">for</span> <span class="pl-s1">_</span>, <span class="pl-s1">decl</span> <span class="pl-c1">:=</span> <span class="pl-k">range</span> <span class="pl-s1">fast</span>.<span class="pl-c1">Decls</span> {
+	<span class="pl-k">if</span> <span class="pl-s1">f</span>, <span class="pl-s1">ok</span> <span class="pl-c1">:=</span> <span class="pl-s1">decl</span>.(<span class="pl-c1">*</span>ast.<span class="pl-smi">FuncDecl</span>); <span class="pl-s1">ok</span> <span class="pl-c1">&amp;&amp;</span> <span class="pl-s1">f</span>.<span class="pl-c1">Name</span>.<span class="pl-c1">Name</span> <span class="pl-c1">==</span> <span class="pl-s">"max"</span> {
+		<span class="pl-s1">funcDecl</span> <span class="pl-c1">=</span> <span class="pl-s1">f</span>
+		<span class="pl-k">break</span>
+	}
+}
+<span class="pl-c">// build cfg with ast</span>
+<span class="pl-s1">cfg</span> <span class="pl-c1">:=</span> <span class="pl-s1">cfg</span>.<span class="pl-c1">New</span>(<span class="pl-s1">funcDecl</span>.<span class="pl-c1">Body</span>, <span class="pl-k">func</span>(<span class="pl-s1">expr</span> <span class="pl-c1">*</span>ast.<span class="pl-smi">CallExpr</span>) <span class="pl-smi">bool</span> { <span class="pl-k">return</span> <span class="pl-c1">false</span> })
+<span class="pl-c">// generate cfg dot</span>
+<span class="pl-s1">cfg</span>.<span class="pl-c1">Dot</span>(<span class="pl-s1">fs</span>)</pre></div>
+<p>使用<a href="https://dreampuf.github.io/GraphvizOnline" rel="nofollow">GraphvizOnline</a>展示CFG(without Unreachable node)：</p>
+<p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/a275bf3a-4e39-4956-ae63-a5c9b8f5949f"><img src="https://github.com/user-attachments/assets/a275bf3a-4e39-4956-ae63-a5c9b8f5949f" height="250" style="max-width: 100%; height: auto; max-height: 250px;"></a></p>
+<hr>
+<p>SSA是基于CFG的中间表示（IR），所以基本块直接对应 CFG 的基本块，控制流边（block.Succs）保持不变。但每个变量只赋值一次，ssa会为每个变量的每次赋值生成唯一版本（例如，x1、x2）。跟踪每个基本块中的变量定义（Def）和使用（Use）。在控制流合并点（例如，if 分支合并），插入 <code class="notranslate">φ(phi)</code> 函数选择变量值，使用支配树（Dominator Tree）确定 <code class="notranslate">φ</code> 函数的插入位置。</p>
+<p>Phi 指令（来源于希腊字母 φ）是 SSA 的核心特性，用于处理变量在不同控制流路径上的不同赋值。它的作用是在控制流合并点根据到达当前块的前驱块选择正确的变量值。简单来说，Phi 就像一个“选择器”，它根据程序执行的路径动态决定变量的值。</p>
+<p>go 编译工具有个<code class="notranslate">GOSSAFUNC</code>参数可以指定生成某个函数SSA，以下代码为例：</p>
+<div class="highlight highlight-source-go"><pre class="notranslate"><span class="pl-k">package</span> main
+
+<span class="pl-k">func</span> <span class="pl-s1">max</span>(<span class="pl-s1">a</span>, <span class="pl-s1">b</span> <span class="pl-smi">int</span>) <span class="pl-smi">int</span> {
+	<span class="pl-k">if</span> <span class="pl-s1">a</span> <span class="pl-c1">&gt;</span> <span class="pl-s1">b</span> {
+		<span class="pl-k">return</span> <span class="pl-s1">a</span>
+	}
+	<span class="pl-k">return</span> <span class="pl-s1">b</span>
+}
+
+<span class="pl-k">func</span> <span class="pl-s1">main</span>() {
+	<span class="pl-s1">println</span>(<span class="pl-s1">max</span>(<span class="pl-c1">1</span>, <span class="pl-c1">2</span>))
+}</pre></div>
+<p>使用 <code class="notranslate">$GOSSAFUNC=max go build foo.go</code> 会生成 ssa.html 文件在浏览器上打开：</p>
+<p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/bf35a201-4a6e-4c90-af42-15534b428e38"><img src="https://github.com/user-attachments/assets/bf35a201-4a6e-4c90-af42-15534b428e38" height="260" style="max-width: 100%; height: auto; max-height: 260px;"></a></p>
+<p>可以看到 <code class="notranslate">If v6 → b3 b2 (5)</code> v6即<code class="notranslate">b</code>为 true 时跳转到 b3, false 跳转到 b2。(Tip: <code class="notranslate">(5)</code>表示源码第五行 )</p>
+<p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/7bcfe44b-51f5-4dcc-823e-00738b555f52"><img src="https://github.com/user-attachments/assets/7bcfe44b-51f5-4dcc-823e-00738b555f52" height="250" style="max-width: 100%; height: auto; max-height: 250px;"></a></p>
+<p>现在假设 <code class="notranslate">b</code> 为true，跳转到 b3 块后 <code class="notranslate">Plain → b2 (8)</code> 指无条件跳转b2，b2 块中 <code class="notranslate">v10 (8) = Phi &lt;int&gt; v8 v9 (x[int])</code> v10 的值就是 return 的值，<code class="notranslate">Phi</code> 函数需要根据控制流选择 v8 或 v9。如从<code class="notranslate">b3</code>跳转过来的就选v9 即为<code class="notranslate">8</code>。</p>
+<p>但是 <code class="notranslate">phi</code> 具体怎么实现也不知道，后面还有一堆优化，不去研究下编译器后端的话是看不懂一点。</p>
+<p>接下来想通过分析现有工具了解一下如何实现 Go 静态分析。</p>
+<h1>gosec</h1>
+<blockquote>
+<p><a href="https://github.com/securego/gosec">gosec</a> 是一个Go安全检查工具，它通过分析Go代码的AST和SSA表示来检测安全问题。</p>
+</blockquote>
+<p>gosec 规则如下：</p>
+<ul>
+<li>基于 AST 检测的</li>
+</ul>
+<pre class="notranslate"><code class="notranslate">G101: Look for hardcoded credentials
+G102: Bind to all interfaces
+G103: Audit the use of unsafe block
+G104: Audit errors not checked
+G106: Audit the use of ssh.InsecureIgnoreHostKey function
+G107: Url provided to HTTP request as taint input
+G108: Profiling endpoint is automatically exposed
+G109: Converting strconv.Atoi result to int32/int16
+G110: Detect io.Copy instead of io.CopyN when decompression
+G111: Detect http.Dir('/') as a potential risk
+G112: Detect ReadHeaderTimeout not configured as a potential risk
+G114: Use of net/http serve function that has no support for setting timeouts
+G201: SQL query construction using format string
+G202: SQL query construction using string concatenation
+G203: Use of unescaped data in HTML templates
+G204: Audit use of command execution
+G301: Poor file permissions used when creating a directory
+G302: Poor file permissions used when creation file or using chmod
+G303: Creating tempfile using a predictable path
+G304: File path provided as taint input
+G305: File path traversal when extracting zip archive
+G306: Poor file permissions used when writing to a file
+G307: Poor file permissions used when creating a file with os.Create
+G401: Detect the usage of MD5 or SHA1
+G402: Look for bad TLS connection settings
+G403: Ensure minimum RSA key length of 2048 bits
+G404: Insecure random number source (rand)
+G405: Detect the usage of DES or RC4
+G406: Detect the usage of deprecated MD4 or RIPEMD160
+G501: Import blocklist: crypto/md5
+G502: Import blocklist: crypto/des
+G503: Import blocklist: crypto/rc4
+G504: Import blocklist: net/http/cgi
+G505: Import blocklist: crypto/sha1
+G506: Import blocklist: golang.org/x/crypto/md4
+G507: Import blocklist: golang.org/x/crypto/ripemd160
+G601: Implicit memory aliasing in RangeStmt
+</code></pre>
+<ul>
+<li>基于SSA检测：</li>
+</ul>
+<pre class="notranslate"><code class="notranslate">G115: Type conversion which leads to integer overflow
+G407: Use of hardcoded IV/nonce for encryption
+G602: Possible slice bounds out of range
+</code></pre>
+<p>我们以 <code class="notranslate">G101(Look for hardcoded credentials)</code> 规则为例，gosec 是如何使用 AST 进行检测的：</p>
+<ul>
+<li>ast 规则定义</li>
+</ul>
+<div class="highlight highlight-source-go"><pre class="notranslate"><span class="pl-k">func</span> <span class="pl-s1">Generate</span>(<span class="pl-s1">trackSuppressions</span> <span class="pl-smi">bool</span>, <span class="pl-s1">filters</span> <span class="pl-c1">...</span><span class="pl-smi">RuleFilter</span>) <span class="pl-smi">RuleList</span> {
+	<span class="pl-s1">rules</span> <span class="pl-c1">:=</span> []<span class="pl-smi">RuleDefinition</span>{
+		{<span class="pl-s">"G101"</span>, <span class="pl-s">"Look for hardcoded credentials"</span>, <span class="pl-s1">NewHardcodedCredentials</span>},
+		<span class="pl-c1">...</span>
+	}
+}</pre></div>
+<ul>
+<li>规则初始化。返回[]ast.Node表示rule对应哪些节点，比如这里是对应：赋值语句（=, :=, += 等）、变(常)量声明、二元表达式</li>
+</ul>
+<div class="highlight highlight-source-go"><pre class="notranslate"><span class="pl-k">func</span> <span class="pl-s1">NewHardcodedCredentials</span>(<span class="pl-s1">id</span> <span class="pl-smi">string</span>, <span class="pl-s1">conf</span> gosec.<span class="pl-smi">Config</span>) (gosec.<span class="pl-smi">Rule</span>, []ast.<span class="pl-smi">Node</span>) {
+	<span class="pl-s1">pattern</span> <span class="pl-c1">:=</span> <span class="pl-s">`(?i)passwd|pass|password|pwd|secret|token|pw|apiKey|bearer|cred`</span>
+	<span class="pl-k">return</span> <span class="pl-c1">&amp;</span><span class="pl-smi">credentials</span>{
+		<span class="pl-s1">pattern</span>:          <span class="pl-s1">regexp</span>.<span class="pl-c1">MustCompile</span>(<span class="pl-s1">pattern</span>),
+		<span class="pl-c1">...</span>
+		<span class="pl-s1">MetaData</span>: issue.<span class="pl-smi">MetaData</span>{
+			<span class="pl-s1">ID</span>:         <span class="pl-s1">id</span>,
+			<span class="pl-s1">What</span>:       <span class="pl-s">"Potential hardcoded credentials"</span>,
+			<span class="pl-s1">Confidence</span>: <span class="pl-s1">issue</span>.<span class="pl-c1">Low</span>,
+			<span class="pl-s1">Severity</span>:   <span class="pl-s1">issue</span>.<span class="pl-c1">High</span>,
+		},
+	}, []ast.<span class="pl-smi">Node</span>{(<span class="pl-c1">*</span><span class="pl-s1">ast</span>.<span class="pl-c1">AssignStmt</span>)(<span class="pl-c1">nil</span>), (<span class="pl-c1">*</span><span class="pl-s1">ast</span>.<span class="pl-c1">ValueSpec</span>)(<span class="pl-c1">nil</span>), (<span class="pl-c1">*</span><span class="pl-s1">ast</span>.<span class="pl-c1">BinaryExpr</span>)(<span class="pl-c1">nil</span>)}
+}</pre></div>
+<ul>
+<li>analyzer 初始化，规则注册</li>
+</ul>
+<div class="highlight highlight-source-go"><pre class="notranslate"><span class="pl-s1">analyzer</span> <span class="pl-c1">:=</span> <span class="pl-s1">gosec</span>.<span class="pl-c1">NewAnalyzer</span>(<span class="pl-s1">config</span>, <span class="pl-c1">*</span><span class="pl-s1">flagScanTests</span>, <span class="pl-c1">*</span><span class="pl-s1">flagExcludeGenerated</span>, <span class="pl-c1">*</span><span class="pl-s1">flagTrackSuppressions</span>, <span class="pl-c1">*</span><span class="pl-s1">flagConcurrency</span>, <span class="pl-s1">logger</span>)
+<span class="pl-s1">analyzer</span>.<span class="pl-c1">LoadRules</span>(<span class="pl-s1">ruleList</span>.<span class="pl-c1">RulesInfo</span>()) </pre></div>
+<ul>
+<li>按照 ast.Node 类型分类注册</li>
+</ul>
+<div class="highlight highlight-source-go"><pre class="notranslate"><span class="pl-k">func</span> (<span class="pl-s1">r</span> <span class="pl-smi">RuleSet</span>) <span class="pl-c1">Register</span>(<span class="pl-s1">rule</span> <span class="pl-smi">Rule</span>, <span class="pl-s1">isSuppressed</span> <span class="pl-smi">bool</span>, <span class="pl-s1">nodes</span> <span class="pl-c1">...</span>ast.<span class="pl-smi">Node</span>) {
+	<span class="pl-k">for</span> <span class="pl-s1">_</span>, <span class="pl-s1">n</span> <span class="pl-c1">:=</span> <span class="pl-k">range</span> <span class="pl-s1">nodes</span> {
+		<span class="pl-s1">t</span> <span class="pl-c1">:=</span> <span class="pl-s1">reflect</span>.<span class="pl-c1">TypeOf</span>(<span class="pl-s1">n</span>)
+		<span class="pl-k">if</span> <span class="pl-s1">rules</span>, <span class="pl-s1">ok</span> <span class="pl-c1">:=</span> <span class="pl-s1">r</span>.<span class="pl-c1">Rules</span>[<span class="pl-s1">t</span>]; <span class="pl-s1">ok</span> {
+			<span class="pl-s1">r</span>.<span class="pl-c1">Rules</span>[<span class="pl-s1">t</span>] <span class="pl-c1">=</span> <span class="pl-s1">append</span>(<span class="pl-s1">rules</span>, <span class="pl-s1">rule</span>)
+		} <span class="pl-k">else</span> {
+			<span class="pl-s1">r</span>.<span class="pl-c1">Rules</span>[<span class="pl-s1">t</span>] <span class="pl-c1">=</span> []<span class="pl-smi">Rule</span>{<span class="pl-s1">rule</span>}
+		}
+	}
+	<span class="pl-c1">...</span>
+}</pre></div>
+<ul>
+<li>analyzer使用 "golang.org/x/tools/go/packages" 模块加载Go源码，用于加载和解析 Go 包的元数据，包括源代码的 AST（抽象语法树）、类型信息和其他相关信息。</li>
+</ul>
+<div class="highlight highlight-source-go"><pre class="notranslate"><span class="pl-s1">pkgs</span>, <span class="pl-s1">err</span> <span class="pl-c1">:=</span> <span class="pl-s1">packages</span>.<span class="pl-c1">Load</span>(<span class="pl-s1">conf</span>, <span class="pl-s1">packageFiles</span><span class="pl-c1">...</span>)</pre></div>
+<ul>
+<li>遍历 package 下的文件AST，进行规则检测</li>
+</ul>
+<div class="highlight highlight-source-go"><pre class="notranslate"><span class="pl-c">// gosec.CheckRules(pkg)</span>
+
+<span class="pl-k">for</span> <span class="pl-s1">_</span>, <span class="pl-s1">file</span> <span class="pl-c1">:=</span> <span class="pl-k">range</span> pkg.<span class="pl-smi">Syntax</span> {
+	<span class="pl-c1">...</span>
+	<span class="pl-s1">ast</span>.<span class="pl-c1">Walk</span>(<span class="pl-s1">gosec</span>, <span class="pl-s1">file</span>)
+}</pre></div>
+<ul>
+<li>gosec 实现了 ast.Visitor 接口</li>
+</ul>
+<div class="highlight highlight-source-go"><pre class="notranslate"><span class="pl-k">func</span> (<span class="pl-s1">gosec</span> <span class="pl-c1">*</span><span class="pl-smi">Analyzer</span>) <span class="pl-c1">Visit</span>(<span class="pl-s1">n</span> ast.<span class="pl-smi">Node</span>) ast.<span class="pl-smi">Visitor</span> {
+	<span class="pl-c1">...</span>
+	<span class="pl-c">// 获取 ast.node 注册的对应规则</span>
+	<span class="pl-k">for</span> <span class="pl-s1">_</span>, <span class="pl-s1">rule</span> <span class="pl-c1">:=</span> <span class="pl-k">range</span> <span class="pl-s1">gosec</span>.<span class="pl-c1">ruleset</span>.<span class="pl-c1">RegisteredFor</span>(<span class="pl-s1">n</span>) {
+		<span class="pl-s1">issue</span>, <span class="pl-s1">err</span> <span class="pl-c1">:=</span> <span class="pl-s1">rule</span>.<span class="pl-c1">Match</span>(<span class="pl-s1">n</span>, <span class="pl-s1">gosec</span>.<span class="pl-c1">context</span>)
+		<span class="pl-c1">...</span>
+		<span class="pl-s1">gosec</span>.<span class="pl-c1">updateIssues</span>(<span class="pl-s1">issue</span>)
+	}
+	<span class="pl-k">return</span> <span class="pl-s1">gosec</span>
+}</pre></div>
+<ul>
+<li>这里调用规则的 Match 函数, 仍然以 hardcoded credentials 为例：
+<ul>
+<li>matchAssign 先判断左边表达式是否为 ast.Ident 是否能匹配 <code class="notranslate">(?i)passwd|pass|password|pwd|secret|token|pw|apiKey|bearer|cred</code> 或者判断右边（如是string）是否满足 secretsPatterns 的规则</li>
+<li>matchValueSpec 也是差不多，分别对  valueSpec.Names valueSpec.Values 进行匹配</li>
+<li>matchEqualityCheck 当 Op 符号为 "==" "!=" 尝试匹配 binaryExpr.X,Y node。</li>
+</ul>
+</li>
+</ul>
+<div class="highlight highlight-source-go"><pre class="notranslate"><span class="pl-k">func</span> (<span class="pl-s1">r</span> <span class="pl-c1">*</span><span class="pl-smi">credentials</span>) <span class="pl-c1">Match</span>(<span class="pl-s1">n</span> ast.<span class="pl-smi">Node</span>, <span class="pl-s1">ctx</span> <span class="pl-c1">*</span>gosec.<span class="pl-smi">Context</span>) (<span class="pl-c1">*</span>issue.<span class="pl-smi">Issue</span>, <span class="pl-smi">error</span>) {
+	<span class="pl-k">switch</span> <span class="pl-s1">node</span> <span class="pl-c1">:=</span> <span class="pl-s1">n</span>.(<span class="pl-k">type</span>) {
+	<span class="pl-k">case</span> <span class="pl-c1">*</span>ast.<span class="pl-smi">AssignStmt</span>:
+		<span class="pl-k">return</span> <span class="pl-s1">r</span>.<span class="pl-c1">matchAssign</span>(<span class="pl-s1">node</span>, <span class="pl-s1">ctx</span>)
+	<span class="pl-k">case</span> <span class="pl-c1">*</span>ast.<span class="pl-smi">ValueSpec</span>:
+		<span class="pl-k">return</span> <span class="pl-s1">r</span>.<span class="pl-c1">matchValueSpec</span>(<span class="pl-s1">node</span>, <span class="pl-s1">ctx</span>)
+	<span class="pl-k">case</span> <span class="pl-c1">*</span>ast.<span class="pl-smi">BinaryExpr</span>:
+		<span class="pl-k">return</span> <span class="pl-s1">r</span>.<span class="pl-c1">matchEqualityCheck</span>(<span class="pl-s1">node</span>, <span class="pl-s1">ctx</span>)
+	}
+	<span class="pl-k">return</span> <span class="pl-c1">nil</span>, <span class="pl-c1">nil</span>
+}</pre></div>
+<p>大概了解AST检测机制后，再通过<code class="notranslate">G602: Possible slice bounds out of range</code> 规则为例，gosec 是如何使用 SSA 进行检测的：</p>
+<ul>
+<li>SSA规则定义</li>
+</ul>
+<div class="highlight highlight-source-go"><pre class="notranslate"><span class="pl-k">var</span> <span class="pl-s1">defaultAnalyzers</span> <span class="pl-c1">=</span> []<span class="pl-smi">AnalyzerDefinition</span>{
+	{<span class="pl-s">"G115"</span>, <span class="pl-s">"Type conversion which leads to integer overflow"</span>, <span class="pl-s1">newConversionOverflowAnalyzer</span>},
+	<span class="pl-c1">...</span>
+}</pre></div>
+<ul>
+<li>SSA规则注册</li>
+</ul>
+<div class="highlight highlight-source-go"><pre class="notranslate"><span class="pl-c">// analyzer.LoadAnalyzers(analyzerList.AnalyzersInfo())</span>
+<span class="pl-c1">...</span>
+<span class="pl-k">for</span> <span class="pl-s1">id</span>, <span class="pl-s1">def</span> <span class="pl-c1">:=</span> <span class="pl-k">range</span> <span class="pl-s1">analyzerDefinitions</span> {
+	<span class="pl-s1">r</span> <span class="pl-c1">:=</span> <span class="pl-s1">def</span>.<span class="pl-c1">Create</span>(<span class="pl-s1">def</span>.<span class="pl-c1">ID</span>, <span class="pl-s1">def</span>.<span class="pl-c1">Description</span>)
+	<span class="pl-s1">gosec</span>.<span class="pl-c1">analyzerSet</span>.<span class="pl-c1">Register</span>(<span class="pl-s1">r</span>, <span class="pl-s1">analyzerSuppressed</span>[<span class="pl-s1">id</span>])
+}
+<span class="pl-c">// Register 函数</span>
+<span class="pl-k">func</span> (<span class="pl-s1">a</span> <span class="pl-c1">*</span><span class="pl-smi">AnalyzerSet</span>) <span class="pl-c1">Register</span>(<span class="pl-s1">analyzer</span> <span class="pl-c1">*</span>analysis.<span class="pl-smi">Analyzer</span>, <span class="pl-s1">isSuppressed</span> <span class="pl-smi">bool</span>) {
+	<span class="pl-s1">a</span>.<span class="pl-c1">Analyzers</span> <span class="pl-c1">=</span> <span class="pl-s1">append</span>(<span class="pl-s1">a</span>.<span class="pl-c1">Analyzers</span>, <span class="pl-s1">analyzer</span>)
+	<span class="pl-c1">...</span>
+}</pre></div>
+<ul>
+<li>规则检测</li>
+</ul>
+<div class="highlight highlight-source-go"><pre class="notranslate"><span class="pl-c">// gosec.CheckAnalyzers(pkg)</span>
+<span class="pl-c1">...</span>
+<span class="pl-s1">ssaResult</span>, <span class="pl-s1">err</span> <span class="pl-c1">:=</span> <span class="pl-s1">gosec</span>.<span class="pl-c1">buildSSA</span>(<span class="pl-s1">pkg</span>) <span class="pl-c">// // 将 pkg 转换为 ssa</span>
+<span class="pl-c">// 准备result</span>
+<span class="pl-s1">resultMap</span> <span class="pl-c1">:=</span> <span class="pl-k">map</span>[<span class="pl-c1">*</span>analysis.<span class="pl-smi">Analyzer</span>]<span class="pl-k">interface</span>{}{
+	<span class="pl-s1">buildssa</span>.<span class="pl-c1">Analyzer</span>: <span class="pl-c1">&amp;</span>analyzers.<span class="pl-smi">SSAAnalyzerResult</span>{
+		<span class="pl-s1">Config</span>: <span class="pl-s1">gosec</span>.<span class="pl-c1">Config</span>(),
+		<span class="pl-s1">Logger</span>: <span class="pl-s1">gosec</span>.<span class="pl-c1">logger</span>,
+		<span class="pl-s1">SSA</span>:    <span class="pl-s1">ssaResult</span>.(<span class="pl-c1">*</span>buildssa.<span class="pl-smi">SSA</span>),
+	},
+}
+<span class="pl-c">// 依次运行注册的 Analyzer</span>
+<span class="pl-k">for</span> <span class="pl-s1">_</span>, <span class="pl-s1">analyzer</span> <span class="pl-c1">:=</span> <span class="pl-k">range</span> <span class="pl-s1">gosec</span>.<span class="pl-c1">analyzerSet</span>.<span class="pl-c1">Analyzers</span> {
+	<span class="pl-s1">pass</span> <span class="pl-c1">:=</span> <span class="pl-c1">&amp;</span>analysis.<span class="pl-smi">Pass</span>{
+		<span class="pl-s1">Analyzer</span>:          <span class="pl-s1">analyzer</span>,
+		<span class="pl-s1">Fset</span>:              <span class="pl-s1">pkg</span>.<span class="pl-c1">Fset</span>,
+		<span class="pl-s1">Files</span>:             <span class="pl-s1">pkg</span>.<span class="pl-c1">Syntax</span>,
+		<span class="pl-s1">OtherFiles</span>:        <span class="pl-s1">pkg</span>.<span class="pl-c1">OtherFiles</span>,
+		<span class="pl-s1">IgnoredFiles</span>:      <span class="pl-s1">pkg</span>.<span class="pl-c1">IgnoredFiles</span>,
+		<span class="pl-s1">Pkg</span>:               <span class="pl-s1">pkg</span>.<span class="pl-c1">Types</span>,
+		<span class="pl-s1">TypesInfo</span>:         <span class="pl-s1">pkg</span>.<span class="pl-c1">TypesInfo</span>,
+		<span class="pl-s1">TypesSizes</span>:        <span class="pl-s1">pkg</span>.<span class="pl-c1">TypesSizes</span>,
+		<span class="pl-s1">ResultOf</span>:          <span class="pl-s1">resultMap</span>,
+		<span class="pl-c1">...</span>
+	}
+	<span class="pl-s1">result</span>, <span class="pl-s1">err</span> <span class="pl-c1">:=</span> <span class="pl-s1">pass</span>.<span class="pl-c1">Analyzer</span>.<span class="pl-c1">Run</span>(<span class="pl-s1">pass</span>)
+	<span class="pl-c1">...</span>
+}</pre></div>
+<ul>
+<li>slice bounds 具体实现逻辑</li>
+</ul>
+<div class="highlight highlight-source-go"><pre class="notranslate"><span class="pl-k">func</span> <span class="pl-s1">newSliceBoundsAnalyzer</span>(<span class="pl-s1">id</span> <span class="pl-smi">string</span>, <span class="pl-s1">description</span> <span class="pl-smi">string</span>) <span class="pl-c1">*</span>analysis.<span class="pl-smi">Analyzer</span> {
+	<span class="pl-k">return</span> <span class="pl-c1">&amp;</span>analysis.<span class="pl-smi">Analyzer</span>{
+		<span class="pl-s1">Name</span>:     <span class="pl-s1">id</span>,
+		<span class="pl-s1">Doc</span>:      <span class="pl-s1">description</span>,
+		<span class="pl-s1">Run</span>:      <span class="pl-s1">runSliceBounds</span>,
+		<span class="pl-s1">Requires</span>: []<span class="pl-c1">*</span>analysis.<span class="pl-smi">Analyzer</span>{<span class="pl-s1">buildssa</span>.<span class="pl-c1">Analyzer</span>},
+	}
+}
+
+<span class="pl-k">func</span> <span class="pl-s1">runSliceBounds</span>(<span class="pl-s1">pass</span> <span class="pl-c1">*</span>analysis.<span class="pl-smi">Pass</span>) (<span class="pl-k">interface</span>{}, <span class="pl-smi">error</span>) {
+	<span class="pl-s1">ssaResult</span>, <span class="pl-s1">err</span> <span class="pl-c1">:=</span> <span class="pl-s1">getSSAResult</span>(<span class="pl-s1">pass</span>)
+	<span class="pl-c1">...</span>
+	<span class="pl-c">// 对每个函数（SrcFuncs）和基本块（DomPreorder）进行分析。</span>
+	<span class="pl-k">for</span> <span class="pl-s1">_</span>, <span class="pl-s1">mcall</span> <span class="pl-c1">:=</span> <span class="pl-k">range</span> <span class="pl-s1">ssaResult</span>.<span class="pl-c1">SSA</span>.<span class="pl-c1">SrcFuncs</span> {
+		<span class="pl-k">for</span> <span class="pl-s1">_</span>, <span class="pl-s1">block</span> <span class="pl-c1">:=</span> <span class="pl-k">range</span> <span class="pl-s1">mcall</span>.<span class="pl-c1">DomPreorder</span>() {
+			<span class="pl-k">for</span> <span class="pl-s1">_</span>, <span class="pl-s1">instr</span> <span class="pl-c1">:=</span> <span class="pl-k">range</span> <span class="pl-s1">block</span>.<span class="pl-c1">Instrs</span> {
+				<span class="pl-c">// 处理 *ssa.Alloc（slice 分配）</span>
+				<span class="pl-s1">instr</span>.(<span class="pl-c1">*</span>ssa.<span class="pl-smi">Alloc</span>)
+				<span class="pl-c">// 提取容量大小</span>
+				<span class="pl-s1">sliceCap</span>, <span class="pl-s1">err</span> <span class="pl-c1">:=</span> <span class="pl-s1">extractSliceCapFromAlloc</span>(<span class="pl-s1">instr</span>.<span class="pl-c1">String</span>())
+				<span class="pl-c">// 查找引用</span>
+				<span class="pl-s1">allocRefs</span> <span class="pl-c1">:=</span> <span class="pl-s1">instr</span>.<span class="pl-c1">Referrers</span>()
+				<span class="pl-k">for</span> <span class="pl-s1">_</span>, <span class="pl-s1">instr</span> <span class="pl-c1">:=</span> <span class="pl-k">range</span> <span class="pl-c1">*</span><span class="pl-s1">allocRefs</span> {
+					<span class="pl-s1">slice</span>, <span class="pl-s1">ok</span> <span class="pl-c1">:=</span> <span class="pl-s1">instr</span>.(<span class="pl-c1">*</span>ssa.<span class="pl-smi">Slice</span>) <span class="pl-c">// 确保是切片操作</span>
+					<span class="pl-c1">...</span>
+					<span class="pl-s1">l</span>, <span class="pl-s1">h</span> <span class="pl-c1">:=</span> <span class="pl-s1">extractSliceBounds</span>(<span class="pl-s1">slice</span>) <span class="pl-c">// 获取切片的上下界（low, high）</span>
+					<span class="pl-s1">newCap</span> <span class="pl-c1">:=</span> <span class="pl-s1">computeSliceNewCap</span>(<span class="pl-s1">l</span>, <span class="pl-s1">h</span>, <span class="pl-s1">sliceCap</span>) <span class="pl-c">// 根据切片边界和原始容量重新计算新 slice 的容量</span>
+					<span class="pl-s1">violations</span> <span class="pl-c1">:=</span> []ssa.<span class="pl-smi">Instruction</span>{}
+					<span class="pl-s1">trackSliceBounds</span>(<span class="pl-c1">0</span>, <span class="pl-s1">newCap</span>, <span class="pl-s1">slice</span>, <span class="pl-c1">&amp;</span><span class="pl-s1">violations</span>, <span class="pl-s1">ifs</span>)<span class="pl-c">// 递归检查该 slice 的后续使用，记录越界操作</span>
+					<span class="pl-c">// 包括切片操作、索引访问、函数调用、if判断长度等。</span>
+				}
+			}
+		}
+	}
+	<span class="pl-c">// 判断if操作，消除误报</span>
+	<span class="pl-k">for</span> <span class="pl-s1">ifref</span>, <span class="pl-s1">binop</span> <span class="pl-c1">:=</span> <span class="pl-k">range</span> <span class="pl-s1">ifs</span> {
+		<span class="pl-s1">bound</span>, <span class="pl-s1">value</span>, <span class="pl-s1">err</span> <span class="pl-c1">:=</span> <span class="pl-s1">extractBinOpBound</span>(<span class="pl-s1">binop</span>) <span class="pl-c">// 提取边界信息（bound 和 value）</span>
+		<span class="pl-k">for</span> <span class="pl-s1">i</span>, <span class="pl-s1">block</span> <span class="pl-c1">:=</span> <span class="pl-k">range</span> <span class="pl-s1">ifref</span>.<span class="pl-c1">Block</span>().<span class="pl-c1">Succs</span> { <span class="pl-c">// 分析if 语句所在基本块的后继块</span>
+			<span class="pl-k">if</span> <span class="pl-s1">i</span> <span class="pl-c1">==</span> <span class="pl-c1">1</span> { <span class="pl-c">//（0 表示真分支，1 表示假分支）</span>
+				<span class="pl-s1">bound</span> <span class="pl-c1">=</span> <span class="pl-s1">invBound</span>(<span class="pl-s1">bound</span>) <span class="pl-c">// 反转bound的值</span>
+			}
+			<span class="pl-k">var</span> <span class="pl-s1">processBlock</span> <span class="pl-k">func</span>(<span class="pl-s1">block</span> <span class="pl-c1">*</span>ssa.<span class="pl-smi">BasicBlock</span>, <span class="pl-s1">depth</span> <span class="pl-smi">int</span>)
+			<span class="pl-c1">...</span>
+			<span class="pl-c">// processBlock会遍历基本块中的指令（block.Instrs）</span>
+			<span class="pl-c">// 根据 bound 的类型（lowerUnbounded、upperUnbounded、unbounded、upperBounded）执行不同的逻辑：</span>
+			<span class="pl-c">// 1. 消除误报（从 issues 中移除）。</span>
+			<span class="pl-c">// 2. 分析切片操作（ssa.Slice）或索引操作（ssa.IndexAddr）是否在边界内。</span>
+			<span class="pl-c">// 如果遇到嵌套的 if 语句（ssa.If），递归分析其后继块。使用depth 参数控制递归深度，防止无限递归。</span>
+		}
+}</pre></div>
+<h2>gosec 的缺点</h2>
+<p>总结一下，gosec 主要通过分析 Go 的抽象语法树（AST）进行检查，部分规则利用了 go/ssa 进行简单的控制流和数据流分析。不支持全局（global）数据流分析，遇到复杂的跨函数/模块跟踪等力较弱，好在轻量，适合快速扫描。</p>
+<h1>更更更强的工具</h1>
+<p>一个好用SAST分析工具，得有个强大的污点分析引擎、支持本地和全局数据流分析和支持多语言的。</p>
+<h2>Joern</h2>
+<blockquote>
+<p><a href="https://github.com/joernio/joern">https://github.com/joernio/joern</a></p>
+</blockquote>
+<p>Joern 是一个开源代码分析平台，专注于 C/C++、Java 等语言，通过生成代码属性图（CPG）进行静态分析，支持 Scala 的查询语言。</p>
+<p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/275d0080-fff8-4768-beec-602829763230"><img src="https://github.com/user-attachments/assets/275d0080-fff8-4768-beec-602829763230" height="350" style="max-width: 100%; height: auto; max-height: 350px;"></a></p>
+<h2>CodeQL</h2>
+<blockquote>
+<p><a href="https://codeql.github.com/docs/">https://codeql.github.com/docs/</a></p>
+</blockquote>
+<p>基于数据流图（data flow graph），支持本地和全局数据流分析，精确跟踪跨函数/模块的污点传播。QL 查询可定义源、汇和 sanitization 规则。</p>
+<p><strong>CodeQL zero to hero</strong></p>
+<ul>
+<li><a href="https://github.blog/developer-skills/github/codeql-zero-to-hero-part-1-the-fundamentals-of-static-analysis-for-vulnerability-research/" rel="nofollow">CodeQL zero to hero part 1: The fundamentals of static analysis for vulnerability research</a></li>
+<li><a href="https://github.blog/developer-skills/github/codeql-zero-to-hero-part-2-getting-started-with-codeql/" rel="nofollow">CodeQL zero to hero part 2: Getting started with CodeQL</a></li>
+<li><a href="https://github.blog/security/vulnerability-research/codeql-zero-to-hero-part-3-security-research-with-codeql/" rel="nofollow">CodeQL zero to hero part 3: Security research with CodeQL</a></li>
+</ul>
+<p><strong>Go 相关</strong></p>
+<ul>
+<li><a href="https://codeql.github.com/docs/codeql-language-guides/codeql-library-for-go/">https://codeql.github.com/docs/codeql-language-guides/codeql-library-for-go/</a></li>
+</ul>
+<h1>参考链接</h1>
+<ul>
+<li><a href="https://draven.co/golang/docs/part1-prerequisite/ch02-compile/golang-compile-intro/" rel="nofollow">Go 语言设计与实现</a></li>
+<li><a href="https://arxiv.org/abs/2405.12841" rel="nofollow">Unveiling the Power of Intermediate Representations for Static Analysis: A Survey</a></li>
+<li><a href="https://www.bilibili.com/video/BV1GCo4YmEK6/" rel="nofollow">深入理解 LLVM 代码生成</a></li>
+<li><a href="https://blog.shiftleft.io/why-your-code-is-a-graph-f7b980eab740" rel="nofollow">Why your code is a Graph</a></li>
+<li><a href="https://lorexxar.cn/2023/12/18/sast2024/" rel="nofollow">lorexxar - sast2024</a></li>
+</ul>
+<h1>结语</h1>
+<p>本文内容如有错误或疏漏之处，欢迎读者朋友指出或与我交流讨论，您的宝贵意见将帮助我不断改进！</p></div>
+<div style="font-size:small;margin-top:8px;float:right;"></div>
+
+<button class="btn btn-block" type="button" onclick="openComments()" id="cmButton">comments</button>
+<div class="comments" id="comments"></div>
+
+</div>
+    <div id="footer"><div id="footer1">Copyright © <span id="copyrightYear"></span> <a href="https://blog.imipy.com">zznQ</a></div>
+<div id="footer2">
+</div>
+
+<script>
+var now=new Date();
+document.getElementById("copyrightYear").innerHTML=now.getFullYear();
+
+if("01/05/2018"!=""){
+    var startSite=new Date("01/05/2018");
+    var diff=now.getTime()-startSite.getTime();
+    var diffDay=Math.floor(diff/(1000*60*60*24));
+    document.getElementById("runday").innerHTML="run "+diffDay+" days"+" • ";
+}
+</script></div>
+</body>
+<script>
+var IconList={'sun': 'M8 10.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM8 12a4 4 0 100-8 4 4 0 000 8zM8 0a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0V.75A.75.75 0 018 0zm0 13a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 018 13zM2.343 2.343a.75.75 0 011.061 0l1.06 1.061a.75.75 0 01-1.06 1.06l-1.06-1.06a.75.75 0 010-1.06zm9.193 9.193a.75.75 0 011.06 0l1.061 1.06a.75.75 0 01-1.06 1.061l-1.061-1.06a.75.75 0 010-1.061zM16 8a.75.75 0 01-.75.75h-1.5a.75.75 0 010-1.5h1.5A.75.75 0 0116 8zM3 8a.75.75 0 01-.75.75H.75a.75.75 0 010-1.5h1.5A.75.75 0 013 8zm10.657-5.657a.75.75 0 010 1.061l-1.061 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 0zm-9.193 9.193a.75.75 0 010 1.06l-1.06 1.061a.75.75 0 11-1.061-1.06l1.06-1.061a.75.75 0 011.061 0z', 'moon': 'M9.598 1.591a.75.75 0 01.785-.175 7 7 0 11-8.967 8.967.75.75 0 01.961-.96 5.5 5.5 0 007.046-7.046.75.75 0 01.175-.786zm1.616 1.945a7 7 0 01-7.678 7.678 5.5 5.5 0 107.678-7.678z', 'sync': 'M1.705 8.005a.75.75 0 0 1 .834.656 5.5 5.5 0 0 0 9.592 2.97l-1.204-1.204a.25.25 0 0 1 .177-.427h3.646a.25.25 0 0 1 .25.25v3.646a.25.25 0 0 1-.427.177l-1.38-1.38A7.002 7.002 0 0 1 1.05 8.84a.75.75 0 0 1 .656-.834ZM8 2.5a5.487 5.487 0 0 0-4.131 1.869l1.204 1.204A.25.25 0 0 1 4.896 6H1.25A.25.25 0 0 1 1 5.75V2.104a.25.25 0 0 1 .427-.177l1.38 1.38A7.002 7.002 0 0 1 14.95 7.16a.75.75 0 0 1-1.49.178A5.5 5.5 0 0 0 8 2.5Z', 'home': 'M6.906.664a1.749 1.749 0 0 1 2.187 0l5.25 4.2c.415.332.657.835.657 1.367v7.019A1.75 1.75 0 0 1 13.25 15h-3.5a.75.75 0 0 1-.75-.75V9H7v5.25a.75.75 0 0 1-.75.75h-3.5A1.75 1.75 0 0 1 1 13.25V6.23c0-.531.242-1.034.657-1.366l5.25-4.2Zm1.25 1.171a.25.25 0 0 0-.312 0l-5.25 4.2a.25.25 0 0 0-.094.196v7.019c0 .138.112.25.25.25H5.5V8.25a.75.75 0 0 1 .75-.75h3.5a.75.75 0 0 1 .75.75v5.25h2.75a.25.25 0 0 0 .25-.25V6.23a.25.25 0 0 0-.094-.195Z', 'github': 'M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z', 'copy': 'M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25Z M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25Z', 'check': 'M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0Z'};
+var utterancesLoad=0;
+
+let themeSettings={
+    "dark": ["dark","moon","#00f0ff","dark-blue"],
+    "light": ["light","sun","#ff5000","github-light"],
+    "auto": ["auto","sync","","preferred-color-scheme"]
+};
+function changeTheme(mode, icon, color, utheme){
+    document.documentElement.setAttribute("data-color-mode",mode);
+    document.getElementById("themeSwitch").setAttribute("d",value=IconList[icon]);
+    document.getElementById("themeSwitch").parentNode.style.color=color;
+    if(utterancesLoad==1){utterancesTheme(utheme);}
+}
+function modeSwitch(){
+    let currentMode=document.documentElement.getAttribute('data-color-mode');
+    let newMode = currentMode === "light" ? "dark" : currentMode === "dark" ? "auto" : "light";
+    localStorage.setItem("meek_theme", newMode);
+    if(themeSettings[newMode]){
+        changeTheme(...themeSettings[newMode]);
+    }
+}
+function utterancesTheme(theme){
+    const message={type:'set-theme',theme: theme};
+    const iframe=document.getElementsByClassName('utterances-frame')[0];
+    iframe.contentWindow.postMessage(message,'https://utteranc.es');
+}
+if(themeSettings[theme]){changeTheme(...themeSettings[theme]);}
+</script>
+
+<script>
+document.getElementById("pathHome").setAttribute("d",IconList["home"]);
+
+
+
+function openComments(){
+    cm=document.getElementById("comments");
+    cmButton=document.getElementById("cmButton");
+    cmButton.disabled=true;
+    cmButton.innerHTML="loading";
+    span=document.createElement("span");
+    span.setAttribute("class","AnimatedEllipsis");
+    cmButton.appendChild(span);
+
+    script=document.createElement("script");
+    script.setAttribute("src","https://utteranc.es/client.js");
+    script.setAttribute("repo","ac0d3r/ac0d3r.github.io");
+    script.setAttribute("issue-term","title");
+    
+    if(localStorage.getItem("meek_theme")=="dark"){script.setAttribute("theme","dark-blue");}
+    else if(localStorage.getItem("meek_theme")=="light") {script.setAttribute("theme","github-light");}
+    else{script.setAttribute("theme","preferred-color-scheme");}
+    
+    script.setAttribute("crossorigin","anonymous");
+    script.setAttribute("async","");
+    cm.appendChild(script);
+
+    int=self.setInterval("iFrameLoading()",200);
+}
+
+function iFrameLoading(){
+    var utterances=document.getElementsByClassName('utterances');
+    if(utterances.length==1){
+        if(utterances[0].style.height!=""){
+            utterancesLoad=1;
+            int=window.clearInterval(int);
+            document.getElementById("cmButton").style.display="none";
+            console.log("utterances Load OK");
+        }
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const createClipboardHTML = (codeContent, additionalClasses = '') => `
+        <pre class="notranslate"><code class="notranslate">${codeContent}</code></pre>
+        <div class="clipboard-container position-absolute right-0 top-0 ${additionalClasses}">
+            <clipboard-copy class="ClipboardButton btn m-2 p-0" role="button" style="display: inherit;">
+                <svg height="16" width="16" class="octicon octicon-copy m-2"><path d="${IconList["copy"]}"></path></svg>
+                <svg height="16" width="16" class="octicon octicon-check color-fg-success m-2 d-none"><path d="${IconList["check"]}"></path></svg>
+            </clipboard-copy>
+            <div class="copy-feedback">Copied!</div>
+        </div>
+    `;
+
+    const handleCodeElements = (selector = '') => {
+        document.querySelectorAll(selector).forEach(codeElement => {
+            const codeContent = codeElement.innerHTML;
+            const newStructure = document.createElement('div');
+            newStructure.className = 'snippet-clipboard-content position-relative overflow-auto';
+            newStructure.innerHTML = createClipboardHTML(codeContent);
+
+            const parentElement = codeElement.parentElement;
+            if (selector.includes('highlight')) {
+                parentElement.insertBefore(newStructure, codeElement.nextSibling);
+                parentElement.removeChild(codeElement);
+            } else {
+                parentElement.parentElement.replaceChild(newStructure, parentElement);
+            }
+        });
+    };
+
+    handleCodeElements('pre.notranslate > code.notranslate');
+    handleCodeElements('div.highlight > pre.notranslate');
+
+    let currentFeedback = null;
+    document.querySelectorAll('clipboard-copy').forEach(copyButton => {
+        copyButton.addEventListener('click', () => {
+            const codeContent = copyButton.closest('.snippet-clipboard-content').innerText;
+            const tempTextArea = document.createElement('textarea');
+            tempTextArea.value = codeContent;
+            document.body.appendChild(tempTextArea);
+            tempTextArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempTextArea);
+
+            const copyIcon = copyButton.querySelector('.octicon-copy');
+            const checkIcon = copyButton.querySelector('.octicon-check');
+            const copyFeedback = copyButton.nextElementSibling;
+
+            if (currentFeedback && currentFeedback !== copyFeedback) {currentFeedback.style.display = 'none';}
+            currentFeedback = copyFeedback;
+
+            copyIcon.classList.add('d-none');
+            checkIcon.classList.remove('d-none');
+            copyFeedback.style.display = 'block';
+            copyButton.style.borderColor = 'var(--color-success-fg)';
+
+            setTimeout(() => {
+                copyIcon.classList.remove('d-none');
+                checkIcon.classList.add('d-none');
+                copyFeedback.style.display = 'none';
+                copyButton.style.borderColor = '';
+            }, 2000);
+        });
+    });
+});
+
+</script>
+
+
+<script src="https://blog.imipy.com/plugins/GmeekTOC.js"></script>
+<script src="https://blog.imipy.com/plugins/lightbox.js"></script>
+</html>

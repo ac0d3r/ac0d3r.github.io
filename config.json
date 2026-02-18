@@ -1,0 +1,16 @@
+{
+    "title": "zznQ",
+    "subTitle": "Enjoy breaking things.",
+    "avatarUrl": "/imgs/avatar.png",
+    "singlePage": [
+        "about",
+        "link"
+    ],
+    "i18n": "EN",
+    "startSite": "01/05/2018",
+    "needComment": 1,
+    "homeUrl": "https://blog.imipy.com",
+    "exlink": {
+        "github": "https://github.com/ac0d3r"
+    }
+}

