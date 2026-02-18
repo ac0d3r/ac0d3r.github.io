@@ -215,6 +215,37 @@ class GMEEK():
         except json.JSONDecodeError:
             return {}
 
+    def convert_mermaid_blocks(self, post_body):
+        def replace_highlight_block(match):
+            inner = match.group(1)
+            text = re.sub(r'<[^>]+>', '', inner)
+            text = html.unescape(text).replace('\r\n', '\n').strip()
+            if not text:
+                return match.group(0)
+            return '<pre class="mermaid">{}</pre>'.format(html.escape(text))
+
+        def replace_code_block(match):
+            inner = match.group(1)
+            text = re.sub(r'<[^>]+>', '', inner)
+            text = html.unescape(text).replace('\r\n', '\n').strip()
+            if not text:
+                return match.group(0)
+            return '<pre class="mermaid">{}</pre>'.format(html.escape(text))
+
+        post_body = re.sub(
+            r'<div class="highlight highlight-source-mermaid">\s*<pre[^>]*>(.*?)</pre>\s*</div>',
+            replace_highlight_block,
+            post_body,
+            flags=re.DOTALL
+        )
+        post_body = re.sub(
+            r'<pre[^>]*>\s*<code class="(?:language-)?mermaid[^\"]*">(.*?)</code>\s*</pre>',
+            replace_code_block,
+            post_body,
+            flags=re.DOTALL
+        )
+        return post_body
+
     def build_post_list_json(self):
         post_list = dict(sorted(
             self.blogBase["postListJson"].items(),
@@ -265,6 +296,8 @@ class GMEEK():
                  'r', encoding='UTF-8')
         post_body = self.markdown2html(f.read())
         f.close()
+
+        post_body = self.convert_mermaid_blocks(post_body)
 
         postBase = self.blogBase.copy()
 
