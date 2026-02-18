@@ -43,6 +43,8 @@
 body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;padding: 45px;font-size: 16px;font-family: sans-serif;line-height: 1.25;}
 #header{display:flex;padding-bottom:8px;border-bottom: 1px solid var(--borderColor-muted, var(--color-border-muted));margin-bottom: 16px;}
 #footer {margin-top:64px; text-align: center;font-size: small;}
+.mermaid{width:100%;min-height:520px;height:70vh;overflow:hidden;}
+.mermaid svg{width:100%;height:100%;display:block;}
 
 </style>
 
@@ -105,54 +107,50 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 <blockquote>
 <p><a href="https://github.com/protectai/vulnhuntr">vulnhuntr</a> 基于 llm+静态分析 来挖掘 Python 项目安全漏洞。</p>
 </blockquote>
-<p>online: <a href="https://mermaid.live/edit#pako:eNptlVtTGkkUx7_K1DyjBSKKPCSFcgdzMSZGByo1FcZLFZcUQu0atEpdBVQQUnEpK6KuG6NusoApUwEZo19munt88its0904TDY8zaF_5_bvM2fS_Ot4WOJt_HQk_tvrWTGR5MYdwRiHfyMC3Pl-u5dR5I_orxVYziry9xA74np6HnCONNo5g7kGzGdB7QP-S4yJkYW3EgeKq_DP84dLFHa04UW4W1_knAI6qmEW5DLwoKQ26uB67e4qh-R9UL-EuTLaa-KHu6uNULcrKJ0sci4BbnyBxSL68Q7JlTa4fqGryUlqcgtq7Rr9qHHTcxFp_lUy_ooVxSgXpajhJoZHALl9cLoF8uVAYLRdzs6Z0toec9odo064LCP5vVaRh7h4BXW7AYplyoDMOqhdMsBLAF-aHVV3QeWso4RPU8IvqOd_4EQ4I01B-VA3SPoOsIbmU9GomFhQmi30T4thfpJrVIDFEi6GxtEVEyDAIwEerAG5hS4wcIhhdNxS6wXcKcivg9KXX3c6Sn2p8YgYj4XbbAGWz3_SCzRPukNrIR4TryfC7UoBbGf-dyWc0qyiD2uwXlSan3V3-YQ4PhXUutxujBzpGntKgLE0PYKVDXraEXpM0--ZoDYu1JusLv6YdhHjTBzWExlM2gdjx0mq59p9qTd76lG-m2fkc0K-wIP6HhSYSHDzE3i3yYAXBJhI4-tUbo5A64R7wBmxCju4AXhVhN8O0FcZHGx12pjQ2ngp4MuB-4dMi-60E1ozk0xqJmlXSMZOkgqmtIlXWnnUOqXxQHH3Nltk5BQh7XYBXH9G2_VB-O-RelPFu4Cd2-0EGB5m-rFkG5f49dbpNzxMwJGRnxXsTt3ZK2yxOARwvIZKGaW5qTS3cM9qvQG_ruJZo6NOV1LXniCLgnM6020ly-f3fh0lnU5NJBdeJXvf2mOMX87Vs7urPJJPkVyljYZ0DkR7t1uAH5fh4Sc8_eC4cB-coW62Rjxpek5r7WT2eLRAXq8A1lfUWlNpLmM97zOHdCgp0ucTwEoFVv_WVeVysVthu8arM31kbXB-P5tAWFlGck43gX66Miap9ZK-n9R41m3QFzAQYFOHvXkDP5OYC_O2ZCIlGfiolIiKbZNPtz2CfHJWikpB3oYfw9K0mIokg3wwtoTd3oixqXg82vFMxFMzs7xtWozMYyv1JiwmJcecOJMQNUSKhaXESDwVS_K2QRKBt6X533lbv2mo1zpg7h-0GvuMRsuAxcAv8LaeIWuv0WKxmE3G_j6L1WReMvBvScq-3v6-oUGT2WIZGLAazRaTgZfCc8l4YpR-9cjHb-k_6_w1Tw" rel="nofollow">workflow</a></p>
-<details>
-<summary>workflow mermaid</summary>
-<div class="highlight highlight-source-mermaid"><pre class="notranslate"><span class="pl-k">flowchart</span> <span class="pl-c1">TD</span>
-    <span class="pl-ent">C</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">[</span></span>收集代码文件<span class="pl-pds"><span class="pl-sg">]</span></span></span>
-    <span class="pl-ent">C</span> <span class="pl-k">--&gt;</span> <span class="pl-ent">D</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">{</span></span>用户指定 --analyze 参数?<span class="pl-pds"><span class="pl-sg">}</span></span></span>
-    <span class="pl-ent">D</span> <span class="pl-k">--&gt;</span><span class="pl-k">|</span><span class="pl-s">是</span><span class="pl-k">|</span> <span class="pl-ent">E</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">[</span></span>确定分析路径（绝对或相对）<span class="pl-pds"><span class="pl-sg">]</span></span></span>
-    <span class="pl-ent">D</span> <span class="pl-k">--&gt;</span><span class="pl-k">|</span><span class="pl-s">否</span><span class="pl-k">|</span> <span class="pl-ent">F</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">[</span></span>扫描网络相关文件<span class="pl-pds"><span class="pl-sg">]</span></span></span>
-    <span class="pl-ent">E</span> <span class="pl-k">--&gt;</span> <span class="pl-ent">G</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">[</span></span>设置 files_to_analyze<span class="pl-pds"><span class="pl-sg">]</span></span></span>
-    <span class="pl-ent">F</span> <span class="pl-k">--&gt;</span> <span class="pl-ent">G</span>
-    <span class="pl-ent">G</span> <span class="pl-k">--&gt;</span> <span class="pl-ent">H</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">[</span></span>初始化LLM（用于README总结）<span class="pl-pds"><span class="pl-sg">]</span></span></span>
-    <span class="pl-ent">H</span> <span class="pl-k">--&gt;</span> <span class="pl-ent">I</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">[</span></span>获取README内容<span class="pl-pds"><span class="pl-sg">]</span></span></span>
-    <span class="pl-ent">I</span> <span class="pl-k">--&gt;</span> <span class="pl-ent">J</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">{</span></span>README存在?<span class="pl-pds"><span class="pl-sg">}</span></span></span>
-    <span class="pl-ent">J</span> <span class="pl-k">--&gt;</span><span class="pl-k">|</span><span class="pl-s">是</span><span class="pl-k">|</span> <span class="pl-ent">K</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">[</span></span>调用LLM总结README<span class="pl-pds"><span class="pl-sg">]</span></span></span>
-    <span class="pl-ent">J</span> <span class="pl-k">--&gt;</span><span class="pl-k">|</span><span class="pl-s">否</span><span class="pl-k">|</span> <span class="pl-ent">L</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">[</span></span>设置summary为空<span class="pl-pds"><span class="pl-sg">]</span></span></span>
-    <span class="pl-ent">K</span> <span class="pl-k">--&gt;</span> <span class="pl-ent">M</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">[</span></span>提取总结内容<span class="pl-pds"><span class="pl-sg">]</span></span></span>
-    <span class="pl-ent">L</span> <span class="pl-k">--&gt;</span> <span class="pl-ent">N</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">[</span></span>构建系统提示词（包含README总结）<span class="pl-pds"><span class="pl-sg">]</span></span></span>
-    <span class="pl-ent">M</span> <span class="pl-k">--&gt;</span> <span class="pl-ent">N</span>
-    <span class="pl-ent">N</span> <span class="pl-k">--&gt;</span> <span class="pl-ent">O</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">[</span></span>重新初始化LLM（带系统提示）<span class="pl-pds"><span class="pl-sg">]</span></span></span>
-    <span class="pl-ent">O</span> <span class="pl-k">--&gt;</span> <span class="pl-ent">P</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">[</span></span>遍历 files_to_analyze 中的每个文件<span class="pl-pds"><span class="pl-sg">]</span></span></span>
-    <span class="pl-ent">P</span> <span class="pl-k">--&gt;</span> <span class="pl-ent">Q</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">[</span></span>读取文件内容<span class="pl-pds"><span class="pl-sg">]</span></span></span>
-    <span class="pl-ent">Q</span> <span class="pl-k">--&gt;</span> <span class="pl-ent">R</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">{</span></span>文件有内容?<span class="pl-pds"><span class="pl-sg">}</span></span></span>
-    <span class="pl-ent">R</span> <span class="pl-k">--&gt;</span><span class="pl-k">|</span><span class="pl-s">否</span><span class="pl-k">|</span> <span class="pl-ent">S</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">[</span></span>跳过文件<span class="pl-pds"><span class="pl-sg">]</span></span></span>
-    <span class="pl-ent">R</span> <span class="pl-k">--&gt;</span><span class="pl-k">|</span><span class="pl-s">是</span><span class="pl-k">|</span> <span class="pl-ent">T</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">[</span></span>构建初始分析提示<span class="pl-pds"><span class="pl-sg">]</span></span></span>
-    <span class="pl-ent">T</span> <span class="pl-k">--&gt;</span> <span class="pl-ent">U</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">[</span></span>调用LLM进行初始分析<span class="pl-pds"><span class="pl-sg">]</span></span></span>
-    <span class="pl-ent">U</span> <span class="pl-k">--&gt;</span> <span class="pl-ent">V</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">[</span></span>打印初始报告<span class="pl-pds"><span class="pl-sg">]</span></span></span>
-    <span class="pl-ent">V</span> <span class="pl-k">--&gt;</span> <span class="pl-ent">W</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">{</span></span>置信度 &gt; 0 且有漏洞类型?<span class="pl-pds"><span class="pl-sg">}</span></span></span>
-    <span class="pl-ent">W</span> <span class="pl-k">--&gt;</span><span class="pl-k">|</span><span class="pl-s">否</span><span class="pl-k">|</span> <span class="pl-ent">X</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">[</span></span>结束文件分析<span class="pl-pds"><span class="pl-sg">]</span></span></span>
-    <span class="pl-ent">W</span> <span class="pl-k">--&gt;</span><span class="pl-k">|</span><span class="pl-s">是</span><span class="pl-k">|</span> <span class="pl-ent">Y</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">[</span></span>遍历每个漏洞类型<span class="pl-pds"><span class="pl-sg">]</span></span></span>
-    <span class="pl-ent">Y</span> <span class="pl-k">--&gt;</span> <span class="pl-ent">Z</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">[</span></span>初始化二级分析变量<span class="pl-pds"><span class="pl-sg">]</span></span></span>
-    <span class="pl-ent">Z</span> <span class="pl-k">--&gt;</span> <span class="pl-ent">AA</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">[</span></span>循环7次迭代<span class="pl-pds"><span class="pl-sg">]</span></span></span>
-    <span class="pl-ent">AA</span> <span class="pl-k">--&gt;</span> <span class="pl-ent">BB</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">[</span></span>构建漏洞特定提示<span class="pl-pds"><span class="pl-sg">]</span></span></span>
-    <span class="pl-ent">BB</span> <span class="pl-k">--&gt;</span> <span class="pl-ent">CC</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">[</span></span>调用LLM进行二级分析<span class="pl-pds"><span class="pl-sg">]</span></span></span>
-    <span class="pl-ent">CC</span> <span class="pl-k">--&gt;</span> <span class="pl-ent">DD</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">[</span></span>处理上下文请求（提取代码）<span class="pl-pds"><span class="pl-sg">]</span></span></span>
-    <span class="pl-ent">DD</span> <span class="pl-k">--&gt;</span> <span class="pl-ent">EE</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">{</span></span>有新上下文?<span class="pl-pds"><span class="pl-sg">}</span></span></span>
-    <span class="pl-ent">EE</span> <span class="pl-k">--&gt;</span><span class="pl-k">|</span><span class="pl-s">是</span><span class="pl-k">|</span> <span class="pl-ent">FF</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">[</span></span>更新存储，继续循环<span class="pl-pds"><span class="pl-sg">]</span></span></span>
-    <span class="pl-ent">EE</span> <span class="pl-k">--&gt;</span><span class="pl-k">|</span><span class="pl-s">否</span><span class="pl-k">|</span> <span class="pl-ent">GG</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">[</span></span>检查重复上下文<span class="pl-pds"><span class="pl-sg">]</span></span></span>
-    <span class="pl-ent">GG</span> <span class="pl-k">--&gt;</span> <span class="pl-ent">HH</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">{</span></span>重复请求?<span class="pl-pds"><span class="pl-sg">}</span></span></span>
-    <span class="pl-ent">HH</span> <span class="pl-k">--&gt;</span><span class="pl-k">|</span><span class="pl-s">否</span><span class="pl-k">|</span> <span class="pl-ent">II</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">[</span></span>允许一次，继续<span class="pl-pds"><span class="pl-sg">]</span></span></span>
-    <span class="pl-ent">HH</span> <span class="pl-k">--&gt;</span><span class="pl-k">|</span><span class="pl-s">是</span><span class="pl-k">|</span> <span class="pl-ent">JJ</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">[</span></span>停止循环<span class="pl-pds"><span class="pl-sg">]</span></span></span>
-    <span class="pl-ent">FF</span> <span class="pl-k">--&gt;</span> <span class="pl-ent">AA</span>
-    <span class="pl-ent">II</span> <span class="pl-k">--&gt;</span> <span class="pl-ent">AA</span>
-    <span class="pl-ent">JJ</span> <span class="pl-k">--&gt;</span> <span class="pl-ent">KK</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">[</span></span>打印最终报告<span class="pl-pds"><span class="pl-sg">]</span></span></span>
-    <span class="pl-ent">KK</span> <span class="pl-k">--&gt;</span> <span class="pl-ent">Y</span>
-    <span class="pl-ent">X</span> <span class="pl-k">--&gt;</span> <span class="pl-ent">P</span>
-    <span class="pl-ent">S</span> <span class="pl-k">--&gt;</span> <span class="pl-ent">P</span>
-    <span class="pl-ent">P</span> <span class="pl-k">--&gt;</span> <span class="pl-ent">LL</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">[</span></span>结束<span class="pl-pds"><span class="pl-sg">]</span></span></span></pre></div>
-</details>
+<pre class="mermaid">flowchart TD
+    C[收集代码文件]
+    C --&gt; D{用户指定 --analyze 参数?}
+    D --&gt;|是| E[确定分析路径（绝对或相对）]
+    D --&gt;|否| F[扫描网络相关文件]
+    E --&gt; G[设置 files_to_analyze]
+    F --&gt; G
+    G --&gt; H[初始化LLM（用于README总结）]
+    H --&gt; I[获取README内容]
+    I --&gt; J{README存在?}
+    J --&gt;|是| K[调用LLM总结README]
+    J --&gt;|否| L[设置summary为空]
+    K --&gt; M[提取总结内容]
+    L --&gt; N[构建系统提示词（包含README总结）]
+    M --&gt; N
+    N --&gt; O[重新初始化LLM（带系统提示）]
+    O --&gt; P[遍历 files_to_analyze 中的每个文件]
+    P --&gt; Q[读取文件内容]
+    Q --&gt; R{文件有内容?}
+    R --&gt;|否| S[跳过文件]
+    R --&gt;|是| T[构建初始分析提示]
+    T --&gt; U[调用LLM进行初始分析]
+    U --&gt; V[打印初始报告]
+    V --&gt; W{置信度 &gt; 0 且有漏洞类型?}
+    W --&gt;|否| X[结束文件分析]
+    W --&gt;|是| Y[遍历每个漏洞类型]
+    Y --&gt; Z[初始化二级分析变量]
+    Z --&gt; AA[循环7次迭代]
+    AA --&gt; BB[构建漏洞特定提示]
+    BB --&gt; CC[调用LLM进行二级分析]
+    CC --&gt; DD[处理上下文请求（提取代码）]
+    DD --&gt; EE{有新上下文?}
+    EE --&gt;|是| FF[更新存储，继续循环]
+    EE --&gt;|否| GG[检查重复上下文]
+    GG --&gt; HH{重复请求?}
+    HH --&gt;|否| II[允许一次，继续]
+    HH --&gt;|是| JJ[停止循环]
+    FF --&gt; AA
+    II --&gt; AA
+    JJ --&gt; KK[打印最终报告]
+    KK --&gt; Y
+    X --&gt; P
+    S --&gt; P
+    P --&gt; LL[结束]</pre>
 <h2>String Comparison Timing Attack</h2>
 <blockquote>
 <p><a href="https://cwe.mitre.org/data/definitions/1254.html" rel="nofollow">CWE-1254: Incorrect Comparison Logic Granularity</a></p>
@@ -373,6 +371,7 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 
 
+<script src="/plugins/mermaid.js"></script>
 <script src="https://blog.imipy.com/plugins/GmeekTOC.js"></script>
 <script src="https://blog.imipy.com/plugins/lightbox.js"></script>
 </html>

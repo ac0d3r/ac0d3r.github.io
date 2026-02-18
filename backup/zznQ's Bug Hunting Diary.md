@@ -9,12 +9,6 @@
 
 > [vulnhuntr](https://github.com/protectai/vulnhuntr) 基于 llm+静态分析 来挖掘 Python 项目安全漏洞。
 
-online: [workflow](https://mermaid.live/edit#pako:eNptlVtTGkkUx7_K1DyjBSKKPCSFcgdzMSZGByo1FcZLFZcUQu0atEpdBVQQUnEpK6KuG6NusoApUwEZo19munt88its0904TDY8zaF_5_bvM2fS_Ot4WOJt_HQk_tvrWTGR5MYdwRiHfyMC3Pl-u5dR5I_orxVYziry9xA74np6HnCONNo5g7kGzGdB7QP-S4yJkYW3EgeKq_DP84dLFHa04UW4W1_knAI6qmEW5DLwoKQ26uB67e4qh-R9UL-EuTLaa-KHu6uNULcrKJ0sci4BbnyBxSL68Q7JlTa4fqGryUlqcgtq7Rr9qHHTcxFp_lUy_ooVxSgXpajhJoZHALl9cLoF8uVAYLRdzs6Z0toec9odo064LCP5vVaRh7h4BXW7AYplyoDMOqhdMsBLAF-aHVV3QeWso4RPU8IvqOd_4EQ4I01B-VA3SPoOsIbmU9GomFhQmi30T4thfpJrVIDFEi6GxtEVEyDAIwEerAG5hS4wcIhhdNxS6wXcKcivg9KXX3c6Sn2p8YgYj4XbbAGWz3_SCzRPukNrIR4TryfC7UoBbGf-dyWc0qyiD2uwXlSan3V3-YQ4PhXUutxujBzpGntKgLE0PYKVDXraEXpM0--ZoDYu1JusLv6YdhHjTBzWExlM2gdjx0mq59p9qTd76lG-m2fkc0K-wIP6HhSYSHDzE3i3yYAXBJhI4-tUbo5A64R7wBmxCju4AXhVhN8O0FcZHGx12pjQ2ngp4MuB-4dMi-60E1ozk0xqJmlXSMZOkgqmtIlXWnnUOqXxQHH3Nltk5BQh7XYBXH9G2_VB-O-RelPFu4Cd2-0EGB5m-rFkG5f49dbpNzxMwJGRnxXsTt3ZK2yxOARwvIZKGaW5qTS3cM9qvQG_ruJZo6NOV1LXniCLgnM6020ly-f3fh0lnU5NJBdeJXvf2mOMX87Vs7urPJJPkVyljYZ0DkR7t1uAH5fh4Sc8_eC4cB-coW62Rjxpek5r7WT2eLRAXq8A1lfUWlNpLmM97zOHdCgp0ucTwEoFVv_WVeVysVthu8arM31kbXB-P5tAWFlGck43gX66Miap9ZK-n9R41m3QFzAQYFOHvXkDP5OYC_O2ZCIlGfiolIiKbZNPtz2CfHJWikpB3oYfw9K0mIokg3wwtoTd3oixqXg82vFMxFMzs7xtWozMYyv1JiwmJcecOJMQNUSKhaXESDwVS_K2QRKBt6X533lbv2mo1zpg7h-0GvuMRsuAxcAv8LaeIWuv0WKxmE3G_j6L1WReMvBvScq-3v6-oUGT2WIZGLAazRaTgZfCc8l4YpR-9cjHb-k_6_w1Tw)
-
-
-<details>
-<summary>workflow mermaid</summary>
-
 ```mermaid
 flowchart TD
     C[收集代码文件]
@@ -61,9 +55,6 @@ flowchart TD
     S --> P
     P --> LL[结束]
 ```
-
-</details>
-
 
 ## String Comparison Timing Attack
 
