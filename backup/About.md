@@ -21,6 +21,8 @@
 - [NSEcho/furlzz](https://github.com/NSEcho/furlzz/pulls?q=is%3Apr+is%3Aclosed+author%3Aac0d3r) <img src="https://img.shields.io/github/stars/NSEcho/furlzz?logo=github" height="18">
   - Add coverage guided with Stalker
   - fix(init): use passed-in type when creating config
+- [gpustack/gguf-parser-go](https://github.com/gpustack/gguf-parser-go/pulls?q=is%3Apr+is%3Aclosed+author%3Aac0d3r) <img src="https://img.shields.io/github/stars/gpustack/gguf-parser-go?logo=github" height="18">
+  - fix: validate GGUF header fields before allocations to prevent OOM
 - [Hemmelig.app](https://github.com/HemmeligOrg/Hemmelig.app/pulls?q=is%3Apr+is%3Aclosed+author%3Aac0d3r) <img src="https://img.shields.io/github/stars/HemmeligOrg/Hemmelig.app?logo=github" height="18">
   - Fix: Public secrets can be opened without a decryption key
   - Fix: toggle Editor between read-only and editable

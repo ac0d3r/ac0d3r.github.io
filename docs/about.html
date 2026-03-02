@@ -29,6 +29,8 @@
 body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;padding: 45px;font-size: 16px;font-family: sans-serif;line-height: 1.25;}
 #header{display:flex;padding-bottom:8px;border-bottom: 1px solid var(--borderColor-muted, var(--color-border-muted));margin-bottom: 16px;}
 #footer {margin-top:64px; text-align: center;font-size: small;}
+.mermaid{width:100%;min-height:520px;height:70vh;overflow:hidden;}
+.mermaid svg{width:100%;height:100%;display:block;}
 
 </style>
 
@@ -105,6 +107,11 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 <ul>
 <li>Add coverage guided with Stalker</li>
 <li>fix(init): use passed-in type when creating config</li>
+</ul>
+</li>
+<li><a href="https://github.com/gpustack/gguf-parser-go/pulls?q=is%3Apr+is%3Aclosed+author%3Aac0d3r">gpustack/gguf-parser-go</a> <a target="_blank" rel="noopener noreferrer nofollow" href="https://camo.githubusercontent.com/472f5c85f8620612fbfa648624b7f3258903adb46e76ce9cb24488e954cf0183/68747470733a2f2f696d672e736869656c64732e696f2f6769746875622f73746172732f677075737461636b2f676775662d7061727365722d676f3f6c6f676f3d676974687562"><img src="https://camo.githubusercontent.com/472f5c85f8620612fbfa648624b7f3258903adb46e76ce9cb24488e954cf0183/68747470733a2f2f696d672e736869656c64732e696f2f6769746875622f73746172732f677075737461636b2f676775662d7061727365722d676f3f6c6f676f3d676974687562" height="18" data-canonical-src="https://img.shields.io/github/stars/gpustack/gguf-parser-go?logo=github" style="max-width: 100%; height: auto; max-height: 18px;"></a>
+<ul>
+<li>fix: validate GGUF header fields before allocations to prevent OOM</li>
 </ul>
 </li>
 <li><a href="https://github.com/HemmeligOrg/Hemmelig.app/pulls?q=is%3Apr+is%3Aclosed+author%3Aac0d3r">Hemmelig.app</a> <a target="_blank" rel="noopener noreferrer nofollow" href="https://camo.githubusercontent.com/da774d03729a3856bd784193c1a20d19e2be4962d5d02c49f7c03418a595ef6f/68747470733a2f2f696d672e736869656c64732e696f2f6769746875622f73746172732f48656d6d656c69674f72672f48656d6d656c69672e6170703f6c6f676f3d676974687562"><img src="https://camo.githubusercontent.com/da774d03729a3856bd784193c1a20d19e2be4962d5d02c49f7c03418a595ef6f/68747470733a2f2f696d672e736869656c64732e696f2f6769746875622f73746172732f48656d6d656c69674f72672f48656d6d656c69672e6170703f6c6f676f3d676974687562" height="18" data-canonical-src="https://img.shields.io/github/stars/HemmeligOrg/Hemmelig.app?logo=github" style="max-width: 100%; height: auto; max-height: 18px;"></a>
@@ -303,6 +310,7 @@ function iFrameLoading(){
 </script>
 
 
+<script src="/plugins/mermaid.js"></script>
 <script src="https://blog.imipy.com/plugins/GmeekTOC.js"></script>
 <script src="https://blog.imipy.com/plugins/lightbox.js"></script>
 </html>
