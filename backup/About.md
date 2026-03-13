@@ -1,8 +1,4 @@
-- Senior Software Developer & Researcher
-- Projects I have participated in:
-  - [DAS-Sandbox](https://sandbox.dbappsecurity.com.cn/)(Maleware Sandbox) - **UNIX-like Malware Research**, **Network Simulation Engine**
-  - [DAS-AI](https://das-ai.com/)(AI for Cybersecurity) - **Code Execution Sandbox**, **LLM Gateway**
-  - Hunter(DAST) - **Network Asset Discovery**, **DAST**, **WebApp Fingerprinting**
+- Software Engineer(AI Agent | Security Platform) | Go/Python/JS/TS | ASM · DAST · Malware Sandbox · Agent-Infra
 
 ## Open Source Projects
 
