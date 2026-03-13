@@ -1,4 +1,4 @@
-- Software Engineer(AI Agent | Security Platform) | Go/Python/JS/TS | ASM · DAST · Malware Sandbox · Agent-Infra
+- Software Engineer(AI Agents | Security Platform) | Go/Python/JS/TS | ASM · DAST · Malware Sandbox · AI Agents(Infra)
 
 ## Open Source Projects
 
