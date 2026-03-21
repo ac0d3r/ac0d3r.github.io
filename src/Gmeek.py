@@ -291,6 +291,30 @@ class GMEEK():
         f.write(output)
         f.close()
 
+    def build_talks_timeline(self, issue):
+        owner_login = self.repo.owner.login
+        entries = []
+        for comment in issue.get_comments():
+            if comment.user.login != owner_login:
+                continue
+            created_time = comment.created_at.astimezone(self.TZ)
+            comment_html = self.markdown2html(comment.body or '')
+            comment_html = self.convert_mermaid_blocks(comment_html)
+            entries.append(
+                '<article class="talk-entry">'
+                '<div class="talk-entry-dot"></div>'
+                '<div class="talk-entry-main">'
+                f'<time class="talk-entry-time" datetime="{created_time.isoformat()}">{created_time.strftime("%Y-%m-%d %H:%M")}</time>'
+                f'<div class="talk-entry-body markdown-body">{comment_html}</div>'
+                '</div>'
+                '</article>'
+            )
+
+        if len(entries) == 0:
+            return '<section class="talks-timeline"><p class="talks-empty">No talks yet.</p></section>', 0
+
+        return '<section class="talks-timeline">{}</section>'.format(''.join(entries)), len(entries)
+
     def createPostHtml(self, issue):
         mdFileName = re.sub(r'[<>:/\\|?*\"]|[\0-\31]', '-', issue["postTitle"])
         f = open(os.path.join(self.backup_dir, mdFileName+".md"),
@@ -333,6 +357,28 @@ class GMEEK():
             post_body = re.sub(r'<code class="notranslate">Gmeek-html(.*?)</code>',
                                lambda match: html.unescape(match.group(1)), post_body, flags=re.DOTALL)
 
+        if issue["labels"][0] == "talks":
+            talks_intro = ''
+            if post_body.strip() != "":
+                talks_intro = '<section class="talks-intro markdown-body">{}</section>'.format(post_body)
+            post_body = talks_intro + issue.get("timelineHtml", '<section class="talks-timeline"><p class="talks-empty">No talks yet.</p></section>')
+            issue["style"] = issue["style"] + (
+                '<style>'
+                '.talks-intro{margin-bottom:32px;padding-bottom:20px;border-bottom:1px solid var(--color-border-default);}'
+                '.talks-timeline{position:relative;padding-left:32px;}'
+                '.talks-timeline:before{content:"";position:absolute;left:10px;top:4px;bottom:4px;width:2px;background:linear-gradient(to bottom,var(--color-accent-fg),var(--color-border-default));}'
+                '.talk-entry{position:relative;margin-bottom:28px;}'
+                '.talk-entry:last-child{margin-bottom:0;}'
+                '.talk-entry-dot{position:absolute;left:-32px;top:5px;width:12px;height:12px;border-radius:999px;background:var(--color-accent-fg);box-shadow:0 0 0 4px var(--color-canvas-default);}'
+                '.talk-entry-time{display:block;margin-bottom:10px;font-size:12px;font-weight:600;letter-spacing:.04em;color:var(--color-fg-muted);}'
+                '.talk-entry-body{padding:18px 20px;border:1px solid var(--color-border-default);border-radius:14px;background:var(--color-canvas-subtle);}'
+                '.talk-entry-body>:first-child{margin-top:0;}'
+                '.talk-entry-body>:last-child{margin-bottom:0;}'
+                '.talks-empty{margin:0;color:var(--color-fg-muted);}'
+                '@media (max-width: 600px){.talks-timeline{padding-left:24px;}.talk-entry-dot{left:-24px;}}'
+                '</style>'
+            )
+
         postBase["postTitle"] = issue["postTitle"]
         postBase["postUrl"] = self.blogBase["homeUrl"]+"/"+issue["postUrl"]
         postBase["description"] = issue["description"]
@@ -347,6 +393,8 @@ class GMEEK():
 
         if issue["labels"][0] in self.blogBase["singlePage"]:
             postBase["bottomText"] = ''
+        if issue["labels"][0] == "talks":
+            postBase["needComment"] = 0
 
         if '<pre class="notranslate">' in post_body:
             keys = ['sun', 'moon', 'sync', 'home', 'github', 'copy', 'check']
@@ -511,10 +559,15 @@ class GMEEK():
             relative_html = relative_html.replace(os.sep, "/")
             self.blogBase[listJsonName][postNum]["postUrl"] = urllib.parse.quote(
                 relative_html)
-            self.blogBase[listJsonName][postNum]["commentNum"] = issue.get_comments(
-            ).totalCount
+            if issue.labels[0].name == "talks":
+                timeline_html, owner_comment_count = self.build_talks_timeline(issue)
+                self.blogBase[listJsonName][postNum]["timelineHtml"] = timeline_html
+                self.blogBase[listJsonName][postNum]["commentNum"] = owner_comment_count
+            else:
+                self.blogBase[listJsonName][postNum]["commentNum"] = issue.get_comments(
+                ).totalCount
 
-            if issue.body == None:
+            if issue.body is None:
                 self.blogBase[listJsonName][postNum]["description"] = ''
                 self.blogBase[listJsonName][postNum]["wordCount"] = 0
             else:
@@ -584,7 +637,7 @@ class GMEEK():
             f = open(os.path.join(self.backup_dir, mdFileName+".md"),
                      'w', encoding='UTF-8')
 
-            if issue.body == None:
+            if issue.body is None:
                 f.write('')
             else:
                 f.write(issue.body)
@@ -625,7 +678,7 @@ class GMEEK():
             print("====== create static html end ======")
 
     def createFileName(self, issue, useLabel=False):
-        if useLabel == True:
+        if useLabel is True:
             fileName = issue.labels[0].name
         else:
             if self.blogBase["urlMode"] == "issue":
