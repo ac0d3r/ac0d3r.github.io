@@ -265,7 +265,11 @@ document.getElementById("pathHome").setAttribute("d",IconList["home"]);
 
 
 
+let commentsOpened=0;
+
 function openComments(){
+    if(commentsOpened===1){return;}
+    commentsOpened=1;
     cm=document.getElementById("comments");
     cmButton=document.getElementById("cmButton");
     cmButton.disabled=true;
@@ -302,6 +306,10 @@ function iFrameLoading(){
     }
 }
 
+document.addEventListener('DOMContentLoaded', () => {
+    openComments();
+});
+
 
 
 </script>
@@ -310,4 +318,5 @@ function iFrameLoading(){
 <script src="/plugins/mermaid.js"></script>
 <script src="https://blog.imipy.com/plugins/GmeekTOC.js"></script>
 <script src="https://blog.imipy.com/plugins/lightbox.js"></script>
+<script src="https://blog.imipy.com/plugins/mermaid.js"></script>
 </html>
