@@ -293,10 +293,15 @@ class GMEEK():
 
     def build_talks_timeline(self, issue):
         owner_login = self.repo.owner.login
-        entries = []
+        owner_comments = []
         for comment in issue.get_comments():
             if comment.user.login != owner_login:
                 continue
+            owner_comments.append(comment)
+        owner_comments.sort(key=lambda item: item.created_at, reverse=True)
+
+        entries = []
+        for comment in owner_comments:
             created_time = comment.created_at.astimezone(self.TZ)
             comment_html = self.markdown2html(comment.body or '')
             comment_html = self.convert_mermaid_blocks(comment_html)
