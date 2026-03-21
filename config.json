@@ -4,7 +4,8 @@
     "avatarUrl": "/imgs/avatar.png",
     "singlePage": [
         "about",
-        "link"
+        "link",
+        "talks"
     ],
     "i18n": "EN",
     "startSite": "01/05/2018",

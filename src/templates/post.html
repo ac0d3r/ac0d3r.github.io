@@ -81,7 +81,11 @@ document.getElementById("pathHome").setAttribute("d",IconList["home"]);
 {%- endif %}
 
 {% if blogBase['needComment']==1 %}
+let commentsOpened=0;
+
 function openComments(){
+    if(commentsOpened===1){return;}
+    commentsOpened=1;
     cm=document.getElementById("comments");
     cmButton=document.getElementById("cmButton");
     cmButton.disabled=true;
@@ -119,6 +123,10 @@ function iFrameLoading(){
         }
     }
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+    openComments();
+});
 {%- endif %}
 
 {% if blogBase['highlight']!=0 -%}
