@@ -14,7 +14,7 @@
 <meta property="og:title" content="Talks">
 <meta property="og:description" content="">
 <meta property="og:type" content="article">
-<meta property="og:url" content="https://blog.imipy.com/post/talks.html">
+<meta property="og:url" content="https://blog.imipy.com/talks.html">
 <meta property="og:image" content="/imgs/avatar.png">
 <title>Talks</title>
 
@@ -45,7 +45,7 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 }
 
 </style>
-
+<style>.talks-intro{margin-bottom:32px;padding-bottom:20px;border-bottom:1px solid var(--color-border-default);}.talks-timeline{position:relative;padding-left:32px;}.talks-timeline:before{content:"";position:absolute;left:10px;top:4px;bottom:4px;width:2px;background:linear-gradient(to bottom,var(--color-accent-fg),var(--color-border-default));}.talk-entry{position:relative;margin-bottom:28px;}.talk-entry:last-child{margin-bottom:0;}.talk-entry-dot{position:absolute;left:-32px;top:5px;width:12px;height:12px;border-radius:999px;background:var(--color-accent-fg);box-shadow:0 0 0 4px var(--color-canvas-default);}.talk-entry-time{display:block;margin-bottom:10px;font-size:12px;font-weight:600;letter-spacing:.04em;color:var(--color-fg-muted);}.talk-entry-body{padding:18px 20px;border:1px solid var(--color-border-default);border-radius:14px;background:var(--color-canvas-subtle);}.talk-entry-body>:first-child{margin-top:0;}.talk-entry-body>:last-child{margin-bottom:0;}.talks-empty{margin:0;color:var(--color-fg-muted);}@media (max-width: 600px){.talks-timeline{padding-left:24px;}.talk-entry-dot{left:-24px;}}</style>
 
 
 
@@ -68,11 +68,11 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 </div>
 </div>
     <div id="content">
-<div class="markdown-body" id="postBody"></div>
+<div class="markdown-body" id="postBody"><section class="talks-timeline"><article class="talk-entry"><div class="talk-entry-dot"></div><div class="talk-entry-main"><time class="talk-entry-time" datetime="2026-03-21T19:58:05+08:00">2026-03-21 19:58</time><div class="talk-entry-body markdown-body"><h2>BUG🐛: Slice Out-of-Bounds Panic in beep</h2>
+<p>通过 go fuzzing 发现的bug：</p>
+<p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/e858fc10-3c23-4736-91a5-7c0dd0de4ad5"><img width="500" height="408" alt="Image" src="https://github.com/user-attachments/assets/e858fc10-3c23-4736-91a5-7c0dd0de4ad5" style="max-width: 100%; height: auto; max-height: 408px;"></a></p>
+<p>root cause 是它的上游依赖库：<a href="https://github.com/hajimehoshi/go-mp3">https://github.com/hajimehoshi/go-mp3</a> ，go-mp3 仓库已归档，即只能在报告在 beep 仓库。解决方法我想只能是用 <code class="notranslate">recover()</code> 去捕获panic。</p></div></div></article></section></div>
 <div style="font-size:small;margin-top:8px;float:right;"></div>
-
-<button class="btn btn-block" type="button" onclick="openComments()" id="cmButton">comments</button>
-<div class="comments" id="comments"></div>
 
 </div>
     <div id="footer"><div id="footer1">Copyright © <span id="copyrightYear"></span> <a href="https://blog.imipy.com">zznQ</a></div>
@@ -124,53 +124,13 @@ if(themeSettings[theme]){changeTheme(...themeSettings[theme]);}
 
 <script>
 document.getElementById("pathHome").setAttribute("d",IconList["home"]);
-
-
-
-let commentsOpened=0;
-
-function openComments(){
-    if(commentsOpened===1){return;}
-    commentsOpened=1;
-    cm=document.getElementById("comments");
-    cmButton=document.getElementById("cmButton");
-    cmButton.disabled=true;
-    cmButton.innerHTML="loading";
+cmButton=document.getElementById("cmButton");
     span=document.createElement("span");
-    span.setAttribute("class","AnimatedEllipsis");
+    span.setAttribute("class","Counter");
+    span.innerHTML="1";
     cmButton.appendChild(span);
 
-    script=document.createElement("script");
-    script.setAttribute("src","https://utteranc.es/client.js");
-    script.setAttribute("repo","ac0d3r/ac0d3r.github.io");
-    script.setAttribute("issue-term","title");
-    
-    if(localStorage.getItem("meek_theme")=="dark"){script.setAttribute("theme","dark-blue");}
-    else if(localStorage.getItem("meek_theme")=="light") {script.setAttribute("theme","github-light");}
-    else{script.setAttribute("theme","preferred-color-scheme");}
-    
-    script.setAttribute("crossorigin","anonymous");
-    script.setAttribute("async","");
-    cm.appendChild(script);
 
-    int=self.setInterval("iFrameLoading()",200);
-}
-
-function iFrameLoading(){
-    var utterances=document.getElementsByClassName('utterances');
-    if(utterances.length==1){
-        if(utterances[0].style.height!=""){
-            utterancesLoad=1;
-            int=window.clearInterval(int);
-            document.getElementById("cmButton").style.display="none";
-            console.log("utterances Load OK");
-        }
-    }
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-    openComments();
-});
 
 
 
