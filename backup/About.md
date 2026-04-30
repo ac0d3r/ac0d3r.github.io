@@ -1,4 +1,4 @@
-- Software Engineer(AI Agents | Security Platform) | Go/Python/JS/TS | ASM · DAST · Malware Sandbox · AI Agents(Infra)
+- Software Engineer & Researcher
 
 ## Open Source Projects
 
@@ -9,10 +9,10 @@
 
 ### PR
 - [Tencent/AI-Infra-Guard](https://github.com/Tencent/AI-Infra-Guard/pulls?q=is%3Apr+is%3Aclosed+author%3Aac0d3r) <img src="https://img.shields.io/github/stars/Tencent/AI-Infra-Guard?logo=github" height="18"> <a href="https://www.blackhat.com/eu-25/arsenal/schedule/index.html#aigai-infra-guard-48381" target="_blank"><img src="https://github.com/user-attachments/assets/2b86faa4-6efa-4269-a48d-91e46faeac21" height="30"></a>
+  - MCP Scan: Harden agent loop and path validation, clean up config.
   - Optimize the Fingerprint DSL parser (build AST and support short-circuit)
-  - Fix out-of-bounds panic when quoted string ends with a backslash
-  - Perf: reduce Docker image size
-- [moonD4rk/HackBrowserData](https://github.com/moonD4rk/HackBrowserData/pulls?q=is%3Apr+author%3Aac0d3r+is%3Aclosed) <img src="https://img.shields.io/github/stars/moonD4rk/HackBrowserData?logo=github" height="18">
+  - ...
+- [moonD4rk/HackBrowserData](https://github.com/moonD4rk/HackBrowserData/pulls?q=is%3Apr+author%3Aac0d3r+is%3Aclosed) <img src="https://img.shields.io/github/stars/moonD4rk/HackBrowserData?logo=github" height="18"> <a href="https://defcon.org/html/defcon-singapore/dc-singapore-talks.html#content_65792" target="_blank"><img src="https://github.com/user-attachments/assets/af753468-d1e8-4827-9af2-4573c3d4b124" height="25"></a>
   - Decrypt the browser master key on macOS via gcore(CVE-2025-24204)
 - [NSEcho/furlzz](https://github.com/NSEcho/furlzz/pulls?q=is%3Apr+is%3Aclosed+author%3Aac0d3r) <img src="https://img.shields.io/github/stars/NSEcho/furlzz?logo=github" height="18">
   - Add coverage guided with Stalker
@@ -89,15 +89,15 @@
 ## Toy program
 - [fbuzzer](https://github.com/BreakOnCrash/fbuzzer) | A Frida-based toy in-process fuzzer 📣
 - [inx](https://github.com/BreakOnCrash/inx)｜Inject *.dylib into target process (like Frida) on macOS (arm64 and x86_64) 💉
-- [go-symbolic-execution](https://github.com/BreakOnCrash/go-symbolic-execution) | Go white-box symbolic execution demo 👨🏻‍💻
 - [TrollR2ool](https://github.com/BreakOnCrash/TrollR2ool) | iOS Runtime analysis tool 🧌
+- [go-symbolic-execution](https://github.com/BreakOnCrash/go-symbolic-execution) | Go white-box symbolic execution demo 👨🏻‍💻
 ---
+- [Rua](https://github.com/ac0d3r/nicu?tab=readme-ov-file#rua) - Generate a <img src="https://user-images.githubusercontent.com/26270009/149051761-21e0e181-534d-458a-ad63-5c8963eda447.gif" height="30">(rua.gif) from any avatar.
 - [gf.imipy.com](https://gf.imipy.com/) - Today's meal picker 🥣
 - [pinger](https://github.com/ac0d3r/pingser) - Transfer custom messages via `ICMP`.
 - [v2hreo](https://github.com/ac0d3r/v2hreo) - V2ray macOS Menu Bar Application with <img src="https://img.shields.io/badge/-292e33?logo=swift" height="18"> + CGO.
 - [webportscan](https://github.com/ac0d3r/webportscan) - Scan local service (TCP) ports over Web page.
 - [PiMonitor](https://github.com/ac0d3r/PiMonitor) - Build a Controllable Web Video Monitor with <img src="https://img.shields.io/badge/-292e33?logo=go" height="18">+<img src="https://img.shields.io/badge/4b-292e33?logo=raspberry-pi" height="18">.
-- [Rua](https://github.com/ac0d3r/nicu?tab=readme-ov-file#rua) - Generate a <img src="https://user-images.githubusercontent.com/26270009/149051761-21e0e181-534d-458a-ad63-5c8963eda447.gif" height="30">(rua.gif) from any avatar.
 
 ## Others
 - 微信公众号
