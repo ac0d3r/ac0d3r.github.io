@@ -5,7 +5,12 @@
     "singlePage": [
         "about",
         "link",
-        "talks"
+        "talks",
+        "daily-reversing"
+    ],
+    "useTimeline": [
+        "talks",
+        "daily-reversing"
     ],
     "i18n": "EN",
     "startSite": "01/05/2018",

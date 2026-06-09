@@ -138,7 +138,7 @@ class GMEEK():
 
     def defaultConfig(self):
         dconfig = {"singlePage": [], "startSite": "", "filingNum": "", "onePageListNum": 15, "commentLabelColor": "#006b75", "yearColorList": ["#bc4c00", "#0969da", "#1f883d", "#A333D0"], "i18n": "CN", "themeMode": "manual", "dayTheme": "light",
-                   "nightTheme": "dark", "urlMode": "pinyin", "script": "", "style": "", "head": "", "indexScript": "", "indexStyle": "", "bottomText": "", "iconList": {}, "UTC": +8, "rssSplit": "sentence", "exlink": {}, "needComment": 1, "allHead": "", "pluginScripts": ""}
+                   "nightTheme": "dark", "urlMode": "pinyin", "script": "", "style": "", "head": "", "indexScript": "", "indexStyle": "", "bottomText": "", "iconList": {}, "UTC": +8, "rssSplit": "sentence", "exlink": {}, "needComment": 1, "allHead": "", "pluginScripts": "", "useTimeline": []}
         config_path = os.path.join(self.repo_root, "config.json")
         config = json.loads(open(config_path, 'r', encoding='utf-8').read())
         self.blogBase = {**dconfig, **config}.copy()
@@ -362,27 +362,10 @@ class GMEEK():
             post_body = re.sub(r'<code class="notranslate">Gmeek-html(.*?)</code>',
                                lambda match: html.unescape(match.group(1)), post_body, flags=re.DOTALL)
 
-        if issue["labels"][0] == "talks":
-            talks_intro = ''
-            if post_body.strip() != "":
-                talks_intro = '<section class="talks-intro markdown-body">{}</section>'.format(post_body)
-            post_body = talks_intro + issue.get("timelineHtml", '<section class="talks-timeline"><p class="talks-empty">No talks yet.</p></section>')
-            issue["style"] = issue["style"] + (
-                '<style>'
-                '.talks-intro{margin-bottom:32px;padding-bottom:20px;border-bottom:1px solid var(--color-border-default);}'
-                '.talks-timeline{position:relative;padding-left:32px;}'
-                '.talks-timeline:before{content:"";position:absolute;left:10px;top:4px;bottom:4px;width:2px;background:linear-gradient(to bottom,var(--color-accent-fg),var(--color-border-default));}'
-                '.talk-entry{position:relative;margin-bottom:28px;}'
-                '.talk-entry:last-child{margin-bottom:0;}'
-                '.talk-entry-dot{position:absolute;left:-32px;top:5px;width:12px;height:12px;border-radius:999px;background:var(--color-accent-fg);box-shadow:0 0 0 4px var(--color-canvas-default);}'
-                '.talk-entry-time{display:block;margin-bottom:10px;font-size:12px;font-weight:600;letter-spacing:.04em;color:var(--color-fg-muted);}'
-                '.talk-entry-body{padding:18px 20px;border:1px solid var(--color-border-default);border-radius:14px;background:var(--color-canvas-subtle);}'
-                '.talk-entry-body>:first-child{margin-top:0;}'
-                '.talk-entry-body>:last-child{margin-bottom:0;}'
-                '.talks-empty{margin:0;color:var(--color-fg-muted);}'
-                '@media (max-width: 600px){.talks-timeline{padding-left:24px;}.talk-entry-dot{left:-24px;}}'
-                '</style>'
-            )
+        template_name = 'post.html'
+        if issue["labels"][0] in self.blogBase["useTimeline"]:
+            template_name = 'timeline.html'
+            postBase["timelineIssue"] = issue.get("issueNumber", 0)
 
         postBase["postTitle"] = issue["postTitle"]
         postBase["postUrl"] = self.blogBase["homeUrl"]+"/"+issue["postUrl"]
@@ -398,8 +381,9 @@ class GMEEK():
 
         if issue["labels"][0] in self.blogBase["singlePage"]:
             postBase["bottomText"] = ''
-        if issue["labels"][0] == "talks":
+        if issue["labels"][0] in self.blogBase["useTimeline"]:
             postBase["needComment"] = 0
+            postBase["pluginScripts"] = self.build_plugin_scripts(exclude=["GmeekTOC.js"])
 
         if '<pre class="notranslate">' in post_body:
             keys = ['sun', 'moon', 'sync', 'home', 'github', 'copy', 'check']
@@ -412,7 +396,7 @@ class GMEEK():
             postBase["highlight"] = 0
 
         postIcon = dict(zip(keys, map(IconBase.get, keys)))
-        self.renderHtml('post.html', postBase, {}, issue["htmlDir"], postIcon)
+        self.renderHtml(template_name, postBase, {}, issue["htmlDir"], postIcon)
         print("create postPage title=%s file=%s " %
               (issue["postTitle"], issue["htmlDir"]))
 
@@ -564,10 +548,9 @@ class GMEEK():
             relative_html = relative_html.replace(os.sep, "/")
             self.blogBase[listJsonName][postNum]["postUrl"] = urllib.parse.quote(
                 relative_html)
-            if issue.labels[0].name == "talks":
-                timeline_html, owner_comment_count = self.build_talks_timeline(issue)
-                self.blogBase[listJsonName][postNum]["timelineHtml"] = timeline_html
-                self.blogBase[listJsonName][postNum]["commentNum"] = owner_comment_count
+            if issue.labels[0].name in self.blogBase["useTimeline"]:
+                self.blogBase[listJsonName][postNum]["issueNumber"] = issue.number
+                self.blogBase[listJsonName][postNum]["commentNum"] = issue.comments
             else:
                 self.blogBase[listJsonName][postNum]["commentNum"] = issue.get_comments(
                 ).totalCount
@@ -701,7 +684,7 @@ class GMEEK():
         fileName = re.sub(r'[<>:/\\|?*\"]|[\0-\31]', '-', fileName)
         return fileName
 
-    def build_plugin_scripts(self):
+    def build_plugin_scripts(self, exclude=None):
         plugin_files = self.discover_plugins()
         if not plugin_files:
             return ""
@@ -709,6 +692,8 @@ class GMEEK():
         base_url = self.blogBase["homeUrl"].rstrip("/")
         scripts = []
         for name in plugin_files:
+            if exclude and name in exclude:
+                continue
             safe_name = urllib.parse.quote(name)
             scripts.append(
                 f"<script src=\"{base_url}/plugins/{safe_name}\"></script>")
