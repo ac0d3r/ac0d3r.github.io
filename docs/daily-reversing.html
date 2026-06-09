@@ -47,7 +47,7 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 .talk-entry:last-child{margin-bottom:0;}
 .talk-entry-dot{position:absolute;left:-32px;top:5px;width:12px;height:12px;border-radius:999px;background:var(--color-accent-fg);box-shadow:0 0 0 4px var(--color-canvas-default);}
 .talk-entry-time{display:block;margin-bottom:10px;font-size:12px;font-weight:600;letter-spacing:.04em;color:var(--color-fg-muted);}
-.talk-entry-body{padding:14px 16px;border:1px solid var(--color-border-default);border-radius:14px;background:var(--color-canvas-subtle);font-size:14px;line-height:1.4;}
+.talk-entry-body{padding:14px 16px;border:1px solid var(--color-border-default);border-radius:14px;background:var(--color-canvas-subtle);font-size:13px;line-height:1.3;}
 .talk-entry-body>:first-child{margin-top:0;}
 .talk-entry-body>:last-child{margin-bottom:0;}
 .talks-empty{margin:0;color:var(--color-fg-muted);}
@@ -82,6 +82,7 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 </div>
     <div id="footer"><div id="footer1">Copyright © <span id="copyrightYear"></span> <a href="https://blog.imipy.com">zznQ</a></div>
 <div id="footer2">
+    <span id="runday"></span>
 </div>
 
 <script>
@@ -140,33 +141,13 @@ function formatTime(isoString) {
     return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
-function processMermaid(html) {
-    const temp = document.createElement('div');
-    temp.innerHTML = html;
-
-    // 处理 <div class="highlight highlight-source-mermaid"><pre>...</pre></div>
-    temp.querySelectorAll('div.highlight.highlight-source-mermaid > pre').forEach(pre => {
-        const wrapper = pre.parentElement;
-        const text = pre.textContent.replace(/\r\n/g, '\n').replace(/\u00a0/g, ' ').trim();
-        if (!text) return;
-        const newPre = document.createElement('pre');
-        newPre.className = 'mermaid';
-        newPre.textContent = text;
-        wrapper.parentElement.replaceChild(newPre, wrapper);
+function preprocessMermaid(md) {
+    return md.replace(/```mermaid\s*\n([\s\S]*?)\n```/g, (_, code) => {
+        const text = code.replace(/\r\n/g, '\n').replace(/\u00a0/g, ' ').trim();
+        if (!text) return '';
+        const esc = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        return `<pre class="mermaid">${esc}</pre>`;
     });
-
-    // 处理 <pre><code class="language-mermaid">...</code></pre> 和 <pre><code class="mermaid">...</code></pre>
-    temp.querySelectorAll('pre > code.language-mermaid, pre > code.mermaid').forEach(code => {
-        const pre = code.parentElement;
-        const text = code.textContent.replace(/\r\n/g, '\n').replace(/\u00a0/g, ' ').trim();
-        if (!text) return;
-        const newPre = document.createElement('pre');
-        newPre.className = 'mermaid';
-        newPre.textContent = text;
-        pre.parentElement.replaceChild(newPre, pre);
-    });
-
-    return temp.innerHTML;
 }
 
 function waitForMermaid(callback) {
@@ -187,7 +168,7 @@ async function loadTimeline() {
 
         const ownerLogin = repoName.split('/')[0];
         const ownerComments = comments
-            .filter(c => c.user.login === ownerLogin)
+            .filter(c => c.author_association === 'OWNER')
             .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
         if (ownerComments.length === 0) {
@@ -199,8 +180,9 @@ async function loadTimeline() {
         ownerComments.forEach(comment => {
             const article = document.createElement('article');
             article.className = 'talk-entry';
-            let bodyHtml = marked.parse(comment.body || '', {breaks: true});
-            bodyHtml = processMermaid(bodyHtml);
+            let bodyMd = comment.body || '';
+            bodyMd = preprocessMermaid(bodyMd);
+            let bodyHtml = marked.parse(bodyMd, {breaks: true});
             article.innerHTML = `
                 <div class="talk-entry-dot"></div>
                 <div class="talk-entry-main">
