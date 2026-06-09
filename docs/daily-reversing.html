@@ -47,7 +47,7 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 .talk-entry:last-child{margin-bottom:0;}
 .talk-entry-dot{position:absolute;left:-32px;top:5px;width:12px;height:12px;border-radius:999px;background:var(--color-accent-fg);box-shadow:0 0 0 4px var(--color-canvas-default);}
 .talk-entry-time{display:block;margin-bottom:10px;font-size:12px;font-weight:600;letter-spacing:.04em;color:var(--color-fg-muted);}
-.talk-entry-body{padding:18px 20px;border:1px solid var(--color-border-default);border-radius:14px;background:var(--color-canvas-subtle);}
+.talk-entry-body{padding:14px 16px;border:1px solid var(--color-border-default);border-radius:14px;background:var(--color-canvas-subtle);font-size:14px;line-height:1.4;}
 .talk-entry-body>:first-child{margin-top:0;}
 .talk-entry-body>:last-child{margin-bottom:0;}
 .talks-empty{margin:0;color:var(--color-fg-muted);}
@@ -143,13 +143,29 @@ function formatTime(isoString) {
 function processMermaid(html) {
     const temp = document.createElement('div');
     temp.innerHTML = html;
-    temp.querySelectorAll('pre > code.language-mermaid').forEach(code => {
-        const pre = code.parentElement;
-        const div = document.createElement('div');
-        div.className = 'mermaid';
-        div.textContent = code.textContent.replace(/\r\n/g, '\n').replace(/\u00a0/g, ' ').trim();
-        pre.parentElement.replaceChild(div, pre);
+
+    // 处理 <div class="highlight highlight-source-mermaid"><pre>...</pre></div>
+    temp.querySelectorAll('div.highlight.highlight-source-mermaid > pre').forEach(pre => {
+        const wrapper = pre.parentElement;
+        const text = pre.textContent.replace(/\r\n/g, '\n').replace(/\u00a0/g, ' ').trim();
+        if (!text) return;
+        const newPre = document.createElement('pre');
+        newPre.className = 'mermaid';
+        newPre.textContent = text;
+        wrapper.parentElement.replaceChild(newPre, wrapper);
     });
+
+    // 处理 <pre><code class="language-mermaid">...</code></pre> 和 <pre><code class="mermaid">...</code></pre>
+    temp.querySelectorAll('pre > code.language-mermaid, pre > code.mermaid').forEach(code => {
+        const pre = code.parentElement;
+        const text = code.textContent.replace(/\r\n/g, '\n').replace(/\u00a0/g, ' ').trim();
+        if (!text) return;
+        const newPre = document.createElement('pre');
+        newPre.className = 'mermaid';
+        newPre.textContent = text;
+        pre.parentElement.replaceChild(newPre, pre);
+    });
+
     return temp.innerHTML;
 }
 
