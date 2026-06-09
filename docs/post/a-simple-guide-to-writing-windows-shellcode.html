@@ -109,33 +109,33 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 <p>The <a href="https://en.wikipedia.org/wiki/Win32_Thread_Information_Block" rel="nofollow">TEB (Thread Environment Block)</a> structure contains thread information in user mode. On 32-bit systems, we can use the <code class="notranslate">FS</code> register to find the address of the <a href="https://en.wikipedia.org/wiki/Process_Environment_Block" rel="nofollow">PEB (Process Environment Block)</a> at offset <code class="notranslate">0x30</code>.</p>
 <p><code class="notranslate">PEB.ldr</code> points to the <code class="notranslate">PEB_LDR_DATA</code> structure, which contains information about the loaded modules, including the base addresses of <code class="notranslate">kernel32</code> and <code class="notranslate">ntdll</code>.</p>
 <div class="highlight highlight-source-c++"><pre class="notranslate"><span class="pl-k">typedef</span> <span class="pl-k">struct</span> <span class="pl-en">_PEB_LDR_DATA</span> {
-  BYTE       Reserved1[<span class="pl-c1">8</span>];
-  PVOID      Reserved2[<span class="pl-c1">3</span>];
-  LIST_ENTRY InMemoryOrderModuleList;
-} PEB_LDR_DATA, *PPEB_LDR_DATA;</pre></div>
+  <span class="pl-c1">BYTE</span>       Reserved1[<span class="pl-c1">8</span>];
+  <span class="pl-c1">PVOID</span>      Reserved2[<span class="pl-c1">3</span>];
+  <span class="pl-c1">LIST_ENTRY</span> InMemoryOrderModuleList;
+} <span class="pl-c1">PEB_LDR_DATA</span>, *<span class="pl-c1">PPEB_LDR_DATA</span>;</pre></div>
 <p><code class="notranslate">PEB_LDR_DATA.InMemoryOrderModuleList</code> contains the head of a doubly linked list of the modules loaded in the process. Each entry in the list is a pointer to an <code class="notranslate">LDR_DATA_TABLE_ENTRY</code> structure.</p>
 <div class="highlight highlight-source-c++"><pre class="notranslate"><span class="pl-k">typedef</span> <span class="pl-k">struct</span> <span class="pl-en">_LIST_ENTRY</span>
 {
-     PLIST_ENTRY Flink;
-     PLIST_ENTRY Blink;
-} LIST_ENTRY, *PLIST_ENTRY;</pre></div>
+     <span class="pl-c1">PLIST_ENTRY</span> Flink;
+     <span class="pl-c1">PLIST_ENTRY</span> Blink;
+} <span class="pl-c1">LIST_ENTRY</span>, *<span class="pl-c1">PLIST_ENTRY</span>;</pre></div>
 <p>Information about the loaded DLL in <code class="notranslate">LDR_DATA_TABLE_ENTRY</code>:</p>
 <div class="highlight highlight-source-c++"><pre class="notranslate"><span class="pl-k">typedef</span> <span class="pl-k">struct</span> <span class="pl-en">_LDR_DATA_TABLE_ENTRY</span> {
-    PVOID Reserved1[<span class="pl-c1">2</span>];
-    LIST_ENTRY InMemoryOrderLinks;
-    PVOID Reserved2[<span class="pl-c1">2</span>];
-    PVOID DllBase;
-    PVOID EntryPoint;
-    PVOID Reserved3;
-    UNICODE_STRING FullDllName;
-    BYTE Reserved4[<span class="pl-c1">8</span>];
-    PVOID Reserved5[<span class="pl-c1">3</span>];
+    <span class="pl-c1">PVOID</span> Reserved1[<span class="pl-c1">2</span>];
+    <span class="pl-c1">LIST_ENTRY</span> InMemoryOrderLinks;
+    <span class="pl-c1">PVOID</span> Reserved2[<span class="pl-c1">2</span>];
+    <span class="pl-c1">PVOID</span> DllBase;
+    <span class="pl-c1">PVOID</span> EntryPoint;
+    <span class="pl-c1">PVOID</span> Reserved3;
+    <span class="pl-c1">UNICODE_STRING</span> FullDllName;
+    <span class="pl-c1">BYTE</span> Reserved4[<span class="pl-c1">8</span>];
+    <span class="pl-c1">PVOID</span> Reserved5[<span class="pl-c1">3</span>];
     <span class="pl-k">union</span> {
-        ULONG CheckSum;
-        PVOID Reserved6;
+        <span class="pl-c1">ULONG</span> CheckSum;
+        <span class="pl-c1">PVOID</span> Reserved6;
     };
-    ULONG TimeDateStamp;
-} LDR_DATA_TABLE_ENTRY, *PLDR_DATA_TABLE_ENTRY;</pre></div>
+    <span class="pl-c1">ULONG</span> TimeDateStamp;
+} <span class="pl-c1">LDR_DATA_TABLE_ENTRY</span>, *<span class="pl-c1">PLDR_DATA_TABLE_ENTRY</span>;</pre></div>
 <blockquote>
 <p><strong>Tips:</strong><br>
 In Windows versions prior to Vista, the first two DLLs in <code class="notranslate">InInitializationOrderModuleList</code> are <code class="notranslate">ntdll.dll</code> and <code class="notranslate">kernel32.dll</code>, but for Vista and later versions, the second DLL is changed to <code class="notranslate">kernelbase.dll</code>.<br>
@@ -158,18 +158,18 @@ In <code class="notranslate">InMemoryOrderModuleLis</code>t, the first entry is 
 </blockquote>
 <p><code class="notranslate">ImageOptionalHeader32.DataDirectory[0].VirtualAddress</code> points to the Export Table RVA. The structure of the Export Table is as follows:</p>
 <div class="highlight highlight-source-c++"><pre class="notranslate"><span class="pl-k">typedef</span> <span class="pl-k">struct</span> <span class="pl-en">_IMAGE_EXPORT_DIRECTORY</span> {
-    DWORD   Characteristics;
-    DWORD   TimeDateStamp;      <span class="pl-c"><span class="pl-c">//</span> Timestamp</span>
-    WORD    MajorVersion;
-    WORD    MinorVersion;
-    DWORD   Name;               <span class="pl-c"><span class="pl-c">//</span> Pointer to the export table's filename string</span>
-    DWORD   Base;               <span class="pl-c"><span class="pl-c">//</span> Starting ordinal of the export table</span>
-    DWORD   NumberOfFunctions;  <span class="pl-c"><span class="pl-c">//</span> Number of exported functions (more accurately, the number of elements in AddressOfFunctions, not the number of functions)</span>
-    DWORD   NumberOfNames;      <span class="pl-c"><span class="pl-c">//</span> Number of functions exported by name</span>
-    DWORD   AddressOfFunctions;     <span class="pl-c"><span class="pl-c">//</span> Exported function address table RVA: stores the addresses of all exported functions (table element width is 4, total size is NumberOfFunctions * 4)</span>
-    DWORD   AddressOfNames;         <span class="pl-c"><span class="pl-c">//</span> Exported function names table RVA: stores the addresses of function name strings (table element width is 4, total size is NumberOfNames * 4)</span>
-    DWORD   AddressOfNameOrdinals;  <span class="pl-c"><span class="pl-c">//</span> Exported function ordinal table RVA: stores the function ordinals (table element width is 2, total size is NumberOfNames * 2)</span>
-} IMAGE_EXPORT_DIRECTORY, *PIMAGE_EXPORT_DIRECTORY;</pre></div>
+    <span class="pl-c1">DWORD</span>   Characteristics;
+    <span class="pl-c1">DWORD</span>   TimeDateStamp;      <span class="pl-c"><span class="pl-c">//</span> Timestamp</span>
+    <span class="pl-c1">WORD</span>    MajorVersion;
+    <span class="pl-c1">WORD</span>    MinorVersion;
+    <span class="pl-c1">DWORD</span>   Name;               <span class="pl-c"><span class="pl-c">//</span> Pointer to the export table's filename string</span>
+    <span class="pl-c1">DWORD</span>   Base;               <span class="pl-c"><span class="pl-c">//</span> Starting ordinal of the export table</span>
+    <span class="pl-c1">DWORD</span>   NumberOfFunctions;  <span class="pl-c"><span class="pl-c">//</span> Number of exported functions (more accurately, the number of elements in AddressOfFunctions, not the number of functions)</span>
+    <span class="pl-c1">DWORD</span>   NumberOfNames;      <span class="pl-c"><span class="pl-c">//</span> Number of functions exported by name</span>
+    <span class="pl-c1">DWORD</span>   AddressOfFunctions;     <span class="pl-c"><span class="pl-c">//</span> Exported function address table RVA: stores the addresses of all exported functions (table element width is 4, total size is NumberOfFunctions * 4)</span>
+    <span class="pl-c1">DWORD</span>   AddressOfNames;         <span class="pl-c"><span class="pl-c">//</span> Exported function names table RVA: stores the addresses of function name strings (table element width is 4, total size is NumberOfNames * 4)</span>
+    <span class="pl-c1">DWORD</span>   AddressOfNameOrdinals;  <span class="pl-c"><span class="pl-c">//</span> Exported function ordinal table RVA: stores the function ordinals (table element width is 2, total size is NumberOfNames * 2)</span>
+} <span class="pl-c1">IMAGE_EXPORT_DIRECTORY</span>, *<span class="pl-c1">PIMAGE_EXPORT_DIRECTORY</span>;</pre></div>
 <p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/a0a43d0e-ab05-4793-a286-67a287e13a94"><img src="https://github.com/user-attachments/assets/a0a43d0e-ab05-4793-a286-67a287e13a94" alt="image" style="max-width: 100%;"></a></p>
 <p>Implementing with Assembly Code:</p>
 <div class="highlight highlight-source-assembly"><pre class="notranslate"><span class="pl-c">;; Find PE export table</span>
@@ -220,16 +220,16 @@ In <code class="notranslate">InMemoryOrderModuleLis</code>t, the first entry is 
     __asm {
         ; Find where kernel32.<span class="pl-smi">dll</span> is loaded into memory
         <span class="pl-k">xor</span> ecx, ecx
-        mov ebx, fs:[ecx + <span class="pl-c1">0x30</span>]    ; *ebx = PEB base address
-        mov ebx, [ebx+<span class="pl-c1">0x0c</span>]         ; ebx = PEB.<span class="pl-smi">Ldr</span>
-        mov esi, [ebx+<span class="pl-c1">0x14</span>]         ; ebx = PEB.<span class="pl-smi">Ldr</span>.<span class="pl-smi">InMemoryOrderModuleList</span>
+        mov ebx, fs:[ecx + <span class="pl-c1">0x30</span>]    ; *ebx = <span class="pl-c1">PEB</span> base address
+        mov ebx, [ebx+<span class="pl-c1">0x0c</span>]         ; ebx = <span class="pl-c1">PEB</span>.<span class="pl-smi">Ldr</span>
+        mov esi, [ebx+<span class="pl-c1">0x14</span>]         ; ebx = <span class="pl-c1">PEB</span>.<span class="pl-smi">Ldr</span>.<span class="pl-smi">InMemoryOrderModuleList</span>
         lodsd                       ; eax = Second <span class="pl-k">module</span>
         xchg eax, esi               ; eax = esi, esi = eax
         lodsd                       ; eax = <span class="pl-c1">Third</span>(kernel32)
         mov ebx, [eax + <span class="pl-c1">0x10</span>]       ; ebx = dll Base address
 
-        ;; Find PE <span class="pl-k">export</span> table
-        mov edx, [ebx + <span class="pl-c1">0x3c</span>]   ; Find the e_lfanew offset in the DOS header
+        ;; Find <span class="pl-c1">PE</span> <span class="pl-k">export</span> table
+        mov edx, [ebx + <span class="pl-c1">0x3c</span>]   ; Find the e_lfanew offset in the <span class="pl-c1">DOS</span> header
         add edx, ebx            ; edx =  pe header
         mov edx, [edx + <span class="pl-c1">0x78</span>]   ; edx = offset <span class="pl-k">export</span> table
         add edx, ebx            ; edx = <span class="pl-k">export</span> table
@@ -240,7 +240,7 @@ In <code class="notranslate">InMemoryOrderModuleLis</code>t, the first entry is 
         <span class="pl-k">xor</span> ecx, ecx
         Get_Function:
             inc ecx                         ; ecx++
-            lodsd                           ; eax = Next function name string RVA
+            lodsd                           ; eax = Next function name string <span class="pl-c1">RVA</span>
             add eax, ebx                    ; eax = Function name string pointer
             cmp dword ptr[eax], <span class="pl-c1">0x456E6957</span>  ; eax[<span class="pl-c1">0</span>:<span class="pl-c1">4</span>] == EniW
             jnz Get_Function
@@ -267,7 +267,7 @@ In <code class="notranslate">InMemoryOrderModuleLis</code>t, the first entry is 
         push <span class="pl-c1">0x6f646e69</span>
         push <span class="pl-c1">0x575c3a43</span>
         mov esi, esp    ; esi = <span class="pl-s"><span class="pl-pds">"</span>C:<span class="pl-cce">\\</span>Windows<span class="pl-cce">\\</span>System32<span class="pl-cce">\\</span>calc.exe<span class="pl-pds">"</span></span>
-        push <span class="pl-c1">10</span>         ; window state SW_SHOWDEFAULT
+        push <span class="pl-c1">10</span>         ; window state <span class="pl-c1">SW_SHOWDEFAULT</span>
         push esi        ; <span class="pl-s"><span class="pl-pds">"</span>C:<span class="pl-cce">\\</span>Windows<span class="pl-cce">\\</span>System32<span class="pl-cce">\\</span>calc.exe<span class="pl-pds">"</span></span>
         call edx        ; <span class="pl-c1">WinExec</span>(esi, <span class="pl-c1">10</span>)
 

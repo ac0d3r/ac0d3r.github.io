@@ -152,7 +152,7 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 
 - (<span class="pl-k">void</span>)<span class="pl-en">startRecording</span> {
   [<span class="pl-c1">self</span>.s <span class="pl-c1">startRunning</span>];
-  <span class="pl-c1">NSString</span> *path = [<span class="pl-c1">NSString</span> <span class="pl-c1">stringWithFormat:</span><span class="pl-s"><span class="pl-pds">@"</span><span class="pl-c1">%s</span><span class="pl-pds">"</span></span>, PATH];
+  <span class="pl-c1">NSString</span> *path = [<span class="pl-c1">NSString</span> <span class="pl-c1">stringWithFormat:</span><span class="pl-s"><span class="pl-pds">@"</span><span class="pl-c1">%s</span><span class="pl-pds">"</span></span>, <span class="pl-c1">PATH</span>];
   [<span class="pl-c1">self</span>.output <span class="pl-c1">startRecordingToOutputFileURL:</span>[<span class="pl-c1">NSURL</span> <span class="pl-c1">fileURLWithPath:</span>path]
                            <span class="pl-c1">recordingDelegate:</span><span class="pl-c1">self</span>];
   <span class="pl-c1">NSLog</span>(<span class="pl-s"><span class="pl-pds">@"</span>Recording started<span class="pl-pds">"</span></span>);
@@ -183,7 +183,7 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
   @autoreleasepool {
     Recorder *ar = [[Recorder <span class="pl-c1">alloc</span>] <span class="pl-c1">init</span>];
     [ar <span class="pl-c1">startRecording</span>];
-    [<span class="pl-c1">NSThread</span> <span class="pl-c1">sleepForTimeInterval:</span>INTERVAL];
+    [<span class="pl-c1">NSThread</span> <span class="pl-c1">sleepForTimeInterval:</span><span class="pl-c1">INTERVAL</span>];
     [ar <span class="pl-c1">stopRecording</span>];
     [[<span class="pl-c1">NSRunLoop</span> <span class="pl-c1">currentRunLoop</span>]
         <span class="pl-c1">runUntilDate:</span>[<span class="pl-c1">NSDate</span> <span class="pl-c1">dateWithTimeIntervalSinceNow:</span><span class="pl-c1">1.0</span>]];

@@ -483,7 +483,7 @@ real_isEqualToString = <span class="pl-c1">method_setImplementation</span>(
   @autoreleasepool {
     <span class="pl-c1">NSLog</span>(<span class="pl-s"><span class="pl-pds">@"</span>pid -&gt; <span class="pl-c1">%d</span><span class="pl-pds">"</span></span>, <span class="pl-c1">getpid</span>());
     <span class="pl-c"><span class="pl-c">//</span> create TEST instrance</span>
-    TEST *t = [[TEST <span class="pl-c1">alloc</span>] <span class="pl-c1">init</span>];
+    <span class="pl-c1">TEST</span> *t = [[<span class="pl-c1">TEST</span> <span class="pl-c1">alloc</span>] <span class="pl-c1">init</span>];
     <span class="pl-k">while</span> (<span class="pl-c1">YES</span>) {}
   }
   <span class="pl-k">return</span> <span class="pl-c1">0</span>;
@@ -526,7 +526,7 @@ real_isEqualToString = <span class="pl-c1">method_setImplementation</span>(
 
     isa = (<span class="pl-c1">uintptr_t</span> *)address[<span class="pl-c1">0</span>];
 #<span class="pl-k">ifdef</span> OBJC_ISA_MASK
-    isa = (<span class="pl-c1">uintptr_t</span> *)((<span class="pl-k">unsigned</span> <span class="pl-k">long</span> <span class="pl-k">long</span>)isa &amp; OBJC_ISA_MASK);
+    isa = (<span class="pl-c1">uintptr_t</span> *)((<span class="pl-k">unsigned</span> <span class="pl-k">long</span> <span class="pl-k">long</span>)isa &amp; <span class="pl-c1">OBJC_ISA_MASK</span>);
 #<span class="pl-k">endif</span>
 
     <span class="pl-k">if</span> (isa &gt; <span class="pl-c1">0</span> &amp;&amp; range-&gt;<span class="pl-smi">size</span> &gt;= <span class="pl-k">sizeof</span>(<span class="pl-c1">Class</span>) &amp;&amp; cls == (<span class="pl-c1">Class</span>)isa) {
@@ -543,7 +543,7 @@ real_isEqualToString = <span class="pl-c1">method_setImplementation</span>(
 
 <span class="pl-k">static</span> <span class="pl-k">void</span> <span class="pl-en">__attribute__</span>((constructor)) initialize(<span class="pl-k">void</span>) {
   @autoreleasepool {
-    cls = <span class="pl-c1">NSClassFromString</span>([<span class="pl-c1">NSString</span> <span class="pl-c1">stringWithFormat:</span><span class="pl-s"><span class="pl-pds">@"</span><span class="pl-c1">%s</span><span class="pl-pds">"</span></span>, CLASS]);
+    cls = <span class="pl-c1">NSClassFromString</span>([<span class="pl-c1">NSString</span> <span class="pl-c1">stringWithFormat:</span><span class="pl-s"><span class="pl-pds">@"</span><span class="pl-c1">%s</span><span class="pl-pds">"</span></span>, <span class="pl-c1">CLASS</span>]);
     <span class="pl-k">if</span> (cls == <span class="pl-c1">Nil</span>) {
 #<span class="pl-k">ifdef</span> DEBUG
       <span class="pl-c1">printf</span>(<span class="pl-s"><span class="pl-pds">"</span>[-] Class not found<span class="pl-cce">\n</span><span class="pl-pds">"</span></span>);
@@ -567,14 +567,14 @@ real_isEqualToString = <span class="pl-c1">method_setImplementation</span>(
     <span class="pl-k">unsigned</span> count, i = <span class="pl-c1">0</span>;
     <span class="pl-c1">kern_return_t</span> r =
         <span class="pl-c1">malloc_get_all_zones</span>(<span class="pl-c1">mach_task_self</span>(), <span class="pl-c1">NULL</span>, &amp;zones, &amp;count);
-    <span class="pl-k">if</span> (r == KERN_SUCCESS) {
+    <span class="pl-k">if</span> (r == <span class="pl-c1">KERN_SUCCESS</span>) {
       <span class="pl-k">for</span> (i = <span class="pl-c1">0</span>; i &lt; count; i++) {
         <span class="pl-c1">vm_address_t</span> zone_address = zones[i];
         <span class="pl-c1">malloc_zone_t</span> *zone = (<span class="pl-c1">malloc_zone_t</span> *)zone_address;
 
         <span class="pl-k">if</span> (zone != <span class="pl-c1">NULL</span> &amp;&amp; zone-&gt;<span class="pl-smi">introspect</span> != <span class="pl-c1">NULL</span>) {
           zone-&gt;<span class="pl-smi">introspect</span>-&gt;<span class="pl-c1">enumerator</span>(<span class="pl-c1">mach_task_self</span>(), <span class="pl-c1">NULL</span>,
-                                       MALLOC_PTR_IN_USE_RANGE_TYPE,
+                                       <span class="pl-c1">MALLOC_PTR_IN_USE_RANGE_TYPE</span>,
                                        zone_address, <span class="pl-c1">NULL</span>, &amp;CanHasObjects);
         }
       }
