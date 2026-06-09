@@ -80,33 +80,13 @@ function formatTime(isoString) {
     return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
-function processMermaid(html) {
-    const temp = document.createElement('div');
-    temp.innerHTML = html;
-
-    // 处理 <div class="highlight highlight-source-mermaid"><pre>...</pre></div>
-    temp.querySelectorAll('div.highlight.highlight-source-mermaid > pre').forEach(pre => {
-        const wrapper = pre.parentElement;
-        const text = pre.textContent.replace(/\r\n/g, '\n').replace(/\u00a0/g, ' ').trim();
-        if (!text) return;
-        const newPre = document.createElement('pre');
-        newPre.className = 'mermaid';
-        newPre.textContent = text;
-        wrapper.parentElement.replaceChild(newPre, wrapper);
+function preprocessMermaid(md) {
+    return md.replace(/```mermaid\s*\n([\s\S]*?)\n```/g, (_, code) => {
+        const text = code.replace(/\r\n/g, '\n').replace(/\u00a0/g, ' ').trim();
+        if (!text) return '';
+        const esc = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        return `<pre class="mermaid">${esc}</pre>`;
     });
-
-    // 处理 <pre><code class="language-mermaid">...</code></pre> 和 <pre><code class="mermaid">...</code></pre>
-    temp.querySelectorAll('pre > code.language-mermaid, pre > code.mermaid').forEach(code => {
-        const pre = code.parentElement;
-        const text = code.textContent.replace(/\r\n/g, '\n').replace(/\u00a0/g, ' ').trim();
-        if (!text) return;
-        const newPre = document.createElement('pre');
-        newPre.className = 'mermaid';
-        newPre.textContent = text;
-        pre.parentElement.replaceChild(newPre, pre);
-    });
-
-    return temp.innerHTML;
 }
 
 function waitForMermaid(callback) {
@@ -127,7 +107,7 @@ async function loadTimeline() {
 
         const ownerLogin = repoName.split('/')[0];
         const ownerComments = comments
-            .filter(c => c.user.login === ownerLogin)
+            .filter(c => c.author_association === 'OWNER')
             .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
         if (ownerComments.length === 0) {
@@ -139,8 +119,9 @@ async function loadTimeline() {
         ownerComments.forEach(comment => {
             const article = document.createElement('article');
             article.className = 'talk-entry';
-            let bodyHtml = marked.parse(comment.body || '', {breaks: true});
-            bodyHtml = processMermaid(bodyHtml);
+            let bodyMd = comment.body || '';
+            bodyMd = preprocessMermaid(bodyMd);
+            let bodyHtml = marked.parse(bodyMd, {breaks: true});
             article.innerHTML = `
                 <div class="talk-entry-dot"></div>
                 <div class="talk-entry-main">
