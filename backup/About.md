@@ -2,11 +2,13 @@
 
 ## Open Source Projects
 
-- [machbox](https://github.com/ac0d3r/machbox)｜A native, lightweight, single-binary malware analysis sandbox for macOS. <img src="https://img.shields.io/github/stars/ac0d3r/machbox?logo=github" height="18">
+- [machbox](https://github.com/ac0d3r/machbox)｜A native, lightweight malware analysis sandbox for macOS. <img src="https://img.shields.io/github/stars/ac0d3r/machbox?logo=github" height="18">
 - [Hyuga](https://github.com/ac0d3r/Hyuga)｜A tool for monitoring Out-of-Band (OOB) traffic, supporting DNS, HTTP, LDAP, RMI, and DNS-Rebinding. <img src="https://img.shields.io/github/stars/ac0d3r/Hyuga?logo=github" height="18">
 - [xssfinder](https://github.com/ac0d3r/xssfinder)｜A tool for detecting DOM-Based XSS using taint analysis, based on Chrome Headless for dynamic semantic analysis of JavaScript. <img src="https://img.shields.io/github/stars/ac0d3r/xssfinder?logo=github" height="18">
 - [TrollAppDuplicator](https://github.com/BreakOnCrash/TrollAppDuplicator) | iOS App duplicator for TrollStore <img src="https://img.shields.io/github/stars/BreakOnCrash/TrollAppDuplicator?logo=github" height="18">
 - [go-embed-extractor](https://github.com/BreakOnCrash/go-embed-extractor)｜Extracting Go embeds <img src="https://img.shields.io/github/stars/BreakOnCrash/go-embed-extractor?logo=github" height="18">
+- [inx](https://github.com/BreakOnCrash/inx)｜Inject `.dylib` into target process (like Frida) on macOS <img src="https://img.shields.io/github/stars/BreakOnCrash/inx?logo=github" height="18">
+
 
 ### PR
 - [Tencent/AI-Infra-Guard](https://github.com/Tencent/AI-Infra-Guard/pulls?q=is%3Apr+is%3Aclosed+author%3Aac0d3r) <img src="https://img.shields.io/github/stars/Tencent/AI-Infra-Guard?logo=github" height="18"> <a href="https://www.blackhat.com/eu-25/arsenal/schedule/index.html#aigai-infra-guard-48381" target="_blank"><img src="https://github.com/user-attachments/assets/2b86faa4-6efa-4269-a48d-91e46faeac21" height="30"></a>
@@ -84,11 +86,9 @@
 </table>
 
 ## Toy program
-- [inx](https://github.com/BreakOnCrash/inx)｜Inject *.dylib into target process (like Frida) on macOS (arm64 and x86_64) 💉
 - [TrollR2ool](https://github.com/BreakOnCrash/TrollR2ool) | iOS Runtime analysis tool 🧌
 - [pinger](https://github.com/ac0d3r/pingser) - Transfer custom messages via `ICMP`.
 - [go-symbolic-execution](https://github.com/BreakOnCrash/go-symbolic-execution) | Go white-box symbolic execution demo 👨🏻‍💻
-- [fbuzzer](https://github.com/BreakOnCrash/fbuzzer) | A Frida-based toy in-process fuzzer
 ---
 - [Rua](https://github.com/ac0d3r/nicu?tab=readme-ov-file#rua) - Generate a <img src="https://user-images.githubusercontent.com/26270009/149051761-21e0e181-534d-458a-ad63-5c8963eda447.gif" height="30">(rua.gif) from any avatar.
 - [gf.imipy.com](https://gf.imipy.com/) - Today's meal picker 🥣
