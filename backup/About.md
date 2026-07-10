@@ -33,6 +33,11 @@
     <td>DoS</td>
   </tr>
   <tr>
+    <td>CVE-2026-44419<br>GHSA-rrfw-c42p-mjp4</td>
+    <td><a href="https://github.com/onyx-dot-app/onyx">Onyx</a> <img src="https://img.shields.io/github/stars/onyx-dot-app/onyx?logo=github" height="18"></td>
+    <td>DoS, SSRF</td>
+  </tr>
+  <tr>
     <td>CVE-2025-15453</td>
     <td><a href="https://github.com/milvus-io/milvus">milvus</a> <img src="https://img.shields.io/github/stars/milvus-io/milvus?logo=github" height="18"></td>
     <td>REE, (By 0x1f and ac0d3r)</td>
