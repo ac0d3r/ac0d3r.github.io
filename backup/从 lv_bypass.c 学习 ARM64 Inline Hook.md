@@ -1,6 +1,5 @@
 说明：_本文基于 `lv_bypass.c` 与实机 hook 日志整理，部分表述与图示由 AI 辅助生成；技术结论以源码与实测为准。_
 
----
 
 ## Inline Hook
 Inline hook 的核心很简单：改目标函数开头几条指令，让执行流跳到你的函数。直接改代码段，对静态链接、内部调用、dyld 内部函数同样有效。
@@ -44,6 +43,14 @@ static const char patch[] = {0x88, 0x00, 0x00, 0x58,  // #0  ldr x8, #0x10  # �
 代价是覆盖函数原始指令，且本实现没有保存被覆盖的原指令——调用原函数靠事先保存的函数指针（如 `__fcntl`/`__mmap`）。
 
 - 搜索指令
+
+```c
+static const char mmapSig[] = {0xB0, 0x18, 0x80, 0xD2,  // mov x16, #0xc5
+                               0x01, 0x10, 0x00, 0xD4}; // svc #0x80
+static const char fcntlSig[] = {0x90, 0x0B, 0x80, 0xD2, // mov x16, #0x5c
+                               0x01, 0x10, 0x00, 0xD4}; // svc #0x80
+```
+在 dyld 镜像中遍历 mmap 和 fcntl 的汇编指令，找到后对该地址做patch：
 ```c
 char *dyldBase = (char *)_alt_dyld_get_all_image_infos()->dyldImageLoadAddress; // 获得 dyld 镜像基址
 searchAndPatch("dyld_mmap", dyldBase, mmapSig, sizeof(mmapSig), hooked_mmap);
@@ -62,14 +69,6 @@ static bool searchAndPatch(char *name, char *base, const char *signature,
   ...
   return redirectFunction(name, patchAddr, target);
 }
-```
-
-在 dyld 镜像中遍历 mmap 和 fcntl 的汇编指令，找到后对该地址做patch
-```c
-static const char mmapSig[] = {0xB0, 0x18, 0x80, 0xD2,  // mov x16, #0xc5
-                               0x01, 0x10, 0x00, 0xD4}; // svc #0x80
-static const char fcntlSig[] = {0x90, 0x0B, 0x80, 0xD2, // mov x16, #0x5c
-                               0x01, 0x10, 0x00, 0xD4}; // svc #0x80
 ```
 
 - patch
@@ -135,7 +134,7 @@ static int hooked___fcntl(int fildes, int cmd, void *param) {
 
 ```
 
-忽略“Catalyst/模拟器”下的情况：
+忽略“Catalyst/Simulator”下的情况：
 - `F_ADDFILESIGS_RETURN`：先走原 `fcntl`（尝试挂签名），再改结构体里返回的 offset 相关字段（`fs_file_start = 0xFFFFFFFF`），并 `return 0`，让调用方以为挂签成功且范围足够。
 - `F_CHECK_LV`：仍可调用原 `fcntl`，但无论结果如何都 `return 0`，即告诉 dyld「LV 允许映射」。
 
