@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html data-color-mode="light" data-dark-theme="dark" data-light-theme="light" lang="en">
+<head>
+    <meta content="text/html; charset=utf-8" http-equiv="content-type" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <link href='https://mirrors.sustech.edu.cn/cdnjs/ajax/libs/Primer/21.0.7/primer.css' rel='stylesheet' />
+    
+    <link rel="icon" href="/imgs/avatar.png"><script>
+        let theme = localStorage.getItem("meek_theme") || "light";
+        document.documentElement.setAttribute("data-color-mode", theme);
+    </script>
+<meta name="description" content="说明：_本文基于 `lv_bypass.">
+<meta property="og:title" content="从 lv_bypass.c 学习 arm64 Iinline hook">
+<meta property="og:description" content="说明：_本文基于 `lv_bypass.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://blog.imipy.com/post/%E4%BB%8E-lv_bypass.c-%E5%AD%A6%E4%B9%A0-arm64-iinline-hook.html">
+<meta property="og:image" content="/imgs/avatar.png">
+<title>从 lv_bypass.c 学习 arm64 Iinline hook</title>
+<link href="//unpkg.com/@wooorm/starry-night@2.1.1/style/both.css" rel="stylesheet" />
+
+
+</head>
+<style>
+body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;padding: 45px;font-size: 16px;font-family: sans-serif;line-height: 1.25;}
+#header{display:flex;padding-bottom:8px;border-bottom: 1px solid var(--borderColor-muted, var(--color-border-muted));margin-bottom: 16px;}
+#footer {margin-top:64px; text-align: center;font-size: small;}
+.mermaid{width:100%;min-height:520px;height:70vh;overflow:hidden;}
+.mermaid svg{width:100%;height:100%;display:block;}
+
+</style>
+
+<style>
+.postTitle{margin: auto 0;font-size:40px;font-weight:bold;}
+.title-right{display:flex;margin:auto 0 0 auto;}
+.title-right .circle{padding: 14px 16px;margin-right:8px;}
+#postBody{border-bottom: 1px solid var(--color-border-default);padding-bottom:36px;}
+#postBody hr{height:2px;}
+#cmButton{height:48px;margin-top:48px;}
+#comments{margin-top:64px;}
+.g-emoji{font-size:24px;}
+@media (max-width: 600px) {
+    body {padding: 8px;}
+    .postTitle{font-size:24px;}
+}
+.copy-feedback {
+    display: none;
+    position: absolute;
+    top: 10px;
+    right: 50px;
+    color: var(--color-fg-on-emphasis);
+    background-color: var(--color-fg-muted);
+    border-radius: 3px;
+    padding: 5px 8px;
+    font-size: 12px;
+}
+</style>
+
+
+
+
+<body>
+    <div id="header">
+<h1 class="postTitle">从 lv_bypass.c 学习 arm64 Iinline hook</h1>
+<div class="title-right">
+    <a href="https://blog.imipy.com" id="buttonHome" class="btn btn-invisible circle" title="home">
+        <svg class="octicon" width="16" height="16">
+            <path id="pathHome" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+
+    <a class="btn btn-invisible circle" onclick="modeSwitch();" title="switch theme">
+        <svg class="octicon" width="16" height="16" >
+            <path id="themeSwitch" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+
+</div>
+</div>
+    <div id="content">
+<div class="markdown-body" id="postBody"><p>说明：<em>本文基于 <code class="notranslate">lv_bypass.c</code> 与实机 hook 日志整理，部分表述与图示由 AI 辅助生成；技术结论以源码与实测为准。</em></p>
+<h2>Inline Hook</h2>
+<p>Inline hook 的核心很简单：改目标函数开头几条指令，让执行流跳到你的函数。直接改代码段，对静态链接、内部调用、dyld 内部函数同样有效。</p>
+<h2>dyld</h2>
+<p>dyld 加载库时会做<code class="notranslate">Library Validation（LV）</code>：</p>
+<ul>
+<li><code class="notranslate">F_ADDFILESIGS_RETURN</code>（97）：从同一文件挂上代码签名；成功时在结构体里返回 end offset</li>
+<li><code class="notranslate">F_CHECK_LV</code>（98）：检查 LV 是否允许把该 Mach-O 映射进当前进程</li>
+</ul>
+<p>未签名/签名不匹配的 dylib 会加载失败。</p>
+<p><code class="notranslate">lv_bypass.c</code> 通过 inline hook 拦截 dyld 中的 <code class="notranslate">mmap/fcntl</code> 路径，从而可以 dlopen 未签名的库：</p>
+<div class="highlight highlight-text-adblock"><pre class="notranslate">dlopen(未签名 dylib)
+          │
+          ▼
+     dyld 内部校验路径
+          │
+          ├─ 内部 fcntl(F_CHECK_LV/ADDFILESIGS) ──inline hook──► hooked___fcntl（放行）
+          │
+          └─ 内部 mmap(PROT_EXEC) ────────────────inline hook──► hooked_mmap（匿名拷贝 + mprotect）
+          │
+          ▼
+     加载成功</pre></div>
+<h2>逐步分析</h2>
+<ul>
+<li>hook 跳板</li>
+</ul>
+<div class="highlight highlight-source-c"><pre class="notranslate"><span class="pl-k">static</span> <span class="pl-k">const</span> <span class="pl-smi">char</span> <span class="pl-s1">patch</span>[] <span class="pl-c1">=</span> {<span class="pl-c1">0x88</span>, <span class="pl-c1">0x00</span>, <span class="pl-c1">0x00</span>, <span class="pl-c1">0x58</span>,  <span class="pl-c">// #0  ldr x8, #0x10  # 从本stub +16 读8字节到 x8</span>
+                             <span class="pl-c1">0x00</span>, <span class="pl-c1">0x01</span>, <span class="pl-c1">0x1f</span>, <span class="pl-c1">0xd6</span>,  <span class="pl-c">// #4  br x8          # 无条件跳到 x8 </span>
+                             <span class="pl-c1">0x1f</span>, <span class="pl-c1">0x20</span>, <span class="pl-c1">0x03</span>, <span class="pl-c1">0xd5</span>,  <span class="pl-c">// #8  nop</span>
+                             <span class="pl-c1">0x1f</span>, <span class="pl-c1">0x20</span>, <span class="pl-c1">0x03</span>, <span class="pl-c1">0xd5</span>,  <span class="pl-c">// #12 nop</span>
+                             <span class="pl-c1">0x41</span>, <span class="pl-c1">0x41</span>, <span class="pl-c1">0x41</span>, <span class="pl-c1">0x41</span>,  <span class="pl-c">// #16 占位            # hook 目标地址（运行时写入）</span>
+                             <span class="pl-c1">0x41</span>, <span class="pl-c1">0x41</span>, <span class="pl-c1">0x41</span>, <span class="pl-c1">0x41</span>};</pre></div>
+<p>这是最经典的绝对跳转：不依赖当前位置相对偏移，任意地址都能跳。<br>
+代价是覆盖函数原始指令，且本实现没有保存被覆盖的原指令——调用原函数靠事先保存的函数指针（如 <code class="notranslate">__fcntl</code>/<code class="notranslate">__mmap</code>）。</p>
+<ul>
+<li>搜索指令</li>
+</ul>
+<div class="highlight highlight-source-c"><pre class="notranslate"><span class="pl-k">static</span> <span class="pl-k">const</span> <span class="pl-smi">char</span> <span class="pl-s1">mmapSig</span>[] <span class="pl-c1">=</span> {<span class="pl-c1">0xB0</span>, <span class="pl-c1">0x18</span>, <span class="pl-c1">0x80</span>, <span class="pl-c1">0xD2</span>,  <span class="pl-c">// mov x16, #0xc5</span>
+                               <span class="pl-c1">0x01</span>, <span class="pl-c1">0x10</span>, <span class="pl-c1">0x00</span>, <span class="pl-c1">0xD4</span>}; <span class="pl-c">// svc #0x80</span>
+<span class="pl-k">static</span> <span class="pl-k">const</span> <span class="pl-smi">char</span> <span class="pl-s1">fcntlSig</span>[] <span class="pl-c1">=</span> {<span class="pl-c1">0x90</span>, <span class="pl-c1">0x0B</span>, <span class="pl-c1">0x80</span>, <span class="pl-c1">0xD2</span>, <span class="pl-c">// mov x16, #0x5c</span>
+                               <span class="pl-c1">0x01</span>, <span class="pl-c1">0x10</span>, <span class="pl-c1">0x00</span>, <span class="pl-c1">0xD4</span>}; <span class="pl-c">// svc #0x80</span></pre></div>
+<p>在 dyld 镜像中遍历 mmap 和 fcntl 的汇编指令，找到后对该地址做patch：</p>
+<div class="highlight highlight-source-c"><pre class="notranslate"><span class="pl-smi">char</span> <span class="pl-c1">*</span><span class="pl-s1">dyldBase</span> <span class="pl-c1">=</span> (<span class="pl-smi">char</span> <span class="pl-c1">*</span>)<span class="pl-en">_alt_dyld_get_all_image_infos</span>()<span class="pl-c1">-&gt;</span><span class="pl-c1">dyldImageLoadAddress</span>; <span class="pl-c">// 获得 dyld 镜像基址</span>
+<span class="pl-en">searchAndPatch</span>(<span class="pl-s">"dyld_mmap"</span>, <span class="pl-s1">dyldBase</span>, <span class="pl-s1">mmapSig</span>, <span class="pl-k">sizeof</span>(<span class="pl-s1">mmapSig</span>), <span class="pl-s1">hooked_mmap</span>);
+<span class="pl-en">searchAndPatch</span>(<span class="pl-s">"dyld_fcntl"</span>, <span class="pl-s1">dyldBase</span>, <span class="pl-s1">fcntlSig</span>, <span class="pl-k">sizeof</span>(<span class="pl-s1">fcntlSig</span>), <span class="pl-s1">hooked___fcntl</span>);
+...
+<span class="pl-k">static</span> <span class="pl-smi">bool</span> <span class="pl-en">searchAndPatch</span>(<span class="pl-smi">char</span> <span class="pl-c1">*</span><span class="pl-s1">name</span>, <span class="pl-smi">char</span> <span class="pl-c1">*</span><span class="pl-s1">base</span>, <span class="pl-k">const</span> <span class="pl-smi">char</span> <span class="pl-c1">*</span><span class="pl-s1">signature</span>,
+                           <span class="pl-smi">int</span> <span class="pl-s1">length</span>, <span class="pl-smi">void</span> <span class="pl-c1">*</span><span class="pl-s1">target</span>) {
+  <span class="pl-smi">char</span> <span class="pl-c1">*</span><span class="pl-s1">patchAddr</span> <span class="pl-c1">=</span> <span class="pl-c1">NULL</span>;
+  <span class="pl-k">for</span> (<span class="pl-smi">int</span> <span class="pl-s1">i</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span>; <span class="pl-s1">i</span> <span class="pl-c1">&lt;</span> <span class="pl-c1">0x80000</span>; <span class="pl-s1">i</span> <span class="pl-c1">+=</span> <span class="pl-c1">4</span>) {
+    <span class="pl-k">if</span> (<span class="pl-s1">base</span>[<span class="pl-s1">i</span>] <span class="pl-c1">==</span> <span class="pl-s1">signature</span>[<span class="pl-c1">0</span>] <span class="pl-c1">&amp;&amp;</span>
+        <span class="pl-en">builtin_memcmp</span>(<span class="pl-s1">base</span> <span class="pl-c1">+</span> <span class="pl-s1">i</span>, <span class="pl-s1">signature</span>, <span class="pl-s1">length</span>) <span class="pl-c1">==</span> <span class="pl-c1">0</span>) {
+      <span class="pl-s1">patchAddr</span> <span class="pl-c1">=</span> <span class="pl-s1">base</span> <span class="pl-c1">+</span> <span class="pl-s1">i</span>;
+      <span class="pl-k">break</span>;
+    }
+  }
+  ...
+  <span class="pl-k">return</span> <span class="pl-en">redirectFunction</span>(<span class="pl-s1">name</span>, <span class="pl-s1">patchAddr</span>, <span class="pl-s1">target</span>);
+}</pre></div>
+<ul>
+<li>patch</li>
+</ul>
+<div class="highlight highlight-source-c"><pre class="notranslate"><span class="pl-k">static</span> <span class="pl-smi">bool</span> <span class="pl-en">redirectFunction</span>(<span class="pl-smi">char</span> <span class="pl-c1">*</span><span class="pl-s1">name</span>, <span class="pl-smi">void</span> <span class="pl-c1">*</span><span class="pl-s1">patchAddr</span>, <span class="pl-smi">void</span> <span class="pl-c1">*</span><span class="pl-s1">target</span>) {
+  <span class="pl-smi">kern_return_t</span> <span class="pl-s1">kret</span> <span class="pl-c1">=</span> <span class="pl-en">builtin_vm_protect</span>(
+      <span class="pl-s1">_mach_task_self_</span>, (<span class="pl-smi">vm_address_t</span>)<span class="pl-s1">patchAddr</span>, <span class="pl-k">sizeof</span>(<span class="pl-s1">patch</span>), false,
+      <span class="pl-c1">PROT_READ</span> | <span class="pl-c1">PROT_WRITE</span> | <span class="pl-c1">VM_PROT_COPY</span>);
+...
+  <span class="pl-en">builtin_memcpy</span>((<span class="pl-smi">char</span> <span class="pl-c1">*</span>)<span class="pl-s1">patchAddr</span>, <span class="pl-s1">patch</span>, <span class="pl-k">sizeof</span>(<span class="pl-s1">patch</span>));
+<span class="pl-k">#if</span> <span class="pl-s1">__arm64e__</span>
+  <span class="pl-c1">*</span>(<span class="pl-smi">void</span> <span class="pl-c1">*</span><span class="pl-c1">*</span>)((<span class="pl-smi">char</span> <span class="pl-c1">*</span>)<span class="pl-s1">patchAddr</span> <span class="pl-c1">+</span> <span class="pl-c1">16</span>) <span class="pl-c1">=</span> <span class="pl-en">__builtin_ptrauth_strip</span>(<span class="pl-s1">target</span>, <span class="pl-c1">0</span>);
+<span class="pl-k">#else</span>
+  <span class="pl-c1">*</span>(<span class="pl-smi">void</span> <span class="pl-c1">*</span><span class="pl-c1">*</span>)((<span class="pl-smi">char</span> <span class="pl-c1">*</span>)<span class="pl-s1">patchAddr</span> <span class="pl-c1">+</span> <span class="pl-c1">16</span>) <span class="pl-c1">=</span> <span class="pl-s1">target</span>;
+<span class="pl-k">#endif</span>
+
+  <span class="pl-s1">kret</span> <span class="pl-c1">=</span> <span class="pl-en">builtin_vm_protect</span>(<span class="pl-s1">_mach_task_self_</span>, (<span class="pl-smi">vm_address_t</span>)<span class="pl-s1">patchAddr</span>,
+                            <span class="pl-k">sizeof</span>(<span class="pl-s1">patch</span>), false, <span class="pl-c1">PROT_READ</span> | <span class="pl-c1">PROT_EXEC</span>);
+...
+}</pre></div>
+<ol>
+<li>先将代码页改成可写：代码页默认 RX，不能直接写 → 先 <code class="notranslate">vm_protect</code> 成 RW。共享映射往往拿不到写权限，所以加上 <code class="notranslate">VM_PROT_COPY</code>（<code class="notranslate">0x10</code>）：把该 entry 标成 needs copy，按 COW 复制对象，并在最大保护里加上写权限，之后才能往本进程私有页上写 stub。</li>
+<li>写入 stub + 目标地址（arm64e：指针带 PAC，写入前用 <code class="notranslate">__builtin_ptrauth_strip</code> 去掉签名）。</li>
+<li>写完立刻改回 RX，否则后续执行会出问题。</li>
+</ol>
+<ul>
+<li>hook_map</li>
+</ul>
+<div class="highlight highlight-source-c"><pre class="notranslate"><span class="pl-k">static</span> <span class="pl-smi">void</span> <span class="pl-c1">*</span><span class="pl-en">hooked_mmap</span>(<span class="pl-smi">void</span> <span class="pl-c1">*</span><span class="pl-s1">addr</span>, <span class="pl-smi">size_t</span> <span class="pl-s1">len</span>, <span class="pl-smi">int</span> <span class="pl-s1">prot</span>, <span class="pl-smi">int</span> <span class="pl-s1">flags</span>, <span class="pl-smi">int</span> <span class="pl-s1">fd</span>, <span class="pl-smi">off_t</span> <span class="pl-s1">offset</span>) {
+  <span class="pl-smi">void</span> <span class="pl-c1">*</span><span class="pl-s1">map</span> <span class="pl-c1">=</span> <span class="pl-en">__mmap</span>(<span class="pl-s1">addr</span>, <span class="pl-s1">len</span>, <span class="pl-s1">prot</span>, <span class="pl-s1">flags</span>, <span class="pl-s1">fd</span>, <span class="pl-s1">offset</span>);
+  <span class="pl-k">if</span> (<span class="pl-s1">map</span> <span class="pl-c1">==</span> <span class="pl-c1">MAP_FAILED</span> <span class="pl-c1">&amp;&amp;</span> <span class="pl-s1">fd</span> <span class="pl-c1">&amp;&amp;</span> (<span class="pl-s1">prot</span> <span class="pl-c1">&amp;</span> <span class="pl-c1">PROT_EXEC</span>)) {
+    <span class="pl-s1">map</span> <span class="pl-c1">=</span> <span class="pl-en">__mmap</span>(<span class="pl-s1">addr</span>, <span class="pl-s1">len</span>, <span class="pl-c1">PROT_READ</span> | <span class="pl-c1">PROT_WRITE</span>,
+                 <span class="pl-s1">flags</span> | <span class="pl-c1">MAP_PRIVATE</span> | <span class="pl-c1">MAP_ANON</span>, <span class="pl-c1">0</span>, <span class="pl-c1">0</span>);
+    <span class="pl-smi">void</span> <span class="pl-c1">*</span><span class="pl-s1">memoryLoadedFile</span> <span class="pl-c1">=</span>
+        <span class="pl-en">__mmap</span>(<span class="pl-c1">NULL</span>, <span class="pl-s1">len</span>, <span class="pl-c1">PROT_READ</span>, <span class="pl-c1">MAP_PRIVATE</span>, <span class="pl-s1">fd</span>, <span class="pl-s1">offset</span>);
+    <span class="pl-en">builtin_memcpy</span>(<span class="pl-s1">map</span>, <span class="pl-s1">memoryLoadedFile</span>, <span class="pl-s1">len</span>);
+    <span class="pl-en">_munmap</span>(<span class="pl-s1">memoryLoadedFile</span>, <span class="pl-s1">len</span>);
+    <span class="pl-en">_mprotect</span>(<span class="pl-s1">map</span>, <span class="pl-s1">len</span>, <span class="pl-s1">prot</span>);
+  }
+  <span class="pl-k">return</span> <span class="pl-s1">map</span>;
+}</pre></div>
+<p>dyld 加载 <code class="notranslate">Mach-O</code> 时，会对 <code class="notranslate">__TEXT</code> 一类段做“从文件映射 + 可执行”的 <code class="notranslate">mmap</code>，权限里带 <code class="notranslate">PROT_EXEC</code>，且 <code class="notranslate">fd</code> 指向那个 dylib。<br>
+内核侧代码签名/AMFI 会约束大致这类规则：来自文件的可执行映射，必须被有效代码签名覆盖。<br>
+不满足就会直接失败（<code class="notranslate">MAP_FAILED</code>），所以这段 hook：匿名 RW → 只读映射 dylib 并拷贝 → 再 <code class="notranslate">mprotect</code> 成原来的 <code class="notranslate">prot</code>。</p>
+<ul>
+<li>hooked___fcntl</li>
+</ul>
+<div class="highlight highlight-source-c"><pre class="notranslate"><span class="pl-k">static</span> <span class="pl-smi">int</span> <span class="pl-en">hooked___fcntl</span>(<span class="pl-smi">int</span> <span class="pl-s1">fildes</span>, <span class="pl-smi">int</span> <span class="pl-s1">cmd</span>, <span class="pl-smi">void</span> <span class="pl-c1">*</span><span class="pl-s1">param</span>) {
+  <span class="pl-k">if</span> (<span class="pl-s1">cmd</span> <span class="pl-c1">==</span> <span class="pl-c1">F_ADDFILESIGS_RETURN</span>) {
+    <span class="pl-en">orig_fcntl</span>(<span class="pl-s1">fildes</span>, <span class="pl-s1">cmd</span>, <span class="pl-s1">param</span>);
+    <span class="pl-smi">fsignatures_t</span> <span class="pl-c1">*</span><span class="pl-s1">fsig</span> <span class="pl-c1">=</span> (<span class="pl-smi">fsignatures_t</span> <span class="pl-c1">*</span>)<span class="pl-s1">param</span>;
+    <span class="pl-s1">fsig</span><span class="pl-c1">-&gt;</span><span class="pl-c1">fs_file_start</span> <span class="pl-c1">=</span> <span class="pl-c1">0xFFFFFFFF</span>;
+    <span class="pl-k">return</span> <span class="pl-c1">0</span>;
+  }
+  <span class="pl-c">// Signature sanity check by dyld</span>
+  <span class="pl-k">else</span> <span class="pl-k">if</span> (<span class="pl-s1">cmd</span> <span class="pl-c1">==</span> <span class="pl-c1">F_CHECK_LV</span>) {
+    <span class="pl-en">orig_fcntl</span>(<span class="pl-s1">fildes</span>, <span class="pl-s1">cmd</span>, <span class="pl-s1">param</span>);
+    <span class="pl-k">return</span> <span class="pl-c1">0</span>;
+  }</pre></div>
+<p>忽略“Catalyst/Simulator”下的情况：</p>
+<ul>
+<li><code class="notranslate">F_ADDFILESIGS_RETURN</code>：先走原 <code class="notranslate">fcntl</code>（尝试挂签名），再改结构体里返回的 offset 相关字段（<code class="notranslate">fs_file_start = 0xFFFFFFFF</code>），并 <code class="notranslate">return 0</code>，让调用方以为挂签成功且范围足够。</li>
+<li><code class="notranslate">F_CHECK_LV</code>：仍可调用原 <code class="notranslate">fcntl</code>，但无论结果如何都 <code class="notranslate">return 0</code>，即告诉 dyld「LV 允许映射」。</li>
+</ul>
+<h2>Hook 过程可视化</h2>
+<p>一次实机测试：<code class="notranslate">dyld=0x1ce0c9000</code>，mmap 钩点 <code class="notranslate">+0x2cd84</code>，fcntl 钩点 <code class="notranslate">+0x2e124</code>。</p>
+<pre lang="text" class="notranslate"><code class="notranslate">                    dyld @ 0x1ce0c9000
+                           │
+              mmap stub ───┴── 0x1ce0f5d84 (+0x2cd84)
+
+  ┌─────────────── BEFORE ────────────────┐    ┌────────────── AFTER ──────────────────┐
+  │ 0x…5d84  mov x16, #0xc5   (mmap)      │    │ 0x…5d84  ldr x8, #16                  │
+  │ 0x…5d88  svc #0x80                    │    │ 0x…5d88  br  x8                       │
+  │ 0x…5d8c  b.lo                         │ =&gt; │ 0x…5d8c  nop                          │
+  │ 0x…5d90  pacibsp                      │    │ 0x…5d90  nop                          │
+  │ 0x…5d94  ...                          │    │ 0x…5d94  .quad 0x104644d80  ──────────┼──► hooked_mmap
+  └───────────────────────────────────────┘    └───────────────────────────────────────┘
+
+              fcntl stub ──── 0x1ce0f7124 (+0x2e124)
+
+  ┌─────────────── BEFORE ────────────────┐    ┌────────────── AFTER ──────────────────┐
+  │ 0x…7124  mov x16, #0x5c   (fcntl)     │    │ 0x…7124  ldr x8, #16                  │
+  │ 0x…7128  svc #0x80                    │    │ 0x…7128  br  x8                       │
+  │ 0x…712c  b.lo                         │ =&gt; │ 0x…712c  nop                          │
+  │ 0x…7130  pacibsp                      │    │ 0x…7130  nop                          │
+  │ 0x…7134  ...                          │    │ 0x…7134  .quad 0x104644f10 ───────────┼──► hooked___fcntl
+  └───────────────────────────────────────┘    └───────────────────────────────────────┘
+</code></pre>
+<h2>Reference</h2>
+<ul>
+<li><a href="https://github.com/khanhduytran0/coruna/blob/duy/decompile/TweakLoader/lv_bypass.c">lv_bypass.c</a></li>
+</ul></div>
+<div style="font-size:small;margin-top:8px;float:right;"></div>
+
+<button class="btn btn-block" type="button" onclick="openComments()" id="cmButton">comments</button>
+<div class="comments" id="comments"></div>
+
+</div>
+    <div id="footer"><div id="footer1">Copyright © <span id="copyrightYear"></span> <a href="https://blog.imipy.com">zznQ</a></div>
+<div id="footer2">
+    <span id="runday"></span>
+</div>
+
+<script>
+var now=new Date();
+document.getElementById("copyrightYear").innerHTML=now.getFullYear();
+
+if("01/05/2018"!=""){
+    var startSite=new Date("01/05/2018");
+    var diff=now.getTime()-startSite.getTime();
+    var diffDay=Math.floor(diff/(1000*60*60*24));
+    document.getElementById("runday").innerHTML="run "+diffDay+" days"+" • ";
+}
+</script></div>
+</body>
+<script>
+var IconList={'sun': 'M8 10.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM8 12a4 4 0 100-8 4 4 0 000 8zM8 0a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0V.75A.75.75 0 018 0zm0 13a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 018 13zM2.343 2.343a.75.75 0 011.061 0l1.06 1.061a.75.75 0 01-1.06 1.06l-1.06-1.06a.75.75 0 010-1.06zm9.193 9.193a.75.75 0 011.06 0l1.061 1.06a.75.75 0 01-1.06 1.061l-1.061-1.06a.75.75 0 010-1.061zM16 8a.75.75 0 01-.75.75h-1.5a.75.75 0 010-1.5h1.5A.75.75 0 0116 8zM3 8a.75.75 0 01-.75.75H.75a.75.75 0 010-1.5h1.5A.75.75 0 013 8zm10.657-5.657a.75.75 0 010 1.061l-1.061 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 0zm-9.193 9.193a.75.75 0 010 1.06l-1.06 1.061a.75.75 0 11-1.061-1.06l1.06-1.061a.75.75 0 011.061 0z', 'moon': 'M9.598 1.591a.75.75 0 01.785-.175 7 7 0 11-8.967 8.967.75.75 0 01.961-.96 5.5 5.5 0 007.046-7.046.75.75 0 01.175-.786zm1.616 1.945a7 7 0 01-7.678 7.678 5.5 5.5 0 107.678-7.678z', 'sync': 'M1.705 8.005a.75.75 0 0 1 .834.656 5.5 5.5 0 0 0 9.592 2.97l-1.204-1.204a.25.25 0 0 1 .177-.427h3.646a.25.25 0 0 1 .25.25v3.646a.25.25 0 0 1-.427.177l-1.38-1.38A7.002 7.002 0 0 1 1.05 8.84a.75.75 0 0 1 .656-.834ZM8 2.5a5.487 5.487 0 0 0-4.131 1.869l1.204 1.204A.25.25 0 0 1 4.896 6H1.25A.25.25 0 0 1 1 5.75V2.104a.25.25 0 0 1 .427-.177l1.38 1.38A7.002 7.002 0 0 1 14.95 7.16a.75.75 0 0 1-1.49.178A5.5 5.5 0 0 0 8 2.5Z', 'home': 'M6.906.664a1.749 1.749 0 0 1 2.187 0l5.25 4.2c.415.332.657.835.657 1.367v7.019A1.75 1.75 0 0 1 13.25 15h-3.5a.75.75 0 0 1-.75-.75V9H7v5.25a.75.75 0 0 1-.75.75h-3.5A1.75 1.75 0 0 1 1 13.25V6.23c0-.531.242-1.034.657-1.366l5.25-4.2Zm1.25 1.171a.25.25 0 0 0-.312 0l-5.25 4.2a.25.25 0 0 0-.094.196v7.019c0 .138.112.25.25.25H5.5V8.25a.75.75 0 0 1 .75-.75h3.5a.75.75 0 0 1 .75.75v5.25h2.75a.25.25 0 0 0 .25-.25V6.23a.25.25 0 0 0-.094-.195Z', 'github': 'M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z', 'copy': 'M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25Z M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25Z', 'check': 'M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0Z'};
+var utterancesLoad=0;
+
+let themeSettings={
+    "dark": ["dark","moon","#00f0ff","dark-blue"],
+    "light": ["light","sun","#ff5000","github-light"],
+    "auto": ["auto","sync","","preferred-color-scheme"]
+};
+function changeTheme(mode, icon, color, utheme){
+    document.documentElement.setAttribute("data-color-mode",mode);
+    document.getElementById("themeSwitch").setAttribute("d",value=IconList[icon]);
+    document.getElementById("themeSwitch").parentNode.style.color=color;
+    if(utterancesLoad==1){utterancesTheme(utheme);}
+}
+function modeSwitch(){
+    let currentMode=document.documentElement.getAttribute('data-color-mode');
+    let newMode = currentMode === "light" ? "dark" : currentMode === "dark" ? "auto" : "light";
+    localStorage.setItem("meek_theme", newMode);
+    if(themeSettings[newMode]){
+        changeTheme(...themeSettings[newMode]);
+    }
+}
+function utterancesTheme(theme){
+    const message={type:'set-theme',theme: theme};
+    const iframe=document.getElementsByClassName('utterances-frame')[0];
+    iframe.contentWindow.postMessage(message,'https://utteranc.es');
+}
+if(themeSettings[theme]){changeTheme(...themeSettings[theme]);}
+</script>
+
+<script>
+document.getElementById("pathHome").setAttribute("d",IconList["home"]);
+
+
+
+let commentsOpened=0;
+
+function openComments(){
+    if(commentsOpened===1){return;}
+    commentsOpened=1;
+    cm=document.getElementById("comments");
+    cmButton=document.getElementById("cmButton");
+    cmButton.disabled=true;
+    cmButton.innerHTML="loading";
+    span=document.createElement("span");
+    span.setAttribute("class","AnimatedEllipsis");
+    cmButton.appendChild(span);
+
+    script=document.createElement("script");
+    script.setAttribute("src","https://utteranc.es/client.js");
+    script.setAttribute("repo","ac0d3r/ac0d3r.github.io");
+    script.setAttribute("issue-term","title");
+    
+    if(localStorage.getItem("meek_theme")=="dark"){script.setAttribute("theme","dark-blue");}
+    else if(localStorage.getItem("meek_theme")=="light") {script.setAttribute("theme","github-light");}
+    else{script.setAttribute("theme","preferred-color-scheme");}
+    
+    script.setAttribute("crossorigin","anonymous");
+    script.setAttribute("async","");
+    cm.appendChild(script);
+
+    int=self.setInterval("iFrameLoading()",200);
+}
+
+function iFrameLoading(){
+    var utterances=document.getElementsByClassName('utterances');
+    if(utterances.length==1){
+        if(utterances[0].style.height!=""){
+            utterancesLoad=1;
+            int=window.clearInterval(int);
+            document.getElementById("cmButton").style.display="none";
+            console.log("utterances Load OK");
+        }
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    openComments();
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+    const createClipboardHTML = (codeContent, additionalClasses = '') => `
+        <pre class="notranslate"><code class="notranslate">${codeContent}</code></pre>
+        <div class="clipboard-container position-absolute right-0 top-0 ${additionalClasses}">
+            <clipboard-copy class="ClipboardButton btn m-2 p-0" role="button" style="display: inherit;">
+                <svg height="16" width="16" class="octicon octicon-copy m-2"><path d="${IconList["copy"]}"></path></svg>
+                <svg height="16" width="16" class="octicon octicon-check color-fg-success m-2 d-none"><path d="${IconList["check"]}"></path></svg>
+            </clipboard-copy>
+            <div class="copy-feedback">Copied!</div>
+        </div>
+    `;
+
+    const handleCodeElements = (selector = '') => {
+        document.querySelectorAll(selector).forEach(codeElement => {
+            const codeContent = codeElement.innerHTML;
+            const newStructure = document.createElement('div');
+            newStructure.className = 'snippet-clipboard-content position-relative overflow-auto';
+            newStructure.innerHTML = createClipboardHTML(codeContent);
+
+            const parentElement = codeElement.parentElement;
+            if (selector.includes('highlight')) {
+                parentElement.insertBefore(newStructure, codeElement.nextSibling);
+                parentElement.removeChild(codeElement);
+            } else {
+                parentElement.parentElement.replaceChild(newStructure, parentElement);
+            }
+        });
+    };
+
+    handleCodeElements('pre.notranslate > code.notranslate');
+    handleCodeElements('div.highlight > pre.notranslate');
+
+    let currentFeedback = null;
+    document.querySelectorAll('clipboard-copy').forEach(copyButton => {
+        copyButton.addEventListener('click', () => {
+            const codeContent = copyButton.closest('.snippet-clipboard-content').innerText;
+            const tempTextArea = document.createElement('textarea');
+            tempTextArea.value = codeContent;
+            document.body.appendChild(tempTextArea);
+            tempTextArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempTextArea);
+
+            const copyIcon = copyButton.querySelector('.octicon-copy');
+            const checkIcon = copyButton.querySelector('.octicon-check');
+            const copyFeedback = copyButton.nextElementSibling;
+
+            if (currentFeedback && currentFeedback !== copyFeedback) {currentFeedback.style.display = 'none';}
+            currentFeedback = copyFeedback;
+
+            copyIcon.classList.add('d-none');
+            checkIcon.classList.remove('d-none');
+            copyFeedback.style.display = 'block';
+            copyButton.style.borderColor = 'var(--color-success-fg)';
+
+            setTimeout(() => {
+                copyIcon.classList.remove('d-none');
+                checkIcon.classList.add('d-none');
+                copyFeedback.style.display = 'none';
+                copyButton.style.borderColor = '';
+            }, 2000);
+        });
+    });
+});
+
+</script>
+
+
+<script src="/plugins/mermaid.js"></script>
+<script src="https://blog.imipy.com/plugins/GmeekTOC.js"></script>
+<script src="https://blog.imipy.com/plugins/lightbox.js"></script>
+<script src="https://blog.imipy.com/plugins/mermaid.js"></script>
+</html>
