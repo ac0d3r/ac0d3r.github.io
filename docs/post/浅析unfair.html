@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html data-color-mode="light" data-dark-theme="dark" data-light-theme="light" lang="en">
+<head>
+    <meta content="text/html; charset=utf-8" http-equiv="content-type" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <link href='https://mirrors.sustech.edu.cn/cdnjs/ajax/libs/Primer/21.0.7/primer.css' rel='stylesheet' />
+    
+    <link rel="icon" href="/imgs/avatar.png"><script>
+        let theme = localStorage.getItem("meek_theme") || "light";
+        document.documentElement.setAttribute("data-color-mode", theme);
+    </script>
+<meta name="description" content="现在自动砸壳基本用这个方案：ipatool(ApplePackage) + unfair(d)；
+ipatool 负责下载 ipa；unfair 负责解密。
+
+unfair 一开始只支持 macOS ≤11.">
+<meta property="og:title" content="浅析unfair">
+<meta property="og:description" content="现在自动砸壳基本用这个方案：ipatool(ApplePackage) + unfair(d)；
+ipatool 负责下载 ipa；unfair 负责解密。
+
+unfair 一开始只支持 macOS ≤11.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://blog.imipy.com/post/%E6%B5%85%E6%9E%90unfair.html">
+<meta property="og:image" content="/imgs/avatar.png">
+<title>浅析unfair</title>
+<link href="//unpkg.com/@wooorm/starry-night@2.1.1/style/both.css" rel="stylesheet" />
+
+
+</head>
+<style>
+body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;padding: 45px;font-size: 16px;font-family: sans-serif;line-height: 1.25;}
+#header{display:flex;padding-bottom:8px;border-bottom: 1px solid var(--borderColor-muted, var(--color-border-muted));margin-bottom: 16px;}
+#footer {margin-top:64px; text-align: center;font-size: small;}
+.mermaid{width:100%;min-height:520px;height:70vh;overflow:hidden;}
+.mermaid svg{width:100%;height:100%;display:block;}
+
+</style>
+
+<style>
+.postTitle{margin: auto 0;font-size:40px;font-weight:bold;}
+.title-right{display:flex;margin:auto 0 0 auto;}
+.title-right .circle{padding: 14px 16px;margin-right:8px;}
+#postBody{border-bottom: 1px solid var(--color-border-default);padding-bottom:36px;}
+#postBody hr{height:2px;}
+#cmButton{height:48px;margin-top:48px;}
+#comments{margin-top:64px;}
+.g-emoji{font-size:24px;}
+@media (max-width: 600px) {
+    body {padding: 8px;}
+    .postTitle{font-size:24px;}
+}
+.copy-feedback {
+    display: none;
+    position: absolute;
+    top: 10px;
+    right: 50px;
+    color: var(--color-fg-on-emphasis);
+    background-color: var(--color-fg-muted);
+    border-radius: 3px;
+    padding: 5px 8px;
+    font-size: 12px;
+}
+</style>
+
+
+
+
+<body>
+    <div id="header">
+<h1 class="postTitle">浅析unfair</h1>
+<div class="title-right">
+    <a href="https://blog.imipy.com" id="buttonHome" class="btn btn-invisible circle" title="home">
+        <svg class="octicon" width="16" height="16">
+            <path id="pathHome" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+
+    <a class="btn btn-invisible circle" onclick="modeSwitch();" title="switch theme">
+        <svg class="octicon" width="16" height="16" >
+            <path id="themeSwitch" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+
+</div>
+</div>
+    <div id="content">
+<div class="markdown-body" id="postBody"><p>现在自动砸壳基本用这个方案：ipatool(ApplePackage) + unfair(d)；<br>
+ipatool 负责下载 ipa；unfair 负责解密。</p>
+<p>unfair 一开始只支持 macOS ≤11.2.3（Apple Silicon），底层调用 mremap_encrypted；之后版本 FairPlay 检测严格无法再成功解密。<br>
+之后 <a href="https://github.com/lbr77/unfair">lbr77/unfair</a> 支持了 Jailbroken iOS。</p>
+<h2>unfair on Jailbroken iOS</h2>
+<p><code class="notranslate">unfair package</code> 的执行路径：把自己提成 platform binary -&gt; 把 App 伪装成已安装布局 -&gt; 用 <code class="notranslate">mremap_encrypted</code> 让内核 FairPlay pager 解出明文 -&gt; 写回 IPA 并剥掉 <code class="notranslate">SC_Info</code>。</p>
+<p><strong>准备环境</strong></p>
+<ul>
+<li>以 <strong>root</strong> 运行</li>
+<li>加载 <code class="notranslate">libjailbreak</code>，给当前进程打上 <code class="notranslate">CS_PLATFORM_BINARY</code>；否则后续 <code class="notranslate">mremap_encrypted / FairPlay</code> 解密会失败（权限不足）。</li>
+</ul>
+<div class="highlight highlight-source-c"><pre class="notranslate"><span class="pl-c">// 86:137:Sources/UnfairSupport/UnfairSupport.c</span>
+<span class="pl-smi">int</span> <span class="pl-en">unfair_prepare_app_bundle_decryption</span>(<span class="pl-smi">char</span> <span class="pl-c1">*</span><span class="pl-s1">error</span>, <span class="pl-smi">size_t</span> <span class="pl-s1">error_size</span>) {
+<span class="pl-k">#if</span> defined(<span class="pl-c1">TARGET_OS_IPHONE</span>) <span class="pl-c1">&amp;&amp;</span> <span class="pl-c1">TARGET_OS_IPHONE</span>
+    <span class="pl-k">static</span> <span class="pl-smi">int</span> <span class="pl-s1">prepared</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span>;
+    <span class="pl-k">if</span> (<span class="pl-s1">prepared</span>) {
+        <span class="pl-k">return</span> <span class="pl-c1">0</span>;
+    }
+
+    <span class="pl-k">if</span> (<span class="pl-en">geteuid</span>() <span class="pl-c1">!=</span> <span class="pl-c1">0</span>) {
+        <span class="pl-en">set_error</span>(<span class="pl-s1">error</span>, <span class="pl-s1">error_size</span>, <span class="pl-s">"root privileges required for jailbreak primitives"</span>);
+        <span class="pl-k">return</span> <span class="pl-c1">-1</span>;
+    }
+
+    <span class="pl-smi">void</span> <span class="pl-c1">*</span><span class="pl-s1">handle</span> <span class="pl-c1">=</span> <span class="pl-en">open_libjailbreak</span>(<span class="pl-s1">error</span>, <span class="pl-s1">error_size</span>);
+    <span class="pl-c">// ...</span>
+    <span class="pl-k">if</span> (<span class="pl-en">jbclient_initialize_primitives</span>() <span class="pl-c1">!=</span> <span class="pl-c1">0</span>) {
+        <span class="pl-en">set_error</span>(<span class="pl-s1">error</span>, <span class="pl-s1">error_size</span>, <span class="pl-s">"jbclient_initialize_primitives failed"</span>);
+        <span class="pl-k">return</span> <span class="pl-c1">-1</span>;
+    }
+
+    <span class="pl-smi">uint64_t</span> <span class="pl-s1">proc</span> <span class="pl-c1">=</span> <span class="pl-en">proc_find</span>(<span class="pl-en">getpid</span>());
+    <span class="pl-c">// ...</span>
+    <span class="pl-smi">int</span> <span class="pl-s1">status</span> <span class="pl-c1">=</span> <span class="pl-en">proc_csflags_set</span>(<span class="pl-s1">proc</span>, <span class="pl-c1">UNFAIR_CS_PLATFORM_BINARY</span>);
+    <span class="pl-en">proc_rele</span>(<span class="pl-s1">proc</span>);
+    <span class="pl-c">// ...</span>
+    <span class="pl-s1">prepared</span> <span class="pl-c1">=</span> <span class="pl-c1">1</span>;
+    <span class="pl-k">return</span> <span class="pl-c1">0</span>;</pre></div>
+<hr>
+<ol>
+<li><strong>解压 IPA</strong></li>
+</ol>
+<ul>
+<li>先 <code class="notranslate">extractIPA</code> 解到临时工作目录</li>
+<li><code class="notranslate">scanBinaries</code> 扫描带 <code class="notranslate">LC_ENCRYPTION_INFO_64</code> 且 <code class="notranslate">cryptid==1</code> 的 Mach-O，只 stage 这些加密二进制文件</li>
+</ul>
+<div class="highlight highlight-source-swift"><pre class="notranslate">// 50:60:Sources/UnfairKit/PackageProcessor.swift
+<span class="pl-k">private</span> <span class="pl-en">func</span> processStagedPackage<span class="pl-kos">(</span>input<span class="pl-kos">:</span> <span class="pl-smi">URL</span><span class="pl-kos">,</span> output<span class="pl-kos">:</span> <span class="pl-smi">URL</span><span class="pl-kos">,</span> workingDirectory<span class="pl-kos">:</span> <span class="pl-smi">URL</span><span class="pl-kos">,</span> payloadURL<span class="pl-kos">:</span> <span class="pl-smi">URL</span><span class="pl-kos">)</span> <span class="pl-k">throws</span> <span class="pl-kos">{</span>
+    <span class="pl-k">let</span> <span class="pl-s1">sourceApps</span> <span class="pl-c1">=</span> <span class="pl-c1"><span class="pl-k">try</span></span> <span class="pl-en">appBundles</span><span class="pl-kos">(</span>in<span class="pl-kos">:</span> payloadURL<span class="pl-kos">)</span>
+    <span class="pl-k">guard</span> sourceApps<span class="pl-kos">.</span>count <span class="pl-c1">==</span> <span class="pl-c1">1</span><span class="pl-kos">,</span> <span class="pl-k">let</span> sourceApp <span class="pl-c1">=</span> sourceApps<span class="pl-kos">.</span>first <span class="pl-k">else</span> <span class="pl-kos">{</span>
+        <span class="pl-k">throw</span> <span class="pl-smi">UnfairError</span><span class="pl-kos">.</span><span class="pl-en">io</span><span class="pl-kos">(</span><span class="pl-s">"</span><span class="pl-s">iOS package mode expects one Payload/*.app bundle</span><span class="pl-s">"</span><span class="pl-kos">)</span>
+    <span class="pl-kos">}</span>
+
+    <span class="pl-c1"><span class="pl-k">try</span></span> <span class="pl-smi">UnfairProcessPermissions</span><span class="pl-kos">.</span><span class="pl-en">prepareForAppBundleDecryption</span><span class="pl-kos">(</span>logger<span class="pl-kos">:</span> logger<span class="pl-kos">)</span>
+    <span class="pl-k">let</span> <span class="pl-s1">sourceRecords</span> <span class="pl-c1">=</span> <span class="pl-c1"><span class="pl-k">try</span></span> <span class="pl-smi">MachOInspector</span><span class="pl-kos">.</span><span class="pl-en">scanBinaries</span><span class="pl-kos">(</span>appURL<span class="pl-kos">:</span> sourceApp<span class="pl-kos">,</span> label<span class="pl-kos">:</span> sourceApp<span class="pl-kos">.</span>lastPathComponent<span class="pl-kos">)</span>
+    <span class="pl-k">let</span> <span class="pl-s1">encryptedRecords</span> <span class="pl-c1">=</span> sourceRecords<span class="pl-kos">.</span><span class="pl-en">filter</span><span class="pl-kos">(</span>\<span class="pl-kos">.</span>isEncrypted<span class="pl-kos">)</span>
+    <span class="pl-k">let</span> <span class="pl-s1">stagedApp</span> <span class="pl-c1">=</span> <span class="pl-c1"><span class="pl-k">try</span></span> <span class="pl-smi">AppBundleStager</span><span class="pl-kos">.</span><span class="pl-en">stageAppBundle</span><span class="pl-kos">(</span>sourceApp<span class="pl-kos">:</span> sourceApp<span class="pl-kos">,</span> encryptedRecords<span class="pl-kos">:</span> encryptedRecords<span class="pl-kos">,</span> logger<span class="pl-kos">:</span> logger<span class="pl-kos">)</span>
+    <span class="pl-k">defer</span> <span class="pl-kos">{</span> <span class="pl-smi">AppBundleStager</span><span class="pl-kos">.</span><span class="pl-en">cleanup</span><span class="pl-kos">(</span>stagedApp<span class="pl-kos">)</span> <span class="pl-kos">}</span>
+    <span class="pl-c1">...</span></pre></div>
+<ol start="2">
+<li><strong>Stage（伪装成已安装 App）</strong></li>
+</ol>
+<p>FairPlay 建解密会话时会看映射文件的真实路径（以及 <code class="notranslate">SC_Info</code>）。<br>
+系统安装的 App 落在 <code class="notranslate">/var/containers/Bundle/Application/&lt;UUID&gt;/*.app/</code>，并归 <code class="notranslate">_installd</code> 所有；</p>
+<ul>
+<li>在 <code class="notranslate">Application</code> 根下建 UUID 容器 + <code class="notranslate">.app</code></li>
+</ul>
+<div class="highlight highlight-source-swift"><pre class="notranslate">// 79:91:Sources/UnfairKit/AppBundleStager.swift
+<span class="pl-k">private</span> <span class="pl-k">static</span> <span class="pl-en">func</span> createBundle<span class="pl-kos">(</span>appName<span class="pl-kos">:</span> <span class="pl-smi">String</span><span class="pl-kos">,</span> logger<span class="pl-kos">:</span> <span class="pl-smi">UnfairLogger</span><span class="pl-kos">)</span> <span class="pl-k">throws</span> <span class="pl-c1">-&gt;</span> <span class="pl-smi">StagedAppBundle</span> <span class="pl-kos">{</span>
+    <span class="pl-k">let</span> <span class="pl-s1">container</span> <span class="pl-c1">=</span> applicationBundleRoot<span class="pl-kos">.</span><span class="pl-en">appendingPathComponent</span><span class="pl-kos">(</span><span class="pl-en">UUID</span><span class="pl-kos">(</span><span class="pl-kos">)</span><span class="pl-kos">.</span>uuidString<span class="pl-kos">,</span> isDirectory<span class="pl-kos">:</span> <span class="pl-c1">true</span><span class="pl-kos">)</span>
+    <span class="pl-k">let</span> <span class="pl-s1">app</span> <span class="pl-c1">=</span> container<span class="pl-kos">.</span><span class="pl-en">appendingPathComponent</span><span class="pl-kos">(</span>appName<span class="pl-kos">,</span> isDirectory<span class="pl-kos">:</span> <span class="pl-c1">true</span><span class="pl-kos">)</span>
+    <span class="pl-c1"><span class="pl-k">try</span></span> <span class="pl-en">createStagingDirectory</span><span class="pl-kos">(</span>container<span class="pl-kos">)</span>
+    // ...
+    <span class="pl-k">return</span> <span class="pl-en">StagedAppBundle</span><span class="pl-kos">(</span>containerURL<span class="pl-kos">:</span> container<span class="pl-kos">,</span> appURL<span class="pl-kos">:</span> app<span class="pl-kos">)</span>
+<span class="pl-kos">}</span></pre></div>
+<ul>
+<li>拷贝加密二进制及其旁路 <code class="notranslate">SC_Info</code>（含 <code class="notranslate">.sinf</code> 等）</li>
+</ul>
+<div class="highlight highlight-source-swift"><pre class="notranslate">// 51:72:Sources/UnfairKit/AppBundleStager.swift
+<span class="pl-k">static</span> <span class="pl-en">func</span> stageAppBundle<span class="pl-kos">(</span>sourceApp<span class="pl-kos">:</span> <span class="pl-smi">URL</span><span class="pl-kos">,</span> encryptedRecords<span class="pl-kos">:</span> <span class="pl-kos">[</span><span class="pl-smi">MachORecord</span><span class="pl-kos">]</span><span class="pl-kos">,</span> logger<span class="pl-kos">:</span> <span class="pl-smi">UnfairLogger</span><span class="pl-kos">)</span> <span class="pl-k">throws</span> <span class="pl-c1">-&gt;</span> <span class="pl-smi">StagedAppBundle</span> <span class="pl-kos">{</span>
+    <span class="pl-k">let</span> <span class="pl-s1">bundle</span> <span class="pl-c1">=</span> <span class="pl-c1"><span class="pl-k">try</span></span> <span class="pl-en">createBundle</span><span class="pl-kos">(</span>appName<span class="pl-kos">:</span> sourceApp<span class="pl-kos">.</span>lastPathComponent<span class="pl-kos">,</span> logger<span class="pl-kos">:</span> logger<span class="pl-kos">)</span>
+    <span class="pl-k">let</span> <span class="pl-s1">sourceSCInfo</span> <span class="pl-c1">=</span> sourceApp<span class="pl-kos">.</span><span class="pl-en">appendingPathComponent</span><span class="pl-kos">(</span><span class="pl-s">"</span><span class="pl-s">SC_Info</span><span class="pl-s">"</span><span class="pl-kos">,</span> isDirectory<span class="pl-kos">:</span> <span class="pl-c1">true</span><span class="pl-kos">)</span>
+    _ <span class="pl-c1">=</span> <span class="pl-c1"><span class="pl-k">try</span></span> <span class="pl-en">copyCredentials</span><span class="pl-kos">(</span>from<span class="pl-kos">:</span> sourceSCInfo<span class="pl-kos">,</span> explicitRootSinf<span class="pl-kos">:</span> <span class="pl-smi">nil</span><span class="pl-kos">,</span> binaryName<span class="pl-kos">:</span> <span class="pl-smi">nil</span><span class="pl-kos">,</span> to<span class="pl-kos">:</span> bundle<span class="pl-kos">.</span>appURL<span class="pl-kos">)</span>
+
+    <span class="pl-k">for</span> <span class="pl-s1">record</span> <span class="pl-k">in</span> encryptedRecords <span class="pl-kos">{</span>
+        <span class="pl-k">let</span> <span class="pl-s1">relativePath</span> <span class="pl-c1">=</span> <span class="pl-c1"><span class="pl-k">try</span></span> <span class="pl-en">relativePath</span><span class="pl-kos">(</span>of<span class="pl-kos">:</span> record<span class="pl-kos">.</span>url<span class="pl-kos">,</span> in<span class="pl-kos">:</span> sourceApp<span class="pl-kos">)</span>
+        <span class="pl-k">let</span> <span class="pl-s1">destination</span> <span class="pl-c1">=</span> bundle<span class="pl-kos">.</span>appURL<span class="pl-kos">.</span><span class="pl-en">appendingPathComponent</span><span class="pl-kos">(</span>relativePath<span class="pl-kos">)</span>
+        <span class="pl-c1"><span class="pl-k">try</span></span> <span class="pl-en">copyFile</span><span class="pl-kos">(</span>record<span class="pl-kos">.</span>url<span class="pl-kos">,</span> to<span class="pl-kos">:</span> destination<span class="pl-kos">)</span>
+        <span class="pl-k">let</span> <span class="pl-s1">sourceSCInfo</span> <span class="pl-c1">=</span> record<span class="pl-kos">.</span>url<span class="pl-kos">.</span><span class="pl-en">deletingLastPathComponent</span><span class="pl-kos">(</span><span class="pl-kos">)</span><span class="pl-kos">.</span><span class="pl-en">appendingPathComponent</span><span class="pl-kos">(</span><span class="pl-s">"</span><span class="pl-s">SC_Info</span><span class="pl-s">"</span><span class="pl-kos">,</span> isDirectory<span class="pl-kos">:</span> <span class="pl-c1">true</span><span class="pl-kos">)</span>
+        _ <span class="pl-c1">=</span> <span class="pl-c1"><span class="pl-k">try</span></span> <span class="pl-en">copyCredentials</span><span class="pl-kos">(</span>
+            from<span class="pl-kos">:</span> sourceSCInfo<span class="pl-kos">,</span>
+            explicitRootSinf<span class="pl-kos">:</span> <span class="pl-smi">nil</span><span class="pl-kos">,</span>
+            binaryName<span class="pl-kos">:</span> record<span class="pl-kos">.</span>name<span class="pl-kos">,</span>
+            to<span class="pl-kos">:</span> destination<span class="pl-kos">.</span><span class="pl-en">deletingLastPathComponent</span><span class="pl-kos">(</span><span class="pl-kos">)</span>
+        <span class="pl-kos">)</span>
+        <span class="pl-c1"><span class="pl-k">try</span></span> <span class="pl-smi">FileSystem</span><span class="pl-kos">.</span><span class="pl-en">chmod</span><span class="pl-kos">(</span>destination<span class="pl-kos">,</span> mode<span class="pl-kos">:</span> <span class="pl-c1">0o755</span><span class="pl-kos">)</span>
+    <span class="pl-kos">}</span>
+    <span class="pl-c1"><span class="pl-k">try</span></span> <span class="pl-en">applyInstalledAppOwnership</span><span class="pl-kos">(</span>to<span class="pl-kos">:</span> bundle<span class="pl-kos">.</span>containerURL<span class="pl-kos">)</span> 
+    // ...
+    <span class="pl-k">return</span> bundle
+<span class="pl-kos">}</span></pre></div>
+<ul>
+<li>整棵目录 <code class="notranslate">chown</code> 给 <code class="notranslate">_installd</code></li>
+</ul>
+<div class="highlight highlight-source-swift"><pre class="notranslate"><span class="pl-k">private</span> <span class="pl-k">static</span> <span class="pl-en">func</span> applyInstalledAppOwnership<span class="pl-kos">(</span>to url<span class="pl-kos">:</span> <span class="pl-smi">URL</span><span class="pl-kos">)</span> <span class="pl-k">throws</span> <span class="pl-kos">{</span>
+    <span class="pl-k">guard</span> <span class="pl-k">let</span> user <span class="pl-c1">=</span> <span class="pl-en">getpwnam</span><span class="pl-kos">(</span><span class="pl-s">"</span><span class="pl-s">_installd</span><span class="pl-s">"</span><span class="pl-kos">)</span><span class="pl-kos">,</span> <span class="pl-k">let</span> group <span class="pl-c1">=</span> <span class="pl-en">getgrnam</span><span class="pl-kos">(</span><span class="pl-s">"</span><span class="pl-s">_installd</span><span class="pl-s">"</span><span class="pl-kos">)</span> <span class="pl-k">else</span> <span class="pl-kos">{</span>
+        <span class="pl-k">throw</span> <span class="pl-smi">UnfairError</span><span class="pl-kos">.</span><span class="pl-en">io</span><span class="pl-kos">(</span><span class="pl-s">"</span><span class="pl-s">_installd user/group missing</span><span class="pl-s">"</span><span class="pl-kos">)</span>
+    <span class="pl-kos">}</span>
+    <span class="pl-c1"><span class="pl-k">try</span></span> <span class="pl-en">chownRecursively</span><span class="pl-kos">(</span>url<span class="pl-kos">,</span> uid<span class="pl-kos">:</span> user<span class="pl-kos">.</span>pointee<span class="pl-kos">.</span>pw_uid<span class="pl-kos">,</span> gid<span class="pl-kos">:</span> group<span class="pl-kos">.</span>pointee<span class="pl-kos">.</span>gr_gid<span class="pl-kos">)</span>
+<span class="pl-kos">}</span></pre></div>
+<ol start="3">
+<li><strong>逐个解密二进制</strong></li>
+</ol>
+<ul>
+<li>主循环：
+<ul>
+<li>validateDecryptableLocation(staged / output)</li>
+<li>cwd = staged 目录</li>
+<li>decryptBinary(stagedAt:outputURL:rootSinf:)
+<ul>
+<li>installTemporarySinf / removeTemporarySinf</li>
+<li>open staged RO + output RW</li>
+<li>mapWritableBinary(output) → inspectMappedBinary # 读 cryptoff/cryptsize</li>
+<li>withPreparedDecryption → unprotectRegion
+<ul>
+<li>按块 decryptChunk: mmap(staged) → mremap_encrypted(cryptid=2) → memcpy(output) → munmap</li>
+</ul>
+</li>
+<li>markDecrypted # LC_ENCRYPTION_INFO_64.cryptid 改成 0</li>
+<li>msync(output)</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<div class="highlight highlight-source-swift"><pre class="notranslate">// 94:112:Sources/UnfairKit/PackageProcessor.swift
+<span class="pl-k">for</span> <span class="pl-s1">stagedRecord</span> <span class="pl-k">in</span> encryptedStagedRecords <span class="pl-kos">{</span>
+    <span class="pl-k">guard</span> <span class="pl-k">let</span> outputRecord <span class="pl-c1">=</span> <span class="pl-en">outputsByDisplayPath</span><span class="pl-kos">[</span>stagedRecord<span class="pl-kos">.</span>displayPath<span class="pl-kos">]</span> <span class="pl-k">else</span> <span class="pl-kos">{</span>
+        <span class="pl-k">throw</span> <span class="pl-smi">UnfairError</span><span class="pl-kos">.</span><span class="pl-en">io</span><span class="pl-kos">(</span><span class="pl-s">"</span><span class="pl-s">output binary missing: </span><span class="pl-kos">\(</span>stagedRecord<span class="pl-kos">.</span>displayPath<span class="pl-kos">)</span><span class="pl-s">"</span><span class="pl-kos">)</span>
+    <span class="pl-kos">}</span>
+    <span class="pl-k">let</span> <span class="pl-s1">binaryDir</span> <span class="pl-c1">=</span> stagedRecord<span class="pl-kos">.</span>url<span class="pl-kos">.</span><span class="pl-en">deletingLastPathComponent</span><span class="pl-kos">(</span><span class="pl-kos">)</span>
+    <span class="pl-c1"><span class="pl-k">try</span></span> <span class="pl-en">validateDecryptableLocation</span><span class="pl-kos">(</span>stagedRecord<span class="pl-kos">.</span>url<span class="pl-kos">,</span> label<span class="pl-kos">:</span> <span class="pl-s">"</span><span class="pl-s">staged binary</span><span class="pl-s">"</span><span class="pl-kos">)</span>
+    <span class="pl-c1"><span class="pl-k">try</span></span> <span class="pl-en">validateDecryptableLocation</span><span class="pl-kos">(</span>outputRecord<span class="pl-kos">.</span>url<span class="pl-kos">,</span> label<span class="pl-kos">:</span> <span class="pl-s">"</span><span class="pl-s">output binary</span><span class="pl-s">"</span><span class="pl-kos">)</span>
+    <span class="pl-c1">...</span>
+    <span class="pl-smi">FileManager</span><span class="pl-kos">.</span>default<span class="pl-kos">.</span><span class="pl-en">changeCurrentDirectoryPath</span><span class="pl-kos">(</span>binaryDir<span class="pl-kos">.</span>path<span class="pl-kos">)</span> // cwd
+    <span class="pl-c1"><span class="pl-k">try</span></span> decryptor<span class="pl-kos">.</span><span class="pl-en">decryptBinary</span><span class="pl-kos">(</span>
+        stagedAt<span class="pl-kos">:</span> <span class="pl-en">URL</span><span class="pl-kos">(</span>fileURLWithPath<span class="pl-kos">:</span> stagedRecord<span class="pl-kos">.</span>name<span class="pl-kos">)</span><span class="pl-kos">,</span>
+        outputURL<span class="pl-kos">:</span> outputRecord<span class="pl-kos">.</span>url<span class="pl-kos">,</span>
+        rootSinf<span class="pl-kos">:</span> rootSinf<span class="pl-kos">,</span>
+        displayPath<span class="pl-kos">:</span> stagedRecord<span class="pl-kos">.</span>displayPath
+    <span class="pl-kos">)</span>
+    decryptedOutputRecords<span class="pl-kos">.</span><span class="pl-en">append</span><span class="pl-kos">(</span>outputRecord<span class="pl-kos">)</span>
+<span class="pl-kos">}</span>
+<span class="pl-c1"><span class="pl-k">try</span></span> <span class="pl-en">verifyDecryptedBinaries</span><span class="pl-kos">(</span>in<span class="pl-kos">:</span> outputApp<span class="pl-kos">,</span> label<span class="pl-kos">:</span> label<span class="pl-kos">)</span></pre></div>
+<p>拷贝 <code class="notranslate">.sinf</code>：</p>
+<div class="highlight highlight-source-swift"><pre class="notranslate">// 108:112:Sources/UnfairKit/BinaryDecryptor.swift
+<span class="pl-k">public</span> <span class="pl-en">func</span> decryptBinary<span class="pl-kos">(</span>stagedAt stagedURL<span class="pl-kos">:</span> <span class="pl-smi">URL</span><span class="pl-kos">,</span> outputURL<span class="pl-kos">:</span> <span class="pl-smi">URL</span><span class="pl-kos">,</span> rootSinf<span class="pl-kos">:</span> <span class="pl-smi">URL</span><span class="pl-kos">,</span> displayPath<span class="pl-kos">:</span> <span class="pl-smi">String</span><span class="pl-c1"><span class="pl-c1">?</span></span> <span class="pl-c1">=</span> <span class="pl-smi">nil</span><span class="pl-kos">)</span> <span class="pl-k">throws</span> <span class="pl-kos">{</span>
+    <span class="pl-k">let</span> <span class="pl-s1">temporarySinf</span> <span class="pl-c1">=</span> <span class="pl-c1"><span class="pl-k">try</span></span> <span class="pl-en">installTemporarySinf</span><span class="pl-kos">(</span>for<span class="pl-kos">:</span> stagedURL<span class="pl-kos">,</span> rootSinf<span class="pl-kos">:</span> rootSinf<span class="pl-kos">)</span>
+    <span class="pl-k">defer</span> <span class="pl-kos">{</span> <span class="pl-en">removeTemporarySinf</span><span class="pl-kos">(</span>temporarySinf<span class="pl-kos">)</span> <span class="pl-kos">}</span>
+    <span class="pl-k">let</span> <span class="pl-s1">status</span> <span class="pl-c1">=</span> <span class="pl-c1"><span class="pl-k">try</span></span> <span class="pl-en">decryptBinary</span><span class="pl-kos">(</span>stagedAt<span class="pl-kos">:</span> stagedURL<span class="pl-kos">,</span> outputURL<span class="pl-kos">:</span> outputURL<span class="pl-kos">)</span>
+    // ...
+<span class="pl-kos">}</span></pre></div>
+<p>读 staged、写 Payload：</p>
+<div class="highlight highlight-source-swift"><pre class="notranslate">// 202:250:Sources/UnfairKit/BinaryDecryptor.swift
+<span class="pl-k">private</span> <span class="pl-en">func</span> decryptBinary<span class="pl-kos">(</span>stagedAt stagedURL<span class="pl-kos">:</span> <span class="pl-smi">URL</span><span class="pl-kos">,</span> outputURL<span class="pl-kos">:</span> <span class="pl-smi">URL</span><span class="pl-kos">)</span> <span class="pl-k">throws</span> <span class="pl-c1">-&gt;</span> <span class="pl-smi">DecryptionStatus</span> <span class="pl-kos">{</span>
+    <span class="pl-k">let</span> <span class="pl-s1">stagedFD</span> <span class="pl-c1">=</span> <span class="pl-en">open</span><span class="pl-kos">(</span>stagedURL<span class="pl-kos">.</span>path<span class="pl-kos">,</span> O_RDONLY<span class="pl-kos">)</span>
+    <span class="pl-k">let</span> <span class="pl-s1">outputFD</span> <span class="pl-c1">=</span> <span class="pl-en">open</span><span class="pl-kos">(</span>outputURL<span class="pl-kos">.</span>path<span class="pl-kos">,</span> O_RDWR<span class="pl-kos">)</span>
+    <span class="pl-c1">...</span>
+    <span class="pl-k">let</span> <span class="pl-s1">mappedOutput</span> <span class="pl-c1">=</span> <span class="pl-c1"><span class="pl-k">try</span></span> <span class="pl-en">mapWritableBinary</span><span class="pl-kos">(</span>fd<span class="pl-kos">:</span> outputFD<span class="pl-kos">)</span>  // mmap 的是 output
+    <span class="pl-k">let</span> <span class="pl-s1">output</span> <span class="pl-c1">=</span> <span class="pl-c1"><span class="pl-k">try</span></span> <span class="pl-en">inspectMappedBinary</span><span class="pl-kos">(</span>mappedOutput<span class="pl-kos">.</span>base<span class="pl-kos">,</span> fileSize<span class="pl-kos">:</span> mappedOutput<span class="pl-kos">.</span>size<span class="pl-kos">)</span>
+    // ...
+    <span class="pl-c1"><span class="pl-k">try</span></span> <span class="pl-en">withPreparedDecryption</span> <span class="pl-kos">{</span>
+        <span class="pl-c1"><span class="pl-k">try</span></span> <span class="pl-en">unprotectRegion</span><span class="pl-kos">(</span>
+            fd<span class="pl-kos">:</span> stagedFD<span class="pl-kos">,</span>                          // 解密映射来自 staged
+            fileOffset<span class="pl-kos">:</span> output<span class="pl-kos">.</span>slice<span class="pl-kos">.</span>offset<span class="pl-kos">,</span>
+            destinationSliceBase<span class="pl-kos">:</span> output<span class="pl-kos">.</span>sliceBase<span class="pl-kos">,</span> // 明文写入 output
+            info<span class="pl-kos">:</span> enc
+        <span class="pl-kos">)</span>
+    <span class="pl-kos">}</span>
+    <span class="pl-c1"><span class="pl-k">try</span></span> <span class="pl-en">markDecrypted</span><span class="pl-kos">(</span>sliceBase<span class="pl-kos">:</span> output<span class="pl-kos">.</span>sliceBase<span class="pl-kos">,</span> commandOffset<span class="pl-kos">:</span> enc<span class="pl-kos">.</span>commandOffset<span class="pl-kos">)</span>
+    <span class="pl-k">guard</span> <span class="pl-en">msync</span><span class="pl-kos">(</span>mappedOutput<span class="pl-kos">.</span>base<span class="pl-kos">,</span> mappedOutput<span class="pl-kos">.</span>size<span class="pl-kos">,</span> MS_SYNC<span class="pl-kos">)</span> <span class="pl-c1">==</span> <span class="pl-c1">0</span> <span class="pl-k">else</span> <span class="pl-kos">{</span> /* ... */ <span class="pl-kos">}</span>
+    <span class="pl-k">return</span> <span class="pl-kos">.</span>decrypted
+<span class="pl-kos">}</span></pre></div>
+<p>核心(单块流程)：<code class="notranslate">mmap</code> + <code class="notranslate">remap(mremap_encrypted)</code> + <code class="notranslate">memcpy</code> + 最后 <code class="notranslate">unmap</code></p>
+<div class="highlight highlight-source-swift"><pre class="notranslate">// 372:403:Sources/UnfairKit/BinaryDecryptor.swift
+<span class="pl-en">func</span> decryptChunk<span class="pl-kos">(</span>fd<span class="pl-kos">:</span> <span class="pl-smi">Int32</span><span class="pl-kos">,</span> chunk<span class="pl-kos">:</span> <span class="pl-smi">EncryptedRegionChunk</span><span class="pl-kos">,</span> destinationSliceBase<span class="pl-kos">:</span> <span class="pl-smi">UnsafeMutableRawPointer</span><span class="pl-kos">)</span> <span class="pl-k">throws</span> <span class="pl-kos">{</span>
+    // 1) mmap staged 上这一块加密区（PROT_READ / MAP_PRIVATE）
+    <span class="pl-k">guard</span> <span class="pl-k">let</span> mapping <span class="pl-c1">=</span> encryptedRegionSystemCalls<span class="pl-kos">.</span><span class="pl-en">map</span><span class="pl-kos">(</span>
+        <span class="pl-smi">nil</span><span class="pl-kos">,</span> chunk<span class="pl-kos">.</span>size<span class="pl-kos">,</span> PROT_READ<span class="pl-kos">,</span> MAP_PRIVATE<span class="pl-kos">,</span> fd<span class="pl-kos">,</span> <span class="pl-en">off_t</span><span class="pl-kos">(</span>chunk<span class="pl-kos">.</span>fileOffset<span class="pl-kos">)</span>
+    <span class="pl-kos">)</span> <span class="pl-k">else</span> <span class="pl-kos">{</span> /* ... */ <span class="pl-kos">}</span>
+    <span class="pl-k">defer</span> <span class="pl-kos">{</span> _ <span class="pl-c1">=</span> encryptedRegionSystemCalls<span class="pl-kos">.</span><span class="pl-en">unmap</span><span class="pl-kos">(</span>mapping<span class="pl-kos">,</span> chunk<span class="pl-kos">.</span>size<span class="pl-kos">)</span> <span class="pl-kos">}</span>  // 4) munmap
+
+    // 2) mremap_encrypted：内核把 mapping 换成明文页（cryptid 参数用 model=2）
+    <span class="pl-k">let</span> <span class="pl-s1">result</span> <span class="pl-c1">=</span> <span class="pl-c1"><span class="pl-k">try</span></span> encryptedRegionSystemCalls<span class="pl-kos">.</span><span class="pl-en">remap</span><span class="pl-kos">(</span>
+        mapping<span class="pl-kos">,</span> chunk<span class="pl-kos">.</span>size<span class="pl-kos">,</span>
+        <span class="pl-smi">Self</span><span class="pl-kos">.</span>modelEncryptionCryptid<span class="pl-kos">,</span>  // 2
+        cpuTypeArm64<span class="pl-kos">,</span> cpuSubtypeArm64All
+    <span class="pl-kos">)</span>
+    <span class="pl-k">guard</span> result <span class="pl-c1">==</span> <span class="pl-c1">0</span> <span class="pl-k">else</span> <span class="pl-kos">{</span> /* ... */ <span class="pl-kos">}</span>
+
+    // 3) 明文拷进 output 映射
+    <span class="pl-en">memcpy</span><span class="pl-kos">(</span>destinationSliceBase<span class="pl-kos">.</span><span class="pl-en">advanced</span><span class="pl-kos">(</span>by<span class="pl-kos">:</span> chunk<span class="pl-kos">.</span>destinationOffset<span class="pl-kos">)</span><span class="pl-kos">,</span> mapping<span class="pl-kos">,</span> chunk<span class="pl-kos">.</span>size<span class="pl-kos">)</span>
+<span class="pl-kos">}</span></pre></div>
+<ol start="4">
+<li><strong>收尾</strong></li>
+</ol>
+<ul>
+<li><code class="notranslate">AppBundleStager.cleanup</code> 删 staging</li>
+<li><code class="notranslate">PackageArchiveWriter</code> 重打包：替换已解密二进制；<code class="notranslate">ArchivePrivacyFilter</code> 去掉 <code class="notranslate">Payload/.../SC_Info/**</code></li>
+<li><code class="notranslate">verifyDecryptedBinaries</code> 确认无残留 <code class="notranslate">cryptid == 1</code></li>
+</ul>
+<h2>Reference</h2>
+<ul>
+<li><a href="https://github.com/lbr77/unfair">https://github.com/lbr77/unfair</a></li>
+</ul></div>
+<div style="font-size:small;margin-top:8px;float:right;"></div>
+
+<button class="btn btn-block" type="button" onclick="openComments()" id="cmButton">comments</button>
+<div class="comments" id="comments"></div>
+
+</div>
+    <div id="footer"><div id="footer1">Copyright © <span id="copyrightYear"></span> <a href="https://blog.imipy.com">zznQ</a></div>
+<div id="footer2">
+    <span id="runday"></span>
+</div>
+
+<script>
+var now=new Date();
+document.getElementById("copyrightYear").innerHTML=now.getFullYear();
+
+if("01/05/2018"!=""){
+    var startSite=new Date("01/05/2018");
+    var diff=now.getTime()-startSite.getTime();
+    var diffDay=Math.floor(diff/(1000*60*60*24));
+    document.getElementById("runday").innerHTML="run "+diffDay+" days"+" • ";
+}
+</script></div>
+</body>
+<script>
+var IconList={'sun': 'M8 10.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM8 12a4 4 0 100-8 4 4 0 000 8zM8 0a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0V.75A.75.75 0 018 0zm0 13a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 018 13zM2.343 2.343a.75.75 0 011.061 0l1.06 1.061a.75.75 0 01-1.06 1.06l-1.06-1.06a.75.75 0 010-1.06zm9.193 9.193a.75.75 0 011.06 0l1.061 1.06a.75.75 0 01-1.06 1.061l-1.061-1.06a.75.75 0 010-1.061zM16 8a.75.75 0 01-.75.75h-1.5a.75.75 0 010-1.5h1.5A.75.75 0 0116 8zM3 8a.75.75 0 01-.75.75H.75a.75.75 0 010-1.5h1.5A.75.75 0 013 8zm10.657-5.657a.75.75 0 010 1.061l-1.061 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 0zm-9.193 9.193a.75.75 0 010 1.06l-1.06 1.061a.75.75 0 11-1.061-1.06l1.06-1.061a.75.75 0 011.061 0z', 'moon': 'M9.598 1.591a.75.75 0 01.785-.175 7 7 0 11-8.967 8.967.75.75 0 01.961-.96 5.5 5.5 0 007.046-7.046.75.75 0 01.175-.786zm1.616 1.945a7 7 0 01-7.678 7.678 5.5 5.5 0 107.678-7.678z', 'sync': 'M1.705 8.005a.75.75 0 0 1 .834.656 5.5 5.5 0 0 0 9.592 2.97l-1.204-1.204a.25.25 0 0 1 .177-.427h3.646a.25.25 0 0 1 .25.25v3.646a.25.25 0 0 1-.427.177l-1.38-1.38A7.002 7.002 0 0 1 1.05 8.84a.75.75 0 0 1 .656-.834ZM8 2.5a5.487 5.487 0 0 0-4.131 1.869l1.204 1.204A.25.25 0 0 1 4.896 6H1.25A.25.25 0 0 1 1 5.75V2.104a.25.25 0 0 1 .427-.177l1.38 1.38A7.002 7.002 0 0 1 14.95 7.16a.75.75 0 0 1-1.49.178A5.5 5.5 0 0 0 8 2.5Z', 'home': 'M6.906.664a1.749 1.749 0 0 1 2.187 0l5.25 4.2c.415.332.657.835.657 1.367v7.019A1.75 1.75 0 0 1 13.25 15h-3.5a.75.75 0 0 1-.75-.75V9H7v5.25a.75.75 0 0 1-.75.75h-3.5A1.75 1.75 0 0 1 1 13.25V6.23c0-.531.242-1.034.657-1.366l5.25-4.2Zm1.25 1.171a.25.25 0 0 0-.312 0l-5.25 4.2a.25.25 0 0 0-.094.196v7.019c0 .138.112.25.25.25H5.5V8.25a.75.75 0 0 1 .75-.75h3.5a.75.75 0 0 1 .75.75v5.25h2.75a.25.25 0 0 0 .25-.25V6.23a.25.25 0 0 0-.094-.195Z', 'github': 'M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z', 'copy': 'M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25Z M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25Z', 'check': 'M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0Z'};
+var utterancesLoad=0;
+
+let themeSettings={
+    "dark": ["dark","moon","#00f0ff","dark-blue"],
+    "light": ["light","sun","#ff5000","github-light"],
+    "auto": ["auto","sync","","preferred-color-scheme"]
+};
+function changeTheme(mode, icon, color, utheme){
+    document.documentElement.setAttribute("data-color-mode",mode);
+    document.getElementById("themeSwitch").setAttribute("d",value=IconList[icon]);
+    document.getElementById("themeSwitch").parentNode.style.color=color;
+    if(utterancesLoad==1){utterancesTheme(utheme);}
+}
+function modeSwitch(){
+    let currentMode=document.documentElement.getAttribute('data-color-mode');
+    let newMode = currentMode === "light" ? "dark" : currentMode === "dark" ? "auto" : "light";
+    localStorage.setItem("meek_theme", newMode);
+    if(themeSettings[newMode]){
+        changeTheme(...themeSettings[newMode]);
+    }
+}
+function utterancesTheme(theme){
+    const message={type:'set-theme',theme: theme};
+    const iframe=document.getElementsByClassName('utterances-frame')[0];
+    iframe.contentWindow.postMessage(message,'https://utteranc.es');
+}
+if(themeSettings[theme]){changeTheme(...themeSettings[theme]);}
+</script>
+
+<script>
+document.getElementById("pathHome").setAttribute("d",IconList["home"]);
+
+
+
+let commentsOpened=0;
+
+function openComments(){
+    if(commentsOpened===1){return;}
+    commentsOpened=1;
+    cm=document.getElementById("comments");
+    cmButton=document.getElementById("cmButton");
+    cmButton.disabled=true;
+    cmButton.innerHTML="loading";
+    span=document.createElement("span");
+    span.setAttribute("class","AnimatedEllipsis");
+    cmButton.appendChild(span);
+
+    script=document.createElement("script");
+    script.setAttribute("src","https://utteranc.es/client.js");
+    script.setAttribute("repo","ac0d3r/ac0d3r.github.io");
+    script.setAttribute("issue-term","title");
+    
+    if(localStorage.getItem("meek_theme")=="dark"){script.setAttribute("theme","dark-blue");}
+    else if(localStorage.getItem("meek_theme")=="light") {script.setAttribute("theme","github-light");}
+    else{script.setAttribute("theme","preferred-color-scheme");}
+    
+    script.setAttribute("crossorigin","anonymous");
+    script.setAttribute("async","");
+    cm.appendChild(script);
+
+    int=self.setInterval("iFrameLoading()",200);
+}
+
+function iFrameLoading(){
+    var utterances=document.getElementsByClassName('utterances');
+    if(utterances.length==1){
+        if(utterances[0].style.height!=""){
+            utterancesLoad=1;
+            int=window.clearInterval(int);
+            document.getElementById("cmButton").style.display="none";
+            console.log("utterances Load OK");
+        }
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    openComments();
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+    const createClipboardHTML = (codeContent, additionalClasses = '') => `
+        <pre class="notranslate"><code class="notranslate">${codeContent}</code></pre>
+        <div class="clipboard-container position-absolute right-0 top-0 ${additionalClasses}">
+            <clipboard-copy class="ClipboardButton btn m-2 p-0" role="button" style="display: inherit;">
+                <svg height="16" width="16" class="octicon octicon-copy m-2"><path d="${IconList["copy"]}"></path></svg>
+                <svg height="16" width="16" class="octicon octicon-check color-fg-success m-2 d-none"><path d="${IconList["check"]}"></path></svg>
+            </clipboard-copy>
+            <div class="copy-feedback">Copied!</div>
+        </div>
+    `;
+
+    const handleCodeElements = (selector = '') => {
+        document.querySelectorAll(selector).forEach(codeElement => {
+            const codeContent = codeElement.innerHTML;
+            const newStructure = document.createElement('div');
+            newStructure.className = 'snippet-clipboard-content position-relative overflow-auto';
+            newStructure.innerHTML = createClipboardHTML(codeContent);
+
+            const parentElement = codeElement.parentElement;
+            if (selector.includes('highlight')) {
+                parentElement.insertBefore(newStructure, codeElement.nextSibling);
+                parentElement.removeChild(codeElement);
+            } else {
+                parentElement.parentElement.replaceChild(newStructure, parentElement);
+            }
+        });
+    };
+
+    handleCodeElements('pre.notranslate > code.notranslate');
+    handleCodeElements('div.highlight > pre.notranslate');
+
+    let currentFeedback = null;
+    document.querySelectorAll('clipboard-copy').forEach(copyButton => {
+        copyButton.addEventListener('click', () => {
+            const codeContent = copyButton.closest('.snippet-clipboard-content').innerText;
+            const tempTextArea = document.createElement('textarea');
+            tempTextArea.value = codeContent;
+            document.body.appendChild(tempTextArea);
+            tempTextArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempTextArea);
+
+            const copyIcon = copyButton.querySelector('.octicon-copy');
+            const checkIcon = copyButton.querySelector('.octicon-check');
+            const copyFeedback = copyButton.nextElementSibling;
+
+            if (currentFeedback && currentFeedback !== copyFeedback) {currentFeedback.style.display = 'none';}
+            currentFeedback = copyFeedback;
+
+            copyIcon.classList.add('d-none');
+            checkIcon.classList.remove('d-none');
+            copyFeedback.style.display = 'block';
+            copyButton.style.borderColor = 'var(--color-success-fg)';
+
+            setTimeout(() => {
+                copyIcon.classList.remove('d-none');
+                checkIcon.classList.add('d-none');
+                copyFeedback.style.display = 'none';
+                copyButton.style.borderColor = '';
+            }, 2000);
+        });
+    });
+});
+
+</script>
+
+
+<script src="/plugins/mermaid.js"></script>
+<script src="https://blog.imipy.com/plugins/GmeekTOC.js"></script>
+<script src="https://blog.imipy.com/plugins/lightbox.js"></script>
+<script src="https://blog.imipy.com/plugins/mermaid.js"></script>
+</html>
