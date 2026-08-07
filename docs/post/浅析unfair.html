@@ -10,15 +10,15 @@
         let theme = localStorage.getItem("meek_theme") || "light";
         document.documentElement.setAttribute("data-color-mode", theme);
     </script>
-<meta name="description" content="现在自动砸壳基本用这个方案：ipatool(ApplePackage) + unfair(d)；
+<meta name="description" content="最近看到不少自动砸壳都用这个方案：ipatool(ApplePackage) + unfair(d)；
 ipatool 负责下载 ipa；unfair 负责解密。
 
-unfair 一开始只支持 macOS ≤11.">
+unfair 一开始只支持 `macOS ≤11.">
 <meta property="og:title" content="浅析unfair">
-<meta property="og:description" content="现在自动砸壳基本用这个方案：ipatool(ApplePackage) + unfair(d)；
+<meta property="og:description" content="最近看到不少自动砸壳都用这个方案：ipatool(ApplePackage) + unfair(d)；
 ipatool 负责下载 ipa；unfair 负责解密。
 
-unfair 一开始只支持 macOS ≤11.">
+unfair 一开始只支持 `macOS ≤11.">
 <meta property="og:type" content="article">
 <meta property="og:url" content="https://blog.imipy.com/post/%E6%B5%85%E6%9E%90unfair.html">
 <meta property="og:image" content="/imgs/avatar.png">
@@ -84,10 +84,10 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 </div>
 </div>
     <div id="content">
-<div class="markdown-body" id="postBody"><p>现在自动砸壳基本用这个方案：ipatool(ApplePackage) + unfair(d)；<br>
+<div class="markdown-body" id="postBody"><p>最近看到不少自动砸壳都用这个方案：ipatool(ApplePackage) + unfair(d)；<br>
 ipatool 负责下载 ipa；unfair 负责解密。</p>
-<p>unfair 一开始只支持 macOS ≤11.2.3（Apple Silicon），底层调用 mremap_encrypted；之后版本 FairPlay 检测严格无法再成功解密。<br>
-之后 <a href="https://github.com/lbr77/unfair">lbr77/unfair</a> 支持了 Jailbroken iOS。</p>
+<p>unfair 一开始只支持 <code class="notranslate">macOS ≤11.2.3(Apple Silicon)</code>，底层调用 <code class="notranslate">mremap_encrypted</code>之后的版本 FairPlay 检测严格无法再成功解密。<br>
+再然后<code class="notranslate">lbr77</code>开发<a href="https://github.com/lbr77/unfair"><code class="notranslate">unfair</code></a> 支持 Jailbroken iOS。</p>
 <h2>unfair on Jailbroken iOS</h2>
 <p><code class="notranslate">unfair package</code> 的执行路径：把自己提成 platform binary -&gt; 把 App 伪装成已安装布局 -&gt; 用 <code class="notranslate">mremap_encrypted</code> 让内核 FairPlay pager 解出明文 -&gt; 写回 IPA 并剥掉 <code class="notranslate">SC_Info</code>。</p>
 <p><strong>准备环境</strong></p>

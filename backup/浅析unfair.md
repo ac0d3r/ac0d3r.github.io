@@ -1,8 +1,8 @@
-现在自动砸壳基本用这个方案：ipatool(ApplePackage) + unfair(d)；
+最近看到不少自动砸壳都用这个方案：ipatool(ApplePackage) + unfair(d)；
 ipatool 负责下载 ipa；unfair 负责解密。
 
-unfair 一开始只支持 macOS ≤11.2.3（Apple Silicon），底层调用 mremap_encrypted；之后版本 FairPlay 检测严格无法再成功解密。
-之后 [lbr77/unfair](https://github.com/lbr77/unfair) 支持了 Jailbroken iOS。
+unfair 一开始只支持 `macOS ≤11.2.3(Apple Silicon)`，底层调用 `mremap_encrypted`之后的版本 FairPlay 检测严格无法再成功解密。
+再然后`lbr77`开发[`unfair`](https://github.com/lbr77/unfair) 支持 Jailbroken iOS。
 
 ## unfair on Jailbroken iOS
 
