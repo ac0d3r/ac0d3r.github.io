@@ -1,13 +1,16 @@
-- Software Engineer & Researcher
+- iOS Security Researcher
+- Software Engineer
 
 ## Open Source Projects
 
-- [machbox](https://github.com/ac0d3r/machbox)｜A native, lightweight malware analysis sandbox for macOS. <img src="https://img.shields.io/github/stars/ac0d3r/machbox?logo=github" height="18">
-- [Hyuga](https://github.com/ac0d3r/Hyuga)｜A tool for monitoring Out-of-Band (OOB) traffic, supporting DNS, HTTP, LDAP, RMI, and DNS-Rebinding. <img src="https://img.shields.io/github/stars/ac0d3r/Hyuga?logo=github" height="18">
-- [xssfinder](https://github.com/ac0d3r/xssfinder)｜A tool for detecting DOM-Based XSS using taint analysis, based on Chrome Headless for dynamic semantic analysis of JavaScript. <img src="https://img.shields.io/github/stars/ac0d3r/xssfinder?logo=github" height="18">
 - [TrollAppDuplicator](https://github.com/BreakOnCrash/TrollAppDuplicator) | iOS App duplicator for TrollStore <img src="https://img.shields.io/github/stars/BreakOnCrash/TrollAppDuplicator?logo=github" height="18">
 - [go-embed-extractor](https://github.com/BreakOnCrash/go-embed-extractor)｜Extracting Go embeds <img src="https://img.shields.io/github/stars/BreakOnCrash/go-embed-extractor?logo=github" height="18">
+- [machbox](https://github.com/ac0d3r/machbox)｜A native, lightweight malware analysis sandbox for macOS. <img src="https://img.shields.io/github/stars/ac0d3r/machbox?logo=github" height="18">
 - [inx](https://github.com/BreakOnCrash/inx)｜Inject `.dylib` into target process (like Frida) on macOS <img src="https://img.shields.io/github/stars/BreakOnCrash/inx?logo=github" height="18">
+- [ios-keychain-decrypter](https://github.com/ac0d3r/ios-keychain-decrypter)｜iOS Keychain decrypter for jailbroken devices. <img src="https://img.shields.io/github/stars/ac0d3r/ios-keychain-decrypter?logo=github" height="18">
+- [Hyuga](https://github.com/ac0d3r/Hyuga)｜A tool for monitoring Out-of-Band (OOB) traffic, supporting DNS, HTTP, LDAP, RMI, and DNS-Rebinding. <img src="https://img.shields.io/github/stars/ac0d3r/Hyuga?logo=github" height="18">
+- [xssfinder](https://github.com/ac0d3r/xssfinder)｜A tool for detecting DOM-Based XSS using taint analysis. <img src="https://img.shields.io/github/stars/ac0d3r/xssfinder?logo=github" height="18">
+
 
 
 ### PR
