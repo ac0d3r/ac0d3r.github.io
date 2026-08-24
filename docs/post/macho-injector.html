@@ -91,7 +91,8 @@ bootstrap → pthread_create_from_mach_thread(_last)
 <h2>Target</h2>
 <p><code class="notranslate">pid / 进程名 → task_for_pid → task port</code></p>
 <p>获取到目标进程的 <code class="notranslate">task</code> 后，对目标地址空间可：<code class="notranslate">mach_vm_allocate</code> / <code class="notranslate">mach_vm_read</code> / <code class="notranslate">mach_vm_write</code> / <code class="notranslate">mach_vm_protect</code> / <code class="notranslate">thread_create</code>。</p>
-<p>权限通常需要 <code class="notranslate">task_for_pid-allow</code>；目标是 SpringBoard 这类 platform 进程还要 <code class="notranslate">com.apple.system-task-ports</code>。</p>
+<p>权限通常需要 <code class="notranslate">task_for_pid-allow</code>；目标是 SpringBoard 这类 platform 进程还要 <code class="notranslate">com.apple.system-task-ports</code>。<br>
+远程 <code class="notranslate">thread_set_state</code> 另需 <code class="notranslate">com.apple.private.thread-set-state</code>，否则 injector 会 <code class="notranslate">EXC_GUARD</code>。</p>
 <h2>远程符号（已加载镜像）</h2>
 <p>bind <code class="notranslate">_dlsym</code>、起 pthread 都要目标进程里的真实 VA，不能用 injector 自己的地址。做法是读目标 dyld 镜像表，再扫符号表：</p>
 <pre lang="text" class="notranslate"><code class="notranslate">task_info(TASK_DYLD_INFO) → all_image_info_addr

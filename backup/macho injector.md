@@ -28,6 +28,7 @@ bootstrap → pthread_create_from_mach_thread(_last)
 获取到目标进程的 `task` 后，对目标地址空间可：`mach_vm_allocate` / `mach_vm_read` / `mach_vm_write` / `mach_vm_protect` / `thread_create`。
 
 权限通常需要 `task_for_pid-allow`；目标是 SpringBoard 这类 platform 进程还要 `com.apple.system-task-ports`。
+远程 `thread_set_state` 另需 `com.apple.private.thread-set-state`，否则 injector 会 `EXC_GUARD`。
 
 ## 远程符号（已加载镜像）
 
