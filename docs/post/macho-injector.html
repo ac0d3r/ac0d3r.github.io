@@ -94,7 +94,9 @@ bootstrap → pthread_create_from_mach_thread(_last)
 <p>获取到目标进程的 <code class="notranslate">task</code> 后，对目标地址空间可：<code class="notranslate">mach_vm_allocate</code> / <code class="notranslate">mach_vm_read</code> / <code class="notranslate">mach_vm_write</code> / <code class="notranslate">mach_vm_protect</code> / <code class="notranslate">thread_create</code>。</p>
 <p>权限通常需要 <code class="notranslate">task_for_pid-allow</code>；目标是 SpringBoard 这类 platform 进程还要 <code class="notranslate">com.apple.system-task-ports</code>。<br>
 远程 <code class="notranslate">thread_set_state</code> 另需 <code class="notranslate">com.apple.private.thread-set-state</code>，否则 injector 会 <code class="notranslate">EXC_GUARD</code>。</p>
-<h2>远程符号（已加载镜像）</h2>
+<ul>
+<li><strong>远程符号（已加载镜像）</strong></li>
+</ul>
 <p>bind <code class="notranslate">_dlsym</code>、起 pthread 都要目标进程里的真实 VA，不能用 injector 自己的地址。做法是读目标 dyld 镜像表，再扫符号表：</p>
 <pre lang="text" class="notranslate"><code class="notranslate">task_info(TASK_DYLD_INFO) → all_image_info_addr
     │
@@ -149,28 +151,30 @@ runtime = n_value + slide
 </tr>
 </tbody>
 </table></markdown-accessiblity-table>
-<h3>blob</h3>
+<ul>
+<li><strong>blob</strong></li>
+</ul>
 <pre lang="text" class="notranslate"><code class="notranslate">[dyld_chained_fixups_header]
     starts_offset  → 每 segment 的 page_start[]（链表入口）
     imports_offset → import 数组（ordinal → 名字）
     symbols_offset → 符号名字符串池
 </code></pre>
 <p><code class="notranslate">seg_info_offset</code> 下标必须与 <code class="notranslate">LC_SEGMENT_64</code> 顺序一致（含 <code class="notranslate">__PAGEZERO</code>）。</p>
-<h3>slide / remote_base</h3>
+<ul>
+<li><strong>slide / remote_base</strong></li>
+</ul>
 <pre lang="text" class="notranslate"><code class="notranslate">preferred_vmin = 非 __PAGEZERO 各 segment 的最小 vmaddr（链接时地址空间起点，dylib 常为 0）
 remote_base    = 目标进程里 mach_vm_allocate(VM_FLAGS_ANYWHERE) 返回的实际基址
 
 slide          = remote_base - preferred_vmin
 </code></pre>
 <p>preferred_* 来自文件；<code class="notranslate">remote_base</code> 由内核在目标 VA 里现挑，每次可能不同。</p>
-<h3>arm64</h3>
 <ul>
-<li><code class="notranslate">DYLD_CHAINED_PTR_64</code></li>
-<li><code class="notranslate">PTR_64_OFFSET</code></li>
+<li><strong>arm64</strong></li>
 </ul>
 <p>同一 64bit 按 <code class="notranslate">bind</code> 位解释成 rebase 或 bind 结构：</p>
 <pre lang="text" class="notranslate"><code class="notranslate">rebase:
-  PTR_64:        runtime = slide + target          // target = preferred vmaddr
+  DYLD_CHAINED_PTR_64:        runtime = slide + target          // target = preferred vmaddr
   PTR_64_OFFSET: runtime = remote_base + target    // target = 相对镜像基址偏移
 
 bind:
@@ -179,7 +183,9 @@ bind:
 </code></pre>
 <p><strong>addend</strong>：链接器在绑定记录（Binding Record）里携带的“额外偏移”被称为 Addend；</p>
 <p>本 demo 的 bind 只接受 <code class="notranslate">_dlsym</code>：在目标 <code class="notranslate">libdyld</code> 里解析一次，写入所有 bind 槽。</p>
-<h3>链表</h3>
+<ul>
+<li><strong>链表</strong></li>
+</ul>
 <p>同一页内多个待改指针用 <code class="notranslate">next</code> 串起来，不是扫全页：</p>
 <pre lang="text" class="notranslate"><code class="notranslate">for each segment:
   for each page:

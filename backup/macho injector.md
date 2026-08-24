@@ -30,7 +30,7 @@ bootstrap → pthread_create_from_mach_thread(_last)
 权限通常需要 `task_for_pid-allow`；目标是 SpringBoard 这类 platform 进程还要 `com.apple.system-task-ports`。
 远程 `thread_set_state` 另需 `com.apple.private.thread-set-state`，否则 injector 会 `EXC_GUARD`。
 
-## 远程符号（已加载镜像）
+- **远程符号（已加载镜像）**
 
 bind `_dlsym`、起 pthread 都要目标进程里的真实 VA，不能用 injector 自己的地址。做法是读目标 dyld 镜像表，再扫符号表：
 
@@ -75,7 +75,7 @@ injector 在目标 `libdyld` 里解析 `_dlsym`，填进 bind 槽即可。
 | 编码 | `bind=0`，带 target / next | `bind=1`，带 ordinal / addend / next |
 | 结果 | 按 slide（或 runtimeOffset）算出地址 | ordinal → imports → 符号真实地址 |
 
-### blob
+- **blob**
 
 ```text
 [dyld_chained_fixups_header]
@@ -86,7 +86,7 @@ injector 在目标 `libdyld` 里解析 `_dlsym`，填进 bind 槽即可。
 
 `seg_info_offset` 下标必须与 `LC_SEGMENT_64` 顺序一致（含 `__PAGEZERO`）。
 
-### slide / remote_base
+- **slide / remote_base**
 
 ```text
 preferred_vmin = 非 __PAGEZERO 各 segment 的最小 vmaddr（链接时地址空间起点，dylib 常为 0）
@@ -97,15 +97,13 @@ slide          = remote_base - preferred_vmin
 
 preferred_* 来自文件；`remote_base` 由内核在目标 VA 里现挑，每次可能不同。
 
-### arm64 
-- `DYLD_CHAINED_PTR_64`
-- `PTR_64_OFFSET`
+- **arm64**
 
 同一 64bit 按 `bind` 位解释成 rebase 或 bind 结构：
 
 ```text
 rebase:
-  PTR_64:        runtime = slide + target          // target = preferred vmaddr
+  DYLD_CHAINED_PTR_64:        runtime = slide + target          // target = preferred vmaddr
   PTR_64_OFFSET: runtime = remote_base + target    // target = 相对镜像基址偏移
 
 bind:
@@ -117,7 +115,7 @@ bind:
 
 本 demo 的 bind 只接受 `_dlsym`：在目标 `libdyld` 里解析一次，写入所有 bind 槽。
 
-### 链表
+- **链表**
 
 同一页内多个待改指针用 `next` 串起来，不是扫全页：
 
