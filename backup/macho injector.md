@@ -97,7 +97,9 @@ slide          = remote_base - preferred_vmin
 
 preferred_* 来自文件；`remote_base` 由内核在目标 VA 里现挑，每次可能不同。
 
-### arm64：`DYLD_CHAINED_PTR_64` / `PTR_64_OFFSET`
+### arm64 
+- `DYLD_CHAINED_PTR_64`
+- `PTR_64_OFFSET`
 
 同一 64bit 按 `bind` 位解释成 rebase 或 bind 结构：
 

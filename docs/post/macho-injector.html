@@ -162,7 +162,11 @@ remote_base    = 目标进程里 mach_vm_allocate(VM_FLAGS_ANYWHERE) 返回的�
 slide          = remote_base - preferred_vmin
 </code></pre>
 <p>preferred_* 来自文件；<code class="notranslate">remote_base</code> 由内核在目标 VA 里现挑，每次可能不同。</p>
-<h3>arm64：<code class="notranslate">DYLD_CHAINED_PTR_64</code> / <code class="notranslate">PTR_64_OFFSET</code></h3>
+<h3>arm64</h3>
+<ul>
+<li><code class="notranslate">DYLD_CHAINED_PTR_64</code></li>
+<li><code class="notranslate">PTR_64_OFFSET</code></li>
+</ul>
 <p>同一 64bit 按 <code class="notranslate">bind</code> 位解释成 rebase 或 bind 结构：</p>
 <pre lang="text" class="notranslate"><code class="notranslate">rebase:
   PTR_64:        runtime = slide + target          // target = preferred vmaddr
