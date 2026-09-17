@@ -1,0 +1,23 @@
+{
+  "number": 18,
+  "title": "Talks",
+  "slug": "talks",
+  "labels": [
+    "talks"
+  ],
+  "createdAt": 1774093745,
+  "createdDate": "2026-03-21",
+  "dateLabelColor": "#1f883d",
+  "updatedAt": "2026-09-05T04:29:01Z",
+  "excerpt": "碎碎念\nA place for short notes, rough ideas and small observations.",
+  "wordCount": 64,
+  "top": 0,
+  "singlePage": true,
+  "timeline": true,
+  "needComment": false,
+  "ogImage": "/imgs/avatar.png",
+  "body": "碎碎念\nA place for short notes, rough ideas and small observations.",
+  "labelColors": {
+    "talks": "#aaaaaa"
+  }
+}

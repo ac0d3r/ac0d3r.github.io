@@ -1,0 +1,23 @@
+{
+  "number": 20,
+  "title": "Daily Reversing",
+  "slug": "daily-reversing",
+  "labels": [
+    "daily-reversing"
+  ],
+  "createdAt": 1780980473,
+  "createdDate": "2026-06-09",
+  "dateLabelColor": "#1f883d",
+  "updatedAt": "2026-08-15T11:48:29Z",
+  "excerpt": "",
+  "wordCount": 0,
+  "top": 0,
+  "singlePage": true,
+  "timeline": true,
+  "needComment": false,
+  "ogImage": "/imgs/avatar.png",
+  "body": "",
+  "labelColors": {
+    "daily-reversing": "#55d230"
+  }
+}

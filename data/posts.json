@@ -1,0 +1,382 @@
+{
+  "posts": [
+    {
+      "number": 22,
+      "title": "浅析unfair",
+      "slug": "浅析unfair",
+      "labels": [
+        "FairPlay"
+      ],
+      "createdAt": 1786088395,
+      "createdDate": "2026-08-07",
+      "dateLabelColor": "#1f883d",
+      "updatedAt": "2026-08-07T08:34:52Z",
+      "excerpt": "最近看到不少自动砸壳都用这个方案：ipatool(ApplePackage) + unfair(d)；\nipatool 负责下载 ipa；unfair 负责解密。\n\nunfair 一开始只支持 `macOS ≤11.",
+      "wordCount": 8507,
+      "top": 0,
+      "singlePage": false,
+      "timeline": false,
+      "needComment": true,
+      "ogImage": "/imgs/avatar.png",
+      "labelColors": {
+        "FairPlay": "#861258"
+      }
+    },
+    {
+      "number": 21,
+      "title": "从 lv_bypass.c 学习 arm64 Iinline hook",
+      "slug": "从-lv_bypass.c-学习-arm64-iinline-hook",
+      "labels": [
+        "Reverse engineering"
+      ],
+      "createdAt": 1785307687,
+      "createdDate": "2026-07-29",
+      "dateLabelColor": "#1f883d",
+      "updatedAt": "2026-07-30T03:32:05Z",
+      "excerpt": "说明：_本文基于 `lv_bypass.",
+      "wordCount": 6282,
+      "top": 0,
+      "singlePage": false,
+      "timeline": false,
+      "needComment": true,
+      "ogImage": "/imgs/avatar.png",
+      "labelColors": {
+        "Reverse engineering": "#255B74"
+      }
+    },
+    {
+      "number": 19,
+      "title": "HTTP(S) MITM",
+      "slug": "http(s)-mitm",
+      "labels": [
+        "Web"
+      ],
+      "createdAt": 1774581183,
+      "createdDate": "2026-03-27",
+      "dateLabelColor": "#1f883d",
+      "updatedAt": "2026-03-27T03:25:12Z",
+      "excerpt": "> [https://en.",
+      "wordCount": 10812,
+      "top": 0,
+      "singlePage": false,
+      "timeline": false,
+      "needComment": true,
+      "ogImage": "/imgs/avatar.png",
+      "labelColors": {
+        "Web": "#04a05e"
+      }
+    },
+    {
+      "number": 17,
+      "title": "使用AI推导滑块验证的位移公式",
+      "slug": "使用ai推导滑块验证的位移公式",
+      "labels": [
+        "AI"
+      ],
+      "createdAt": 1762410284,
+      "createdDate": "2025-11-06",
+      "dateLabelColor": "#0969da",
+      "updatedAt": "2025-11-06T17:06:48Z",
+      "excerpt": "## 前提\n\n上一篇[文章](https://blog.",
+      "wordCount": 3870,
+      "top": 0,
+      "singlePage": false,
+      "timeline": false,
+      "needComment": true,
+      "ogImage": "/imgs/avatar.png",
+      "labelColors": {
+        "AI": "#89ab97"
+      }
+    },
+    {
+      "number": 16,
+      "title": "Go Embed Extractor",
+      "slug": "go-embed-extractor",
+      "labels": [
+        "Reverse engineering"
+      ],
+      "createdAt": 1761554168,
+      "createdDate": "2025-10-27",
+      "dateLabelColor": "#0969da",
+      "updatedAt": "2025-10-27T08:36:28Z",
+      "excerpt": "## Go-Embed\n\nStarting from Go 1.",
+      "wordCount": 3861,
+      "top": 0,
+      "singlePage": false,
+      "timeline": false,
+      "needComment": true,
+      "ogImage": "/imgs/avatar.png",
+      "labelColors": {
+        "Reverse engineering": "#255B74"
+      }
+    },
+    {
+      "number": 15,
+      "title": "Find Slider CAPTCHA Position with OpenCV Template Matching",
+      "slug": "find-slider-captcha-position-with-opencv-template-matching",
+      "labels": [
+        "Computer Vision"
+      ],
+      "createdAt": 1761394342,
+      "createdDate": "2025-10-25",
+      "dateLabelColor": "#0969da",
+      "updatedAt": "2025-10-25T12:12:40Z",
+      "excerpt": "## Template Matching\n> [Wiki: Template_matching](https://en.",
+      "wordCount": 3567,
+      "top": 0,
+      "singlePage": false,
+      "timeline": false,
+      "needComment": true,
+      "ogImage": "/imgs/avatar.png",
+      "labelColors": {
+        "Computer Vision": "#e9857a"
+      }
+    },
+    {
+      "number": 11,
+      "title": "静态程序分析入门之Go实践笔记",
+      "slug": "静态程序分析入门之go实践笔记",
+      "labels": [
+        "SAST"
+      ],
+      "createdAt": 1745252789,
+      "createdDate": "2025-04-22",
+      "dateLabelColor": "#0969da",
+      "updatedAt": "2025-04-22T09:26:45Z",
+      "excerpt": "# 学习课程\n> [南京大学（李樾、谭添老师）的课程《软件分析》](https://tai-e.",
+      "wordCount": 16182,
+      "top": 0,
+      "singlePage": false,
+      "timeline": false,
+      "needComment": true,
+      "ogImage": "/imgs/avatar.png",
+      "labelColors": {
+        "SAST": "#e99695"
+      }
+    },
+    {
+      "number": 10,
+      "title": "Records of macOS Malware Analysis",
+      "slug": "records-of-macos-malware-analysis",
+      "labels": [
+        "Malware"
+      ],
+      "createdAt": 1733984943,
+      "createdDate": "2024-12-12",
+      "dateLabelColor": "#bc4c00",
+      "updatedAt": "2026-06-12T09:20:16Z",
+      "excerpt": "## AtomicStealer - BrewApp\n- **Malware Sample**: [AtomicStealer.",
+      "wordCount": 6980,
+      "top": 0,
+      "singlePage": false,
+      "timeline": false,
+      "needComment": true,
+      "ogImage": "/imgs/avatar.png",
+      "labelColors": {
+        "Malware": "#F1C359"
+      }
+    },
+    {
+      "number": 9,
+      "title": "Break ClashX: Discovery the Network Proxy Privilege Vulnerability ",
+      "slug": "break-clashx--discovery-the-network-proxy-privilege-vulnerability",
+      "labels": [
+        "XPC"
+      ],
+      "createdAt": 1732716671,
+      "createdDate": "2024-11-27",
+      "dateLabelColor": "#bc4c00",
+      "updatedAt": "2024-11-27T14:12:37Z",
+      "excerpt": "> This article was first published on the [tttang Community](https://tttang.",
+      "wordCount": 8223,
+      "top": 0,
+      "singlePage": false,
+      "timeline": false,
+      "needComment": true,
+      "ogImage": "/imgs/avatar.png",
+      "labelColors": {
+        "XPC": "#0BE44D"
+      }
+    },
+    {
+      "number": 8,
+      "title": "Bypass macOS TCC via Dylib Injection",
+      "slug": "bypass-macos-tcc-via-dylib-injection",
+      "labels": [
+        "TCC"
+      ],
+      "createdAt": 1732702728,
+      "createdDate": "2024-11-27",
+      "dateLabelColor": "#bc4c00",
+      "updatedAt": "2024-11-27T14:10:00Z",
+      "excerpt": "> This article was first published on the [tttang Community](https://tttang.",
+      "wordCount": 5658,
+      "top": 0,
+      "singlePage": false,
+      "timeline": false,
+      "needComment": true,
+      "ogImage": "/imgs/avatar.png",
+      "labelColors": {
+        "TCC": "#034001"
+      }
+    },
+    {
+      "number": 7,
+      "title": "Break frida-objc-bridge",
+      "slug": "break-frida-objc-bridge",
+      "labels": [
+        "Frida-Internal"
+      ],
+      "createdAt": 1732616321,
+      "createdDate": "2024-11-26",
+      "dateLabelColor": "#bc4c00",
+      "updatedAt": "2024-12-12T14:45:32Z",
+      "excerpt": "> This article was first published on the [tttang Community](https://tttang.",
+      "wordCount": 26393,
+      "top": 0,
+      "singlePage": false,
+      "timeline": false,
+      "needComment": true,
+      "ogImage": "/imgs/avatar.png",
+      "labelColors": {
+        "Frida-Internal": "#7C30EE"
+      }
+    },
+    {
+      "number": 6,
+      "title": "Reverse Engineering WeChat on macOS: Building a Forensic Tool",
+      "slug": "reverse-engineering-wechat-on-macos--building-a-forensic-tool",
+      "labels": [
+        "Forensic",
+        "Reverse engineering"
+      ],
+      "createdAt": 1732179567,
+      "createdDate": "2024-11-21",
+      "dateLabelColor": "#bc4c00",
+      "updatedAt": "2024-11-22T02:36:10Z",
+      "excerpt": "> This article was first published on the [RedTeam.",
+      "wordCount": 11114,
+      "top": 0,
+      "singlePage": false,
+      "timeline": false,
+      "needComment": true,
+      "ogImage": "/imgs/avatar.png",
+      "labelColors": {
+        "Forensic": "#3A04B6",
+        "Reverse engineering": "#255B74"
+      }
+    },
+    {
+      "number": 5,
+      "title": "macOS Shellcode Cheat Sheet",
+      "slug": "macos-shellcode-cheat-sheet",
+      "labels": [
+        "Shellcode"
+      ],
+      "createdAt": 1732169006,
+      "createdDate": "2024-11-21",
+      "dateLabelColor": "#bc4c00",
+      "updatedAt": "2024-11-27T10:21:44Z",
+      "excerpt": "> This article was first published on the [BreakOnCrash Lab](https://mp.",
+      "wordCount": 13659,
+      "top": 0,
+      "singlePage": false,
+      "timeline": false,
+      "needComment": true,
+      "ogImage": "/imgs/avatar.png",
+      "labelColors": {
+        "Shellcode": "#503631"
+      }
+    },
+    {
+      "number": 4,
+      "title": "A Simple Guide to Writing Windows Shellcode",
+      "slug": "a-simple-guide-to-writing-windows-shellcode",
+      "labels": [
+        "Shellcode"
+      ],
+      "createdAt": 1732156585,
+      "createdDate": "2024-11-21",
+      "dateLabelColor": "#bc4c00",
+      "updatedAt": "2024-11-27T10:21:30Z",
+      "excerpt": "> This article was first published on the [Xianzhi Community](https://xz.",
+      "wordCount": 11617,
+      "top": 0,
+      "singlePage": false,
+      "timeline": false,
+      "needComment": true,
+      "ogImage": "/imgs/avatar.png",
+      "labelColors": {
+        "Shellcode": "#503631"
+      }
+    }
+  ],
+  "pages": [
+    {
+      "number": 20,
+      "title": "Daily Reversing",
+      "slug": "daily-reversing",
+      "labels": [
+        "daily-reversing"
+      ],
+      "createdAt": 1780980473,
+      "createdDate": "2026-06-09",
+      "dateLabelColor": "#1f883d",
+      "updatedAt": "2026-08-15T11:48:29Z",
+      "excerpt": "",
+      "wordCount": 0,
+      "top": 0,
+      "singlePage": true,
+      "timeline": true,
+      "needComment": false,
+      "ogImage": "/imgs/avatar.png",
+      "labelColors": {
+        "daily-reversing": "#55d230"
+      }
+    },
+    {
+      "number": 18,
+      "title": "Talks",
+      "slug": "talks",
+      "labels": [
+        "talks"
+      ],
+      "createdAt": 1774093745,
+      "createdDate": "2026-03-21",
+      "dateLabelColor": "#1f883d",
+      "updatedAt": "2026-09-05T04:29:01Z",
+      "excerpt": "碎碎念\nA place for short notes, rough ideas and small observations.",
+      "wordCount": 64,
+      "top": 0,
+      "singlePage": true,
+      "timeline": true,
+      "needComment": false,
+      "ogImage": "/imgs/avatar.png",
+      "labelColors": {
+        "talks": "#aaaaaa"
+      }
+    },
+    {
+      "number": 14,
+      "title": "About",
+      "slug": "about",
+      "labels": [
+        "about"
+      ],
+      "createdAt": 1756696816,
+      "createdDate": "2025-09-01",
+      "dateLabelColor": "#0969da",
+      "updatedAt": "2026-09-13T16:05:41Z",
+      "excerpt": "- iOS Security Researcher\n- Security R&D Engineer\n\n## Projects\n\n- [IPA Decrypter](https://decrypt.",
+      "wordCount": 8000,
+      "top": 0,
+      "singlePage": true,
+      "timeline": false,
+      "needComment": true,
+      "ogImage": "/imgs/avatar.png",
+      "labelColors": {
+        "about": "#AAA061"
+      }
+    }
+  ]
+}

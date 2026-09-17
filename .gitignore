@@ -219,3 +219,5 @@ __marimo__/
 .DS_Store
 # Custom
 draft/
+web/node_modules/
+web/dist/

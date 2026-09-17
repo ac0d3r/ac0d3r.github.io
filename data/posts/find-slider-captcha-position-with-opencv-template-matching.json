@@ -1,0 +1,23 @@
+{
+  "number": 15,
+  "title": "Find Slider CAPTCHA Position with OpenCV Template Matching",
+  "slug": "find-slider-captcha-position-with-opencv-template-matching",
+  "labels": [
+    "Computer Vision"
+  ],
+  "createdAt": 1761394342,
+  "createdDate": "2025-10-25",
+  "dateLabelColor": "#0969da",
+  "updatedAt": "2025-10-25T12:12:40Z",
+  "excerpt": "## Template Matching\n> [Wiki: Template_matching](https://en.",
+  "wordCount": 3567,
+  "top": 0,
+  "singlePage": false,
+  "timeline": false,
+  "needComment": true,
+  "ogImage": "/imgs/avatar.png",
+  "body": "## Template Matching\n> [Wiki: Template_matching](https://en.wikipedia.org/wiki/Template_matching)\n\nThe technique we’ll use is called **Template Matching**. Basically, it slides a small image — the template — across a larger image, and measures how similar each region is.\n\n[OpenCV](https://opencv.org/) provides the `cv.matchTemplate()` method, which makes Template Matching easy, You can learn more in template matching [tutorial](https://docs.opencv.org/4.x/d4/dc6/tutorial_py_template_matching.html).\n\n## Find Slider CAPTCHA Position\n\n```Python\ndef find_gap_position(background_img, template_img):\n    \"\"\"\n    Use Template Matching to find the slider gap position\n    \"\"\"\n    # Convert to grayscale\n    bg_gray = cv2.cvtColor(background_img, cv2. COLOR_BGR2GRAY)\n    template_gray = cv2.cvtColor(template_img, cv2. COLOR_BGR2GRAY)\n\n    # Template matching\n    result = cv2.matchTemplate(bg_gray, template_gray, cv2. TM_CCOEFF_NORMED)\n\n    # Find the best match position\n    _, max_val, _, max_loc = cv2.minMaxLoc(result)\n    return max_loc[0], max_val  # Return x coordinate and match confidence\n```\n\nUsing this pair of sample images as an example (sample1:bg&template):\n\n<img height=\"150\" alt=\"Image\" src=\"https://github.com/user-attachments/assets/9850db1a-4fff-405f-95bf-08c466ce2baa\" /><img height=\"150\" alt=\"Image\" src=\"https://github.com/user-attachments/assets/d350795b-8aa5-4c97-a729-de451d2ace23\" />\n\n```Python\nbackground = cv2.imread(\"sample1-bg.png\")\ntemplate = cv2.imread(\"sample1-template.png\")\n\ngap_x, confidence = find_gap_position(background, template)\nprint(\n    f\"Template matching result - X coordinate: {gap_x}, Confidence: {confidence:.4f}\")\n## Output\n# Template matching result - X coordinate: 169, Confidence: 0.3312\n```\n\nUse the `verify_gap_position` function to check whether the template match position is correct:\n\n```Python\ndef verify_gap_position(background, template, gap_x, save_path):\n    \"\"\"\n    Create verification image showing the found gap position\n    \"\"\"\n    # Create verification image: overlay template onto background image\n    result_img = background.copy()\n    template_height, template_width = template.shape[:2]\n\n    # Add red border to template\n    template_with_border = template.copy()\n    cv2.rectangle(template_with_border, (0, 0),\n                  (template_width-1, template_height-1), (0, 0, 255), 1)\n\n    # Overlay bordered template onto background at found position\n    # Use weighted blending to make template semi-transparent\n    if gap_x + template_width <= background.shape[1] and template_height <= background.shape[0]:\n        roi = result_img[0:template_height, gap_x:gap_x+template_width]\n        # 0.85 background transparency, 0.15 template transparency\n        blended = cv2.addWeighted(roi, 0.3, template_with_border, 0.7, 0)\n        result_img[0:template_height, gap_x:gap_x+template_width] = blended\n\n    # Save verification image\n    cv2.imwrite(save_path, result_img)\n    print(f\"Verification image saved as {save_path}\")\n```\n\nVerify sample1 result：\n\n<img height=\"150\" alt=\"Image\" src=\"https://github.com/user-attachments/assets/9fc56967-2675-4866-87cb-5a3ad11e2f5f\" />\n\n\n## Test more samples\n\n<img height=\"150\" alt=\"Image\" src=\"https://github.com/user-attachments/assets/04c89342-928b-4e54-a0f3-2687ae1f267d\" /><img height=\"150\" alt=\"Image\" src=\"https://github.com/user-attachments/assets/318700fe-639d-4e81-949c-f2b78e44202d\" />\n\n<img height=\"150\" alt=\"Image\" src=\"https://github.com/user-attachments/assets/e2ad29ef-4865-4d7b-9055-fd1fb69908f1\" />\n\n**The recognition is very accurate**!!!",
+  "labelColors": {
+    "Computer Vision": "#e9857a"
+  }
+}

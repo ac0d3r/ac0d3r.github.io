@@ -1,0 +1,23 @@
+{
+  "number": 16,
+  "title": "Go Embed Extractor",
+  "slug": "go-embed-extractor",
+  "labels": [
+    "Reverse engineering"
+  ],
+  "createdAt": 1761554168,
+  "createdDate": "2025-10-27",
+  "dateLabelColor": "#0969da",
+  "updatedAt": "2025-10-27T08:36:28Z",
+  "excerpt": "## Go-Embed\n\nStarting from Go 1.",
+  "wordCount": 3861,
+  "top": 0,
+  "singlePage": false,
+  "timeline": false,
+  "needComment": true,
+  "ogImage": "/imgs/avatar.png",
+  "body": "## Go-Embed\n\nStarting from Go 1.16, the language introduced the `go:embed` directive, providing native support for embedding static files.\nEmbedded files can be accessed via an `embed.FS` pseudo-filesystem. They are read-only and packaged directly within the compiled binary.\n\n## Understanding How Go-Embed Works\n\nThe `embed.FS` file container structure:\n\n```go\ntype FS struct {\n    files *[]file\n}\ntype file struct {\n    name string   // file name\n    data string  // file content\n    hash [16]byte // truncated SHA256 hash\n}\n```\n\n---\n\n- The demo directory structure:\n\n```\ntests\n├── embedemo.go\n└── misc\n    ├── bdir\n    │   └── sample.txt\n    ├── sample.txt\n    └── sample2.txt\n```\n\n- `embedemo.go`:\n\n```go\npackage main\nimport (\n    \"embed\"\n    \"fmt\"\n    \"log\"\n)\n\n//go:embed misc\nvar embedFiles embed.FS\nfunc main() {\n    content, err := embedFiles.ReadFile(\"misc/sample.txt\")\n    if err != nil {\n        log.Fatal(err)\n    }\n    fmt.Println(string(content))\n}\n```\n\nUse debugging to inspect what contents are stored in the files after compilation：\n\n<img height=\"200\" src=\"https://github.com/user-attachments/assets/b8a49d08-a841-4b3f-8258-81d3a5cccc65\" />\n\n`//go:embed <filename>` is a compiler directive. During `go build`, it triggers the [`WriteEmbed`](https://github.com/golang/go/blob/master/src/cmd/compile/internal/staticdata/embed.go#L134-L171) function to process the directive:\n\n\n<img height=\"530\" src=\"https://github.com/user-attachments/assets/c52c93c2-0ce2-4807-84ef-d630ba20d289\" />\n\n- `L138-L140`: `slicedata` is the pointer to `FS.files`, writing the length of `files` twice;  \n- `L150`: writes the filename (pointer);  \n- `L152-156`: filenames ending with `/` are directories, skipped, with `data` and `hash` set to 0;  \n- `L158-164`: writes `data` (pointer) and `hash` (16 bytes);\n\n## Analyzing with Decompiler Tools\n\nIn the `main` function, calling `embed.FS.ReadFile`\n- `x1` refers to the string `\"misc/sample.txt\"`\n- `x0` is the pointer to the `FS`.\n\n<img height=\"71\" src=\"https://github.com/user-attachments/assets/6968653a-99f2-4b01-86c8-e84f9e214dbd\" />\n\nLocate .rodata and display it using a hex viewer:\n\n<img height=\"200\" src=\"https://github.com/user-attachments/assets/e8654cfc-a150-4145-9bc6-cfa6f1a4a39b\" />\n\n* The three bytes marked in red represent the `files` pointer (little-endian), the length, and the length again.\n* The first blue box, spanning six bytes, represents the directory structure: filename pointer, filename length, data pointer, data length, and a 2-byte hash. Since this is a directory, `data` and `hash` are empty.\n* The second blue box highlights the structure of a file that contains actual content.\n\nThe files studied above are Mach-O for the ARM64 architecture. Later, I also compiled ELF and PE binaries, and their storage structures are the same. You can use the `debug/*` packages to parse files for each architecture, convert virtual addresses to file offsets, and thus extract the embedded files.\n\n## Building an Automated Tool\n\nIt has been open-sourced and can extract embedded files from PE, ELF, and Mach-O binaries: [BreakOnCrash/go-embed-extractor](https://github.com/BreakOnCrash/go-embed-extractor).\n\n~~The downside is that you have to manually locate the FS pointer 😅~~\n\n[@leonjza](https://x.com/leonjza) shared a [method](https://x.com/leonjza/status/1960794001449025797) using the radare tool to find the FS structure pointer, which can then be combined with [go-embed-extractor](https://github.com/BreakOnCrash/go-embed-extractor) to extract embedded files.\n\n<img height=\"216\" src=\"https://github.com/user-attachments/assets/a90dc3f1-43cd-4157-91b9-457b1592fcdb\" />\n\n## Reference Links\n\n- [extracting-go-embeds](https://web.archive.org/web/20230606135339/https://0x00sec.org/t/extracting-go-embeds/34885)\n- [use-radare-extract-go-embeds](https://x.com/leonjza/status/1960794001449025797)",
+  "labelColors": {
+    "Reverse engineering": "#255B74"
+  }
+}

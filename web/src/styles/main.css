@@ -1,0 +1,86 @@
+body {
+  box-sizing: border-box;
+  min-width: 200px;
+  max-width: 900px;
+  margin: 20px auto;
+  padding: 45px;
+  font-size: 14px;
+  font-family: sans-serif;
+  line-height: 1.25;
+}
+
+.markdown-body {
+  font-size: 14px;
+}
+
+#header {
+  display: flex;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--borderColor-muted, var(--color-border-muted));
+  margin-bottom: 16px;
+}
+
+#footer {
+  margin-top: 64px;
+  text-align: center;
+  font-size: small;
+}
+
+.octicon {
+  display: inline-block;
+  vertical-align: text-bottom;
+  fill: currentColor;
+  overflow: visible;
+}
+
+.SideNav-item {
+  text-decoration: none;
+}
+
+.listTitle {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  margin-right: 8px;
+}
+
+.listLabels {
+  white-space: nowrap;
+  display: flex;
+  gap: 4px;
+  margin-left: auto;
+}
+
+.listLabels .Label {
+  color: #fff;
+  margin-left: 4px;
+}
+
+.d-flex {
+  min-width: 0;
+}
+
+.mermaid {
+  width: 100%;
+  min-height: 200px;
+  overflow: auto;
+}
+
+.comments {
+  margin-top: 64px;
+}
+
+@media (max-width: 600px) {
+  body {
+    padding: 8px;
+  }
+  .LabelTime {
+    display: none;
+  }
+}
+
+/* dark highlight tweak */
+[data-color-mode='dark'] .hljs {
+  background: transparent;
+}

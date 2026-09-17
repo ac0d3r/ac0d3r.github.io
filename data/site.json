@@ -1,0 +1,47 @@
+{
+  "title": "zznQ",
+  "subTitle": "Enjoy building & breaking things.",
+  "avatarUrl": "/imgs/avatar.png",
+  "homeUrl": "https://blog.imipy.com",
+  "startSite": "01/05/2018",
+  "filingNum": "",
+  "bottomText": "",
+  "i18n": "EN",
+  "themeMode": "manual",
+  "dayTheme": "light",
+  "nightTheme": "dark",
+  "needComment": 1,
+  "onePageListNum": 15,
+  "singlePage": [
+    "about",
+    "link",
+    "talks",
+    "daily-reversing"
+  ],
+  "useTimeline": [
+    "talks",
+    "daily-reversing"
+  ],
+  "exlink": {
+    "github": "https://github.com/ac0d3r"
+  },
+  "repo": "ac0d3r/ac0d3r.github.io",
+  "labelColors": {
+    "about": "#AAA061",
+    "AI": "#89ab97",
+    "Computer Vision": "#e9857a",
+    "daily-reversing": "#55d230",
+    "FairPlay": "#861258",
+    "Forensic": "#3A04B6",
+    "Frida-Internal": "#7C30EE",
+    "Malware": "#F1C359",
+    "Reverse engineering": "#255B74",
+    "SAST": "#e99695",
+    "Shellcode": "#503631",
+    "talks": "#aaaaaa",
+    "TCC": "#034001",
+    "Web": "#04a05e",
+    "XPC": "#0BE44D"
+  },
+  "generatedAt": "2026-09-17T09:32:41.390Z"
+}

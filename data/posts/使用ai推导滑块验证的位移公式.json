@@ -1,0 +1,23 @@
+{
+  "number": 17,
+  "title": "使用AI推导滑块验证的位移公式",
+  "slug": "使用ai推导滑块验证的位移公式",
+  "labels": [
+    "AI"
+  ],
+  "createdAt": 1762410284,
+  "createdDate": "2025-11-06",
+  "dateLabelColor": "#0969da",
+  "updatedAt": "2025-11-06T17:06:48Z",
+  "excerpt": "## 前提\n\n上一篇[文章](https://blog.",
+  "wordCount": 3870,
+  "top": 0,
+  "singlePage": false,
+  "timeline": false,
+  "needComment": true,
+  "ogImage": "/imgs/avatar.png",
+  "body": "## 前提\n\n上一篇[文章](https://blog.imipy.com/post/find-slider-captcha-position-with-opencv-template-matching.html)介绍了使用`Template Matching`定位到缺口位置，再模拟鼠标去滑动元素就可以了。\n但是我遇到一个有趣的案例：\n\n![Image](https://github.com/user-attachments/assets/9ee83179-06b5-4aa1-888e-9af04769170f)\n\n如这个视频所示，滑块和拼图的移动关系并非线性：先慢、再均速、最后快。但它们之间肯定存在某种数学关系。\n\n## 采集数据\n\n在浏览器上使用JS采集滑块和拼图两个元素对应的移动数据（style:`left:xxpx`）：\n\n```javascript\nconst slider = document.querySelector('#captcha-sliding-slider');\nconst puzzle = document.querySelector('#captcha-puzzle');\n\nlet recordedData = [];\nlet sliderObserver = null;\n\nfunction recordPositions() {\n    if (!slider || !puzzle) return;\n\n    const slider_x = parseFloat(slider.style.left) || 0;\n    const puzzle_x = parseFloat(puzzle.style.left) || 0;\n\n    recordedData.push({\n        slider_x: slider_x,\n        puzzle_x: puzzle_x,\n    });\n}\n\ndocument.addEventListener('mousedown', () => {\n    if (!slider) return;\n\n    recordedData = [];\n    sliderObserver = new MutationObserver(recordPositions);\n    sliderObserver.observe(slider, { attributes: true, attributeFilter: ['style'] });\n});\n\ndocument.addEventListener('mouseup', () => {\n    if (sliderObserver) {\n        sliderObserver.disconnect();\n        sliderObserver = null;\n        console.log(`记录完成: ${recordedData.length} 条`);\n    }\n});\n\nfunction exportToCSV() {\n    if (recordedData.length === 0) return;\n\n    const headers = ['Slider_Left(px)', 'Puzzle_Left(px)'];\n    const csvRows = [headers.join(',')];\n\n    recordedData.forEach(row => {\n        csvRows.push([\n            row.slider_x,\n            row.puzzle_x,\n        ].join(','));\n    });\n\n    const blob = new Blob(['\\ufeff' + csvRows.join('\\n')], { type: 'text/csv;charset=utf-8;' });\n    const link = document.createElement('a');\n    link.href = URL.createObjectURL(blob);\n    link.download = `positions_${Date.now()}.csv`;\n    link.click();\n}\n\nfunction viewData() {\n    console.table(recordedData);\n}\n```\n\n## 推算公式\n\n使用AI帮我推算出公式：\n\n<img width=\"829\" height=\"389\" alt=\"Image\" src=\"https://github.com/user-attachments/assets/2bae2f16-bae8-4fa4-b93b-680fbe02ebee\" />\n\n```python\ndef calculate_puzzle_x(slider_x):\n    \"\"\"从 slider_x 计算 puzzle_x（优化浮点精度）\"\"\"\n    # 使用 Horner 方法重写多项式，减少浮点误差\n    # 原式: -0.0000020625 + 0.0769232487*x + 0.0035502933*x² + 0.000000000006490*x³\n    # Horner: -0.0000020625 + x*(0.0769232487 + x*(0.0035502933 + x*(0.000000000006490)))\n    result = -0.0000020625 + slider_x * (0.0769232487 + slider_x * (0.0035502933 + slider_x * (0.000000000006490)))\n    return round(result, 2)\n```\n\n## 生成逆公式\n\n还是使用AI生成逆公式，根据 puzzle_x 距离计算出 slider_x 实际要拖动的距离：\n\n```python\ndef calculate_slider_x(puzzle_x, initial_guess=None):\n    \"\"\"\n    从 puzzle_x 计算 slider_x（逆函数 - 最高精度）\n    使用牛顿迭代法从精确公式反推，优化浮点精度\n    \n    参数:\n        puzzle_x: 目标 puzzle_x 值\n        initial_guess: 初始猜测值（可选，默认使用 puzzle_x 作为初始值）\n    \n    返回:\n        slider_x: 计算出的 slider_x 值\n    \"\"\"\n    # 初始猜测：使用 puzzle_x 作为起点（通常接近真实值）\n    x = initial_guess if initial_guess is not None else puzzle_x\n    \n    # 牛顿迭代法求解方程：calculate_puzzle_x(x) - puzzle_x = 0\n    tolerance = 1e-12  # 提高收敛精度\n    max_iterations = 100\n    \n    for i in range(max_iterations):\n        # f(x) = calculate_puzzle_x(x) - puzzle_x\n        fx = calculate_puzzle_x(x) - puzzle_x\n        \n        if abs(fx) < tolerance:\n            return round(x, 2)\n        \n        # f'(x) = 导数，使用 Horner 方法优化\n        # 原式: 0.0769232487 + 2*0.0035502933*x + 3*0.000000000006490*x²\n        # Horner: 0.0769232487 + x*(2*0.0035502933 + x*3*0.000000000006490)\n        fpx = 0.0769232487 + x * (0.0071005866 + x * (0.00000000001947))\n        \n        if abs(fpx) < 1e-15:  # 避免除以零\n            break\n        \n        # 牛顿迭代：x_new = x - f(x)/f'(x)\n        x_new = x - fx / fpx\n        \n        # 检查收敛（相对变化）\n        if abs(x_new - x) < tolerance * (1.0 + abs(x)):\n            return round(x_new, 2)\n        \n        x = x_new\n    \n    return round(x, 2)\n```\n",
+  "labelColors": {
+    "AI": "#89ab97"
+  }
+}
